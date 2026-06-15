@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import mdiIcons from "@iconify-json/mdi/icons.json";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { applyWidget, applyWidgets, fetchWidgets, reloadWidgets } from "./api";
 import { DEFAULT_LAYOUT, GRID_SIZE, WIDGET_TYPES, type WidgetConfig, type WidgetResponse } from "./types";
 
@@ -24,6 +25,8 @@ const GRID_LABELS = Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, index) => 
   col: index % GRID_SIZE,
   row: Math.floor(index / GRID_SIZE)
 }));
+const MDI_ALIASES = (mdiIcons.aliases || {}) as Record<string, { parent: string }>;
+const MDI_ICON_NAMES = Array.from(new Set([...Object.keys(mdiIcons.icons), ...Object.keys(MDI_ALIASES)])).sort();
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -51,15 +54,61 @@ function detectWarnings(widgets: WidgetConfig[]) {
   return warnings;
 }
 
-function iconGlyph(icon: string) {
-  const normalized = icon.trim().toLowerCase();
-  if (normalized.includes("clock")) return "CLK";
-  if (normalized.includes("calendar")) return "CAL";
-  if (normalized.includes("weather")) return "WTH";
-  if (normalized.includes("thermometer")) return "TMP";
-  if (normalized.includes("water")) return "H2O";
-  if (normalized.includes("light")) return "LGT";
-  return "WGT";
+function getMdiIcon(icon: string) {
+  const normalized = icon.trim().replace(/^mdi:/i, "").toLowerCase();
+  if (!normalized) {
+    return null;
+  }
+
+  const directIcon = mdiIcons.icons[normalized as keyof typeof mdiIcons.icons];
+  if (directIcon) {
+    return directIcon;
+  }
+
+  const alias = MDI_ALIASES[normalized];
+  if (!alias) {
+    return null;
+  }
+
+  return mdiIcons.icons[alias.parent as keyof typeof mdiIcons.icons] || null;
+}
+
+function widgetScale(widget: WidgetConfig) {
+  const area = widget.w * widget.h;
+  const widthBoost = widget.w * 0.08;
+  const heightBoost = widget.h * 0.12;
+  return clamp(0.86 + Math.sqrt(area) * 0.3 + widthBoost + heightBoost, 0.9, 2.6);
+}
+
+function widgetStyle(widget: WidgetConfig): CSSProperties {
+  const scale = widgetScale(widget);
+  return {
+    left: `${(widget.x / GRID_SIZE) * 100}%`,
+    top: `${(widget.y / GRID_SIZE) * 100}%`,
+    width: `${(widget.w / GRID_SIZE) * 100}%`,
+    height: `${(widget.h / GRID_SIZE) * 100}%`,
+    ["--widget-scale" as string]: String(scale),
+    ["--widget-padding" as string]: `${clamp(10 + widget.h * 2 + widget.w, 10, 24)}px`,
+    ["--widget-gap" as string]: `${clamp(6 + widget.h * 2, 6, 18)}px`
+  };
+}
+
+function MdiIcon({ icon, className }: { icon: string; className?: string }) {
+  const iconData = getMdiIcon(icon);
+
+  if (!iconData) {
+    return <div className={`widget-icon widget-icon-fallback ${className || ""}`.trim()}>{icon.slice(0, 3).toUpperCase() || "MDI"}</div>;
+  }
+
+  return (
+    <svg
+      className={`widget-icon ${className || ""}`.trim()}
+      viewBox={`0 0 ${iconData.width || 24} ${iconData.height || 24}`}
+      aria-hidden="true"
+    >
+      <g dangerouslySetInnerHTML={{ __html: iconData.body }} />
+    </svg>
+  );
 }
 
 export default function App() {
@@ -72,6 +121,7 @@ export default function App() {
   const [missingHelpers, setMissingHelpers] = useState<string[]>([]);
   const [helperYaml, setHelperYaml] = useState("");
   const [showHelperYaml, setShowHelperYaml] = useState(false);
+  const [iconQuery, setIconQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
   const interactionRef = useRef<Interaction | null>(null);
@@ -80,10 +130,21 @@ export default function App() {
     () => widgets.find((widget) => widget.id === selectedId) || widgets[0],
     [selectedId, widgets]
   );
+  const filteredIcons = useMemo(() => {
+    const query = iconQuery.trim().replace(/^mdi:/i, "").toLowerCase();
+    if (!query) {
+      return MDI_ICON_NAMES.slice(0, 120);
+    }
+    return MDI_ICON_NAMES.filter((name) => name.includes(query)).slice(0, 120);
+  }, [iconQuery]);
 
   useEffect(() => {
     void loadWidgets();
   }, []);
+
+  useEffect(() => {
+    setIconQuery(selectedWidget?.icon || "");
+  }, [selectedWidget?.id, selectedWidget?.icon]);
 
   useEffect(() => {
     const onPointerMove = (event: PointerEvent) => {
@@ -339,12 +400,7 @@ export default function App() {
                   key={widget.id}
                   type="button"
                   className={`widget-card ${selectedId === widget.id ? "selected" : ""} ${widget.visible ? "" : "hidden-card"}`}
-                  style={{
-                    left: `${(widget.x / GRID_SIZE) * 100}%`,
-                    top: `${(widget.y / GRID_SIZE) * 100}%`,
-                    width: `${(widget.w / GRID_SIZE) * 100}%`,
-                    height: `${(widget.h / GRID_SIZE) * 100}%`
-                  }}
+                  style={widgetStyle(widget)}
                   onClick={() => setSelectedId(widget.id)}
                   onPointerDown={(event) => handlePointerStart(event, widget, "drag")}
                 >
@@ -352,10 +408,12 @@ export default function App() {
                     <span>{widget.id}</span>
                     <span>{widget.type}</span>
                   </div>
-                  <div className="widget-icon">{iconGlyph(widget.icon)}</div>
-                  <div className="widget-text">
-                    <strong>{widget.label || "Untitled"}</strong>
-                    <span>{widget.value || "No value"}</span>
+                  <div className="widget-main">
+                    <MdiIcon icon={widget.icon} />
+                    <div className="widget-text">
+                      <strong>{widget.label || "Untitled"}</strong>
+                      <span>{widget.value || "No value"}</span>
+                    </div>
                   </div>
                   <span className="widget-size">
                     {widget.w}x{widget.h}
@@ -420,10 +478,48 @@ export default function App() {
                 <span>Icon</span>
                 <input
                   type="text"
-                  value={selectedWidget.icon}
-                  onChange={(event) => updateWidget(selectedWidget.id, { icon: event.target.value })}
+                  value={iconQuery}
+                  list="mdi-icons"
+                  placeholder="Search MDI icons, for example weather-partly-cloudy"
+                  onChange={(event) => {
+                    const nextValue = event.target.value.replace(/^mdi:/i, "");
+                    setIconQuery(nextValue);
+                    updateWidget(selectedWidget.id, { icon: nextValue });
+                  }}
                 />
               </label>
+              <datalist id="mdi-icons">
+                {MDI_ICON_NAMES.map((iconName) => (
+                  <option key={iconName} value={iconName} />
+                ))}
+              </datalist>
+
+              <div className="icon-picker">
+                <div className="icon-picker-header">
+                  <span>Matching MDI icons</span>
+                  <span>{filteredIcons.length} shown</span>
+                </div>
+                <div className="icon-preview">
+                  <MdiIcon icon={selectedWidget.icon} className="editor-icon-preview" />
+                  <strong>{selectedWidget.icon || "No icon selected"}</strong>
+                </div>
+                <div className="icon-results">
+                  {filteredIcons.map((iconName) => (
+                    <button
+                      key={iconName}
+                      type="button"
+                      className={`icon-option ${selectedWidget.icon === iconName ? "active" : ""}`}
+                      onClick={() => {
+                        setIconQuery(iconName);
+                        updateWidget(selectedWidget.id, { icon: iconName });
+                      }}
+                    >
+                      <MdiIcon icon={iconName} className="icon-option-glyph" />
+                      <span>{iconName}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <label className="field">
                 <span>Action Key</span>
