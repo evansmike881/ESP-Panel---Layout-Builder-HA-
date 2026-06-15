@@ -19,7 +19,7 @@ esp-panel-layout-builder/
       index.html
       server.js
       src/
-        main.ts
+        main.tsx
         App.tsx
         api.ts
         types.ts
