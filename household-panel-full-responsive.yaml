@@ -1,0 +1,2385 @@
+substitutions:
+  screen_width: "480"
+  screen_height: "480"
+
+esphome:
+  name: household-panel
+  friendly_name: Household Panel
+  min_version: 2026.4.0
+  on_boot:
+    priority: -200
+    then:
+      - delay: 5s
+      - light.turn_off: display_backlight
+      - delay: 500ms
+      - lvgl.page.show: main_page
+      - lvgl.widget.redraw:
+      - delay: 500ms
+      - light.turn_on:
+          id: display_backlight
+          brightness: 85%
+      - delay: 2s
+      - lvgl.page.show: main_page
+      - lvgl.widget.redraw:
+      - script.execute: layout_all_widgets
+      - script.execute: render_all_widgets
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    advanced:
+      execute_from_psram: true
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+preferences:
+  flash_write_interval: 5min
+
+logger:
+  level: WARN
+
+api:
+  actions:
+    - action: panel_notify
+      variables:
+        message: string
+      then:
+        - script.execute:
+            id: show_notification
+            message: !lambda "return message;"
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+time:
+  - platform: homeassistant
+    id: ha_time
+
+output:
+  - platform: ledc
+    pin: GPIO38
+    id: gpio_backlight_pwm
+    frequency: 100Hz
+
+light:
+  - platform: monochromatic
+    output: gpio_backlight_pwm
+    name: Display Backlight
+    id: display_backlight
+    restore_mode: ALWAYS_ON
+
+i2c:
+  - id: bus_a
+    sda: GPIO19
+    scl:
+      number: GPIO45
+      ignore_strapping_warning: true
+
+touchscreen:
+  platform: gt911
+  id: my_touchscreen
+  display: my_display
+  i2c_id: bus_a
+  transform:
+    mirror_x: true
+    mirror_y: true
+
+spi:
+  - id: lcd_spi
+    clk_pin: GPIO48
+    mosi_pin: GPIO47
+
+display:
+  - platform: mipi_rgb
+    id: my_display
+    model: GUITION-4848S040
+    auto_clear_enabled: false
+    update_interval: never
+    dimensions:
+      width: 480
+      height: 480
+
+i2s_audio:
+  - id: i2s_audio_bus
+    i2s_lrclk_pin: GPIO2
+    i2s_bclk_pin: GPIO1
+
+speaker:
+  - platform: i2s_audio
+    id: panel_speaker
+    i2s_audio_id: i2s_audio_bus
+    dac_type: external
+    i2s_dout_pin: GPIO40
+    channel: left
+    sample_rate: 44100
+    bits_per_sample: 16bit
+
+media_player:
+  - platform: speaker
+    id: household_panel_speaker
+    name: "Household Panel Speaker"
+    announcement_pipeline:
+      speaker: panel_speaker
+      format: WAV
+
+font:
+  - file: "gfonts://Montserrat"
+    id: montserrat_12
+    size: 12
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_14
+    size: 14
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_16
+    size: 16
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_22
+    size: 22
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_28
+    size: 28
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_36
+    size: 36
+    bpp: 4
+  - file:
+      url: "https://cdn.jsdelivr.net/npm/@mdi/font@latest/fonts/materialdesignicons-webfont.ttf"
+      type: web
+    id: mdi_icons_32
+    size: 32
+    glyphs:
+      - "\U000F0599" # weather-sunny
+      - "\U000F0595" # weather-partly-cloudy
+      - "\U000F0590" # weather-cloudy
+      - "\U000F0597" # weather-rainy
+      - "\U000F0596" # weather-pouring
+      - "\U000F0593" # weather-lightning
+      - "\U000F0598" # weather-snowy
+      - "\U000F0594" # weather-fog
+      - "\U000F050F" # thermometer
+      - "\U000F058E" # water-percent
+      - "\U000F0769" # ceiling-light
+      - "\U000F0150" # clock
+      - "\U000F00ED" # calendar
+      - "\U000F06E8" # blank/shape
+      - "\U000F05A9" # wifi
+      - "\U000F04B9" # sofa
+      - "\U000F081C" # door
+      - "\U000F07D0" # home
+      - "\U000F0493" # cog
+
+globals:
+  - id: slot_w
+    type: int
+    restore_value: no
+    initial_value: "80"
+  - id: slot_h
+    type: int
+    restore_value: no
+    initial_value: "80"
+  - id: slot_gap
+    type: int
+    restore_value: no
+    initial_value: "6"
+
+script:
+  - id: show_notification
+    mode: restart
+    parameters:
+      message: string
+    then:
+      - lvgl.label.update:
+          id: notification_message_label
+          text: !lambda "return message;"
+      - lvgl.widget.show: notification_overlay
+      - delay: 12s
+      - lvgl.widget.hide: notification_overlay
+
+  - id: layout_all_widgets
+    mode: restart
+    then:
+      - script.execute: layout_w01
+      - script.execute: layout_w02
+      - script.execute: layout_w03
+      - script.execute: layout_w04
+      - script.execute: layout_w05
+      - script.execute: layout_w06
+      - script.execute: layout_w07
+      - script.execute: layout_w08
+      - script.execute: layout_w09
+      - script.execute: layout_w10
+      - script.execute: layout_w11
+      - script.execute: layout_w12
+
+  - id: render_all_widgets
+    mode: restart
+    then:
+      - script.execute: render_w01
+      - script.execute: render_w02
+      - script.execute: render_w03
+      - script.execute: render_w04
+      - script.execute: render_w05
+      - script.execute: render_w06
+      - script.execute: render_w07
+      - script.execute: render_w08
+      - script.execute: render_w09
+      - script.execute: render_w10
+      - script.execute: render_w11
+      - script.execute: render_w12
+
+  - id: update_clock_widgets
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: 'return id(w01_type).state == "clock";'
+          then:
+            - script.execute: render_w01
+      - if:
+          condition:
+            lambda: 'return id(w02_type).state == "clock";'
+          then:
+            - script.execute: render_w02
+      - if:
+          condition:
+            lambda: 'return id(w03_type).state == "clock";'
+          then:
+            - script.execute: render_w03
+      - if:
+          condition:
+            lambda: 'return id(w04_type).state == "clock";'
+          then:
+            - script.execute: render_w04
+      - if:
+          condition:
+            lambda: 'return id(w05_type).state == "clock";'
+          then:
+            - script.execute: render_w05
+      - if:
+          condition:
+            lambda: 'return id(w06_type).state == "clock";'
+          then:
+            - script.execute: render_w06
+      - if:
+          condition:
+            lambda: 'return id(w07_type).state == "clock";'
+          then:
+            - script.execute: render_w07
+      - if:
+          condition:
+            lambda: 'return id(w08_type).state == "clock";'
+          then:
+            - script.execute: render_w08
+      - if:
+          condition:
+            lambda: 'return id(w09_type).state == "clock";'
+          then:
+            - script.execute: render_w09
+      - if:
+          condition:
+            lambda: 'return id(w10_type).state == "clock";'
+          then:
+            - script.execute: render_w10
+      - if:
+          condition:
+            lambda: 'return id(w11_type).state == "clock";'
+          then:
+            - script.execute: render_w11
+      - if:
+          condition:
+            lambda: 'return id(w12_type).state == "clock";'
+          then:
+            - script.execute: render_w12
+
+  - id: update_date_widgets
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: 'return id(w01_type).state == "date";'
+          then:
+            - script.execute: render_w01
+      - if:
+          condition:
+            lambda: 'return id(w02_type).state == "date";'
+          then:
+            - script.execute: render_w02
+      - if:
+          condition:
+            lambda: 'return id(w03_type).state == "date";'
+          then:
+            - script.execute: render_w03
+      - if:
+          condition:
+            lambda: 'return id(w04_type).state == "date";'
+          then:
+            - script.execute: render_w04
+      - if:
+          condition:
+            lambda: 'return id(w05_type).state == "date";'
+          then:
+            - script.execute: render_w05
+      - if:
+          condition:
+            lambda: 'return id(w06_type).state == "date";'
+          then:
+            - script.execute: render_w06
+      - if:
+          condition:
+            lambda: 'return id(w07_type).state == "date";'
+          then:
+            - script.execute: render_w07
+      - if:
+          condition:
+            lambda: 'return id(w08_type).state == "date";'
+          then:
+            - script.execute: render_w08
+      - if:
+          condition:
+            lambda: 'return id(w09_type).state == "date";'
+          then:
+            - script.execute: render_w09
+      - if:
+          condition:
+            lambda: 'return id(w10_type).state == "date";'
+          then:
+            - script.execute: render_w10
+      - if:
+          condition:
+            lambda: 'return id(w11_type).state == "date";'
+          then:
+            - script.execute: render_w11
+      - if:
+          condition:
+            lambda: 'return id(w12_type).state == "date";'
+          then:
+            - script.execute: render_w12
+
+  - id: layout_w01
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w01_card
+          x: !lambda "return (int) id(w01_x).state * id(slot_w) + 3;"
+          y: !lambda "return (int) id(w01_y).state * id(slot_h) + 3;"
+          width: !lambda "return ((int) id(w01_w).state * id(slot_w)) - id(slot_gap);"
+          height: !lambda "return ((int) id(w01_h).state * id(slot_h)) - id(slot_gap);"
+  - id: layout_w02
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w02_card
+          x: !lambda "return (int) id(w02_x).state * id(slot_w) + 3;"
+          y: !lambda "return (int) id(w02_y).state * id(slot_h) + 3;"
+          width: !lambda "return ((int) id(w02_w).state * id(slot_w)) - id(slot_gap);"
+          height: !lambda "return ((int) id(w02_h).state * id(slot_h)) - id(slot_gap);"
+  - id: layout_w03
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w03_card
+          x: !lambda "return (int) id(w03_x).state * id(slot_w) + 3;"
+          y: !lambda "return (int) id(w03_y).state * id(slot_h) + 3;"
+          width: !lambda "return ((int) id(w03_w).state * id(slot_w)) - id(slot_gap);"
+          height: !lambda "return ((int) id(w03_h).state * id(slot_h)) - id(slot_gap);"
+  - id: layout_w04
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w04_card
+          x: !lambda "return (int) id(w04_x).state * id(slot_w) + 3;"
+          y: !lambda "return (int) id(w04_y).state * id(slot_h) + 3;"
+          width: !lambda "return ((int) id(w04_w).state * id(slot_w)) - id(slot_gap);"
+          height: !lambda "return ((int) id(w04_h).state * id(slot_h)) - id(slot_gap);"
+  - id: layout_w05
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w05_card
+          x: !lambda "return (int) id(w05_x).state * id(slot_w) + 3;"
+          y: !lambda "return (int) id(w05_y).state * id(slot_h) + 3;"
+          width: !lambda "return ((int) id(w05_w).state * id(slot_w)) - id(slot_gap);"
+          height: !lambda "return ((int) id(w05_h).state * id(slot_h)) - id(slot_gap);"
+  - id: layout_w06
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w06_card
+          x: !lambda "return (int) id(w06_x).state * id(slot_w) + 3;"
+          y: !lambda "return (int) id(w06_y).state * id(slot_h) + 3;"
+          width: !lambda "return ((int) id(w06_w).state * id(slot_w)) - id(slot_gap);"
+          height: !lambda "return ((int) id(w06_h).state * id(slot_h)) - id(slot_gap);"
+  - id: layout_w07
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w07_card
+          x: !lambda "return (int) id(w07_x).state * id(slot_w) + 3;"
+          y: !lambda "return (int) id(w07_y).state * id(slot_h) + 3;"
+          width: !lambda "return ((int) id(w07_w).state * id(slot_w)) - id(slot_gap);"
+          height: !lambda "return ((int) id(w07_h).state * id(slot_h)) - id(slot_gap);"
+  - id: layout_w08
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w08_card
+          x: !lambda "return (int) id(w08_x).state * id(slot_w) + 3;"
+          y: !lambda "return (int) id(w08_y).state * id(slot_h) + 3;"
+          width: !lambda "return ((int) id(w08_w).state * id(slot_w)) - id(slot_gap);"
+          height: !lambda "return ((int) id(w08_h).state * id(slot_h)) - id(slot_gap);"
+  - id: layout_w09
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w09_card
+          x: !lambda "return (int) id(w09_x).state * id(slot_w) + 3;"
+          y: !lambda "return (int) id(w09_y).state * id(slot_h) + 3;"
+          width: !lambda "return ((int) id(w09_w).state * id(slot_w)) - id(slot_gap);"
+          height: !lambda "return ((int) id(w09_h).state * id(slot_h)) - id(slot_gap);"
+  - id: layout_w10
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w10_card
+          x: !lambda "return (int) id(w10_x).state * id(slot_w) + 3;"
+          y: !lambda "return (int) id(w10_y).state * id(slot_h) + 3;"
+          width: !lambda "return ((int) id(w10_w).state * id(slot_w)) - id(slot_gap);"
+          height: !lambda "return ((int) id(w10_h).state * id(slot_h)) - id(slot_gap);"
+  - id: layout_w11
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w11_card
+          x: !lambda "return (int) id(w11_x).state * id(slot_w) + 3;"
+          y: !lambda "return (int) id(w11_y).state * id(slot_h) + 3;"
+          width: !lambda "return ((int) id(w11_w).state * id(slot_w)) - id(slot_gap);"
+          height: !lambda "return ((int) id(w11_h).state * id(slot_h)) - id(slot_gap);"
+  - id: layout_w12
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w12_card
+          x: !lambda "return (int) id(w12_x).state * id(slot_w) + 3;"
+          y: !lambda "return (int) id(w12_y).state * id(slot_h) + 3;"
+          width: !lambda "return ((int) id(w12_w).state * id(slot_w)) - id(slot_gap);"
+          height: !lambda "return ((int) id(w12_h).state * id(slot_h)) - id(slot_gap);"
+
+  - id: render_w01
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w01_card
+          hidden: !lambda 'return !id(w01_visible).state || id(w01_type).state == "blank";'
+      - lvgl.label.update:
+          id: w01_label_label
+          text: !lambda 'return id(w01_label).state;'
+      - lvgl.label.update:
+          id: w01_value_label
+          text: !lambda |-
+            if (id(w01_type).state == "clock") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--:--");
+              char buffer[6];
+              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
+              return std::string(buffer);
+            }
+            if (id(w01_type).state == "date") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--");
+              char buffer[16];
+              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
+              return std::string(buffer);
+            }
+            return id(w01_value).state;
+      - lvgl.label.update:
+          id: w01_icon_label
+          text: !lambda |-
+            std::string s = id(w01_icon).state;
+            std::string t = id(w01_type).state;
+            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+
+            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
+            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
+            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
+            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
+            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
+            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
+            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
+            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
+            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
+            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
+            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
+            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
+            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
+            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
+            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
+            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
+            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
+            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
+            if (t == "weather") return std::string("\U000F0595");
+            return std::string("\U000F06E8");
+  - id: render_w02
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w02_card
+          hidden: !lambda 'return !id(w02_visible).state || id(w02_type).state == "blank";'
+      - lvgl.label.update:
+          id: w02_label_label
+          text: !lambda 'return id(w02_label).state;'
+      - lvgl.label.update:
+          id: w02_value_label
+          text: !lambda |-
+            if (id(w02_type).state == "clock") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--:--");
+              char buffer[6];
+              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
+              return std::string(buffer);
+            }
+            if (id(w02_type).state == "date") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--");
+              char buffer[16];
+              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
+              return std::string(buffer);
+            }
+            return id(w02_value).state;
+      - lvgl.label.update:
+          id: w02_icon_label
+          text: !lambda |-
+            std::string s = id(w02_icon).state;
+            std::string t = id(w02_type).state;
+            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+
+            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
+            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
+            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
+            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
+            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
+            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
+            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
+            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
+            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
+            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
+            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
+            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
+            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
+            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
+            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
+            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
+            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
+            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
+            if (t == "weather") return std::string("\U000F0595");
+            return std::string("\U000F06E8");
+  - id: render_w03
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w03_card
+          hidden: !lambda 'return !id(w03_visible).state || id(w03_type).state == "blank";'
+      - lvgl.label.update:
+          id: w03_label_label
+          text: !lambda 'return id(w03_label).state;'
+      - lvgl.label.update:
+          id: w03_value_label
+          text: !lambda |-
+            if (id(w03_type).state == "clock") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--:--");
+              char buffer[6];
+              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
+              return std::string(buffer);
+            }
+            if (id(w03_type).state == "date") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--");
+              char buffer[16];
+              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
+              return std::string(buffer);
+            }
+            return id(w03_value).state;
+      - lvgl.label.update:
+          id: w03_icon_label
+          text: !lambda |-
+            std::string s = id(w03_icon).state;
+            std::string t = id(w03_type).state;
+            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+
+            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
+            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
+            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
+            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
+            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
+            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
+            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
+            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
+            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
+            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
+            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
+            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
+            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
+            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
+            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
+            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
+            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
+            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
+            if (t == "weather") return std::string("\U000F0595");
+            return std::string("\U000F06E8");
+  - id: render_w04
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w04_card
+          hidden: !lambda 'return !id(w04_visible).state || id(w04_type).state == "blank";'
+      - lvgl.label.update:
+          id: w04_label_label
+          text: !lambda 'return id(w04_label).state;'
+      - lvgl.label.update:
+          id: w04_value_label
+          text: !lambda |-
+            if (id(w04_type).state == "clock") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--:--");
+              char buffer[6];
+              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
+              return std::string(buffer);
+            }
+            if (id(w04_type).state == "date") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--");
+              char buffer[16];
+              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
+              return std::string(buffer);
+            }
+            return id(w04_value).state;
+      - lvgl.label.update:
+          id: w04_icon_label
+          text: !lambda |-
+            std::string s = id(w04_icon).state;
+            std::string t = id(w04_type).state;
+            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+
+            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
+            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
+            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
+            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
+            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
+            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
+            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
+            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
+            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
+            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
+            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
+            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
+            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
+            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
+            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
+            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
+            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
+            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
+            if (t == "weather") return std::string("\U000F0595");
+            return std::string("\U000F06E8");
+  - id: render_w05
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w05_card
+          hidden: !lambda 'return !id(w05_visible).state || id(w05_type).state == "blank";'
+      - lvgl.label.update:
+          id: w05_label_label
+          text: !lambda 'return id(w05_label).state;'
+      - lvgl.label.update:
+          id: w05_value_label
+          text: !lambda |-
+            if (id(w05_type).state == "clock") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--:--");
+              char buffer[6];
+              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
+              return std::string(buffer);
+            }
+            if (id(w05_type).state == "date") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--");
+              char buffer[16];
+              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
+              return std::string(buffer);
+            }
+            return id(w05_value).state;
+      - lvgl.label.update:
+          id: w05_icon_label
+          text: !lambda |-
+            std::string s = id(w05_icon).state;
+            std::string t = id(w05_type).state;
+            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+
+            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
+            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
+            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
+            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
+            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
+            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
+            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
+            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
+            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
+            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
+            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
+            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
+            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
+            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
+            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
+            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
+            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
+            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
+            if (t == "weather") return std::string("\U000F0595");
+            return std::string("\U000F06E8");
+  - id: render_w06
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w06_card
+          hidden: !lambda 'return !id(w06_visible).state || id(w06_type).state == "blank";'
+      - lvgl.label.update:
+          id: w06_label_label
+          text: !lambda 'return id(w06_label).state;'
+      - lvgl.label.update:
+          id: w06_value_label
+          text: !lambda |-
+            if (id(w06_type).state == "clock") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--:--");
+              char buffer[6];
+              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
+              return std::string(buffer);
+            }
+            if (id(w06_type).state == "date") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--");
+              char buffer[16];
+              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
+              return std::string(buffer);
+            }
+            return id(w06_value).state;
+      - lvgl.label.update:
+          id: w06_icon_label
+          text: !lambda |-
+            std::string s = id(w06_icon).state;
+            std::string t = id(w06_type).state;
+            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+
+            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
+            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
+            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
+            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
+            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
+            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
+            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
+            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
+            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
+            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
+            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
+            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
+            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
+            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
+            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
+            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
+            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
+            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
+            if (t == "weather") return std::string("\U000F0595");
+            return std::string("\U000F06E8");
+  - id: render_w07
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w07_card
+          hidden: !lambda 'return !id(w07_visible).state || id(w07_type).state == "blank";'
+      - lvgl.label.update:
+          id: w07_label_label
+          text: !lambda 'return id(w07_label).state;'
+      - lvgl.label.update:
+          id: w07_value_label
+          text: !lambda |-
+            if (id(w07_type).state == "clock") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--:--");
+              char buffer[6];
+              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
+              return std::string(buffer);
+            }
+            if (id(w07_type).state == "date") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--");
+              char buffer[16];
+              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
+              return std::string(buffer);
+            }
+            return id(w07_value).state;
+      - lvgl.label.update:
+          id: w07_icon_label
+          text: !lambda |-
+            std::string s = id(w07_icon).state;
+            std::string t = id(w07_type).state;
+            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+
+            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
+            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
+            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
+            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
+            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
+            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
+            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
+            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
+            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
+            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
+            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
+            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
+            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
+            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
+            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
+            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
+            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
+            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
+            if (t == "weather") return std::string("\U000F0595");
+            return std::string("\U000F06E8");
+  - id: render_w08
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w08_card
+          hidden: !lambda 'return !id(w08_visible).state || id(w08_type).state == "blank";'
+      - lvgl.label.update:
+          id: w08_label_label
+          text: !lambda 'return id(w08_label).state;'
+      - lvgl.label.update:
+          id: w08_value_label
+          text: !lambda |-
+            if (id(w08_type).state == "clock") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--:--");
+              char buffer[6];
+              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
+              return std::string(buffer);
+            }
+            if (id(w08_type).state == "date") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--");
+              char buffer[16];
+              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
+              return std::string(buffer);
+            }
+            return id(w08_value).state;
+      - lvgl.label.update:
+          id: w08_icon_label
+          text: !lambda |-
+            std::string s = id(w08_icon).state;
+            std::string t = id(w08_type).state;
+            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+
+            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
+            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
+            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
+            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
+            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
+            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
+            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
+            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
+            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
+            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
+            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
+            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
+            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
+            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
+            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
+            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
+            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
+            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
+            if (t == "weather") return std::string("\U000F0595");
+            return std::string("\U000F06E8");
+  - id: render_w09
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w09_card
+          hidden: !lambda 'return !id(w09_visible).state || id(w09_type).state == "blank";'
+      - lvgl.label.update:
+          id: w09_label_label
+          text: !lambda 'return id(w09_label).state;'
+      - lvgl.label.update:
+          id: w09_value_label
+          text: !lambda |-
+            if (id(w09_type).state == "clock") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--:--");
+              char buffer[6];
+              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
+              return std::string(buffer);
+            }
+            if (id(w09_type).state == "date") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--");
+              char buffer[16];
+              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
+              return std::string(buffer);
+            }
+            return id(w09_value).state;
+      - lvgl.label.update:
+          id: w09_icon_label
+          text: !lambda |-
+            std::string s = id(w09_icon).state;
+            std::string t = id(w09_type).state;
+            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+
+            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
+            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
+            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
+            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
+            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
+            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
+            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
+            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
+            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
+            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
+            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
+            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
+            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
+            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
+            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
+            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
+            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
+            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
+            if (t == "weather") return std::string("\U000F0595");
+            return std::string("\U000F06E8");
+  - id: render_w10
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w10_card
+          hidden: !lambda 'return !id(w10_visible).state || id(w10_type).state == "blank";'
+      - lvgl.label.update:
+          id: w10_label_label
+          text: !lambda 'return id(w10_label).state;'
+      - lvgl.label.update:
+          id: w10_value_label
+          text: !lambda |-
+            if (id(w10_type).state == "clock") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--:--");
+              char buffer[6];
+              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
+              return std::string(buffer);
+            }
+            if (id(w10_type).state == "date") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--");
+              char buffer[16];
+              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
+              return std::string(buffer);
+            }
+            return id(w10_value).state;
+      - lvgl.label.update:
+          id: w10_icon_label
+          text: !lambda |-
+            std::string s = id(w10_icon).state;
+            std::string t = id(w10_type).state;
+            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+
+            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
+            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
+            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
+            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
+            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
+            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
+            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
+            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
+            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
+            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
+            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
+            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
+            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
+            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
+            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
+            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
+            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
+            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
+            if (t == "weather") return std::string("\U000F0595");
+            return std::string("\U000F06E8");
+  - id: render_w11
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w11_card
+          hidden: !lambda 'return !id(w11_visible).state || id(w11_type).state == "blank";'
+      - lvgl.label.update:
+          id: w11_label_label
+          text: !lambda 'return id(w11_label).state;'
+      - lvgl.label.update:
+          id: w11_value_label
+          text: !lambda |-
+            if (id(w11_type).state == "clock") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--:--");
+              char buffer[6];
+              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
+              return std::string(buffer);
+            }
+            if (id(w11_type).state == "date") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--");
+              char buffer[16];
+              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
+              return std::string(buffer);
+            }
+            return id(w11_value).state;
+      - lvgl.label.update:
+          id: w11_icon_label
+          text: !lambda |-
+            std::string s = id(w11_icon).state;
+            std::string t = id(w11_type).state;
+            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+
+            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
+            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
+            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
+            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
+            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
+            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
+            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
+            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
+            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
+            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
+            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
+            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
+            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
+            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
+            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
+            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
+            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
+            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
+            if (t == "weather") return std::string("\U000F0595");
+            return std::string("\U000F06E8");
+  - id: render_w12
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w12_card
+          hidden: !lambda 'return !id(w12_visible).state || id(w12_type).state == "blank";'
+      - lvgl.label.update:
+          id: w12_label_label
+          text: !lambda 'return id(w12_label).state;'
+      - lvgl.label.update:
+          id: w12_value_label
+          text: !lambda |-
+            if (id(w12_type).state == "clock") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--:--");
+              char buffer[6];
+              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
+              return std::string(buffer);
+            }
+            if (id(w12_type).state == "date") {
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--");
+              char buffer[16];
+              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
+              return std::string(buffer);
+            }
+            return id(w12_value).state;
+      - lvgl.label.update:
+          id: w12_icon_label
+          text: !lambda |-
+            std::string s = id(w12_icon).state;
+            std::string t = id(w12_type).state;
+            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+
+            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
+            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
+            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
+            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
+            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
+            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
+            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
+            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
+            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
+            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
+            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
+            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
+            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
+            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
+            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
+            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
+            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
+            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
+            if (t == "weather") return std::string("\U000F0595");
+            return std::string("\U000F06E8");
+
+binary_sensor:
+  - platform: homeassistant
+    id: w01_visible
+    entity_id: input_boolean.esp_panel_w01_visible
+    on_state:
+      - script.execute: render_w01
+  - platform: homeassistant
+    id: w02_visible
+    entity_id: input_boolean.esp_panel_w02_visible
+    on_state:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w03_visible
+    entity_id: input_boolean.esp_panel_w03_visible
+    on_state:
+      - script.execute: render_w03
+  - platform: homeassistant
+    id: w04_visible
+    entity_id: input_boolean.esp_panel_w04_visible
+    on_state:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w05_visible
+    entity_id: input_boolean.esp_panel_w05_visible
+    on_state:
+      - script.execute: render_w05
+  - platform: homeassistant
+    id: w06_visible
+    entity_id: input_boolean.esp_panel_w06_visible
+    on_state:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w07_visible
+    entity_id: input_boolean.esp_panel_w07_visible
+    on_state:
+      - script.execute: render_w07
+  - platform: homeassistant
+    id: w08_visible
+    entity_id: input_boolean.esp_panel_w08_visible
+    on_state:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w09_visible
+    entity_id: input_boolean.esp_panel_w09_visible
+    on_state:
+      - script.execute: render_w09
+  - platform: homeassistant
+    id: w10_visible
+    entity_id: input_boolean.esp_panel_w10_visible
+    on_state:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w11_visible
+    entity_id: input_boolean.esp_panel_w11_visible
+    on_state:
+      - script.execute: render_w11
+  - platform: homeassistant
+    id: w12_visible
+    entity_id: input_boolean.esp_panel_w12_visible
+    on_state:
+      - script.execute: render_w12
+
+sensor:
+  - platform: homeassistant
+    id: w01_x
+    entity_id: input_number.esp_panel_w01_x
+    on_value:
+      - script.execute: layout_w01
+  - platform: homeassistant
+    id: w01_y
+    entity_id: input_number.esp_panel_w01_y
+    on_value:
+      - script.execute: layout_w01
+  - platform: homeassistant
+    id: w01_w
+    entity_id: input_number.esp_panel_w01_w
+    on_value:
+      - script.execute: layout_w01
+  - platform: homeassistant
+    id: w01_h
+    entity_id: input_number.esp_panel_w01_h
+    on_value:
+      - script.execute: layout_w01
+  - platform: homeassistant
+    id: w02_x
+    entity_id: input_number.esp_panel_w02_x
+    on_value:
+      - script.execute: layout_w02
+  - platform: homeassistant
+    id: w02_y
+    entity_id: input_number.esp_panel_w02_y
+    on_value:
+      - script.execute: layout_w02
+  - platform: homeassistant
+    id: w02_w
+    entity_id: input_number.esp_panel_w02_w
+    on_value:
+      - script.execute: layout_w02
+  - platform: homeassistant
+    id: w02_h
+    entity_id: input_number.esp_panel_w02_h
+    on_value:
+      - script.execute: layout_w02
+  - platform: homeassistant
+    id: w03_x
+    entity_id: input_number.esp_panel_w03_x
+    on_value:
+      - script.execute: layout_w03
+  - platform: homeassistant
+    id: w03_y
+    entity_id: input_number.esp_panel_w03_y
+    on_value:
+      - script.execute: layout_w03
+  - platform: homeassistant
+    id: w03_w
+    entity_id: input_number.esp_panel_w03_w
+    on_value:
+      - script.execute: layout_w03
+  - platform: homeassistant
+    id: w03_h
+    entity_id: input_number.esp_panel_w03_h
+    on_value:
+      - script.execute: layout_w03
+  - platform: homeassistant
+    id: w04_x
+    entity_id: input_number.esp_panel_w04_x
+    on_value:
+      - script.execute: layout_w04
+  - platform: homeassistant
+    id: w04_y
+    entity_id: input_number.esp_panel_w04_y
+    on_value:
+      - script.execute: layout_w04
+  - platform: homeassistant
+    id: w04_w
+    entity_id: input_number.esp_panel_w04_w
+    on_value:
+      - script.execute: layout_w04
+  - platform: homeassistant
+    id: w04_h
+    entity_id: input_number.esp_panel_w04_h
+    on_value:
+      - script.execute: layout_w04
+  - platform: homeassistant
+    id: w05_x
+    entity_id: input_number.esp_panel_w05_x
+    on_value:
+      - script.execute: layout_w05
+  - platform: homeassistant
+    id: w05_y
+    entity_id: input_number.esp_panel_w05_y
+    on_value:
+      - script.execute: layout_w05
+  - platform: homeassistant
+    id: w05_w
+    entity_id: input_number.esp_panel_w05_w
+    on_value:
+      - script.execute: layout_w05
+  - platform: homeassistant
+    id: w05_h
+    entity_id: input_number.esp_panel_w05_h
+    on_value:
+      - script.execute: layout_w05
+  - platform: homeassistant
+    id: w06_x
+    entity_id: input_number.esp_panel_w06_x
+    on_value:
+      - script.execute: layout_w06
+  - platform: homeassistant
+    id: w06_y
+    entity_id: input_number.esp_panel_w06_y
+    on_value:
+      - script.execute: layout_w06
+  - platform: homeassistant
+    id: w06_w
+    entity_id: input_number.esp_panel_w06_w
+    on_value:
+      - script.execute: layout_w06
+  - platform: homeassistant
+    id: w06_h
+    entity_id: input_number.esp_panel_w06_h
+    on_value:
+      - script.execute: layout_w06
+  - platform: homeassistant
+    id: w07_x
+    entity_id: input_number.esp_panel_w07_x
+    on_value:
+      - script.execute: layout_w07
+  - platform: homeassistant
+    id: w07_y
+    entity_id: input_number.esp_panel_w07_y
+    on_value:
+      - script.execute: layout_w07
+  - platform: homeassistant
+    id: w07_w
+    entity_id: input_number.esp_panel_w07_w
+    on_value:
+      - script.execute: layout_w07
+  - platform: homeassistant
+    id: w07_h
+    entity_id: input_number.esp_panel_w07_h
+    on_value:
+      - script.execute: layout_w07
+  - platform: homeassistant
+    id: w08_x
+    entity_id: input_number.esp_panel_w08_x
+    on_value:
+      - script.execute: layout_w08
+  - platform: homeassistant
+    id: w08_y
+    entity_id: input_number.esp_panel_w08_y
+    on_value:
+      - script.execute: layout_w08
+  - platform: homeassistant
+    id: w08_w
+    entity_id: input_number.esp_panel_w08_w
+    on_value:
+      - script.execute: layout_w08
+  - platform: homeassistant
+    id: w08_h
+    entity_id: input_number.esp_panel_w08_h
+    on_value:
+      - script.execute: layout_w08
+  - platform: homeassistant
+    id: w09_x
+    entity_id: input_number.esp_panel_w09_x
+    on_value:
+      - script.execute: layout_w09
+  - platform: homeassistant
+    id: w09_y
+    entity_id: input_number.esp_panel_w09_y
+    on_value:
+      - script.execute: layout_w09
+  - platform: homeassistant
+    id: w09_w
+    entity_id: input_number.esp_panel_w09_w
+    on_value:
+      - script.execute: layout_w09
+  - platform: homeassistant
+    id: w09_h
+    entity_id: input_number.esp_panel_w09_h
+    on_value:
+      - script.execute: layout_w09
+  - platform: homeassistant
+    id: w10_x
+    entity_id: input_number.esp_panel_w10_x
+    on_value:
+      - script.execute: layout_w10
+  - platform: homeassistant
+    id: w10_y
+    entity_id: input_number.esp_panel_w10_y
+    on_value:
+      - script.execute: layout_w10
+  - platform: homeassistant
+    id: w10_w
+    entity_id: input_number.esp_panel_w10_w
+    on_value:
+      - script.execute: layout_w10
+  - platform: homeassistant
+    id: w10_h
+    entity_id: input_number.esp_panel_w10_h
+    on_value:
+      - script.execute: layout_w10
+  - platform: homeassistant
+    id: w11_x
+    entity_id: input_number.esp_panel_w11_x
+    on_value:
+      - script.execute: layout_w11
+  - platform: homeassistant
+    id: w11_y
+    entity_id: input_number.esp_panel_w11_y
+    on_value:
+      - script.execute: layout_w11
+  - platform: homeassistant
+    id: w11_w
+    entity_id: input_number.esp_panel_w11_w
+    on_value:
+      - script.execute: layout_w11
+  - platform: homeassistant
+    id: w11_h
+    entity_id: input_number.esp_panel_w11_h
+    on_value:
+      - script.execute: layout_w11
+  - platform: homeassistant
+    id: w12_x
+    entity_id: input_number.esp_panel_w12_x
+    on_value:
+      - script.execute: layout_w12
+  - platform: homeassistant
+    id: w12_y
+    entity_id: input_number.esp_panel_w12_y
+    on_value:
+      - script.execute: layout_w12
+  - platform: homeassistant
+    id: w12_w
+    entity_id: input_number.esp_panel_w12_w
+    on_value:
+      - script.execute: layout_w12
+  - platform: homeassistant
+    id: w12_h
+    entity_id: input_number.esp_panel_w12_h
+    on_value:
+      - script.execute: layout_w12
+
+text_sensor:
+  - platform: homeassistant
+    id: w01_type
+    entity_id: input_select.esp_panel_w01_type
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
+    id: w01_label
+    entity_id: input_text.esp_panel_w01_label
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
+    id: w01_value
+    entity_id: input_text.esp_panel_w01_value
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
+    id: w01_icon
+    entity_id: input_text.esp_panel_w01_icon
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
+    id: w01_action
+    entity_id: input_text.esp_panel_w01_action
+  - platform: homeassistant
+    id: w02_type
+    entity_id: input_select.esp_panel_w02_type
+    on_value:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w02_label
+    entity_id: input_text.esp_panel_w02_label
+    on_value:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w02_value
+    entity_id: input_text.esp_panel_w02_value
+    on_value:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w02_icon
+    entity_id: input_text.esp_panel_w02_icon
+    on_value:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w02_action
+    entity_id: input_text.esp_panel_w02_action
+  - platform: homeassistant
+    id: w03_type
+    entity_id: input_select.esp_panel_w03_type
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
+    id: w03_label
+    entity_id: input_text.esp_panel_w03_label
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
+    id: w03_value
+    entity_id: input_text.esp_panel_w03_value
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
+    id: w03_icon
+    entity_id: input_text.esp_panel_w03_icon
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
+    id: w03_action
+    entity_id: input_text.esp_panel_w03_action
+  - platform: homeassistant
+    id: w04_type
+    entity_id: input_select.esp_panel_w04_type
+    on_value:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w04_label
+    entity_id: input_text.esp_panel_w04_label
+    on_value:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w04_value
+    entity_id: input_text.esp_panel_w04_value
+    on_value:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w04_icon
+    entity_id: input_text.esp_panel_w04_icon
+    on_value:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w04_action
+    entity_id: input_text.esp_panel_w04_action
+  - platform: homeassistant
+    id: w05_type
+    entity_id: input_select.esp_panel_w05_type
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
+    id: w05_label
+    entity_id: input_text.esp_panel_w05_label
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
+    id: w05_value
+    entity_id: input_text.esp_panel_w05_value
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
+    id: w05_icon
+    entity_id: input_text.esp_panel_w05_icon
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
+    id: w05_action
+    entity_id: input_text.esp_panel_w05_action
+  - platform: homeassistant
+    id: w06_type
+    entity_id: input_select.esp_panel_w06_type
+    on_value:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w06_label
+    entity_id: input_text.esp_panel_w06_label
+    on_value:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w06_value
+    entity_id: input_text.esp_panel_w06_value
+    on_value:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w06_icon
+    entity_id: input_text.esp_panel_w06_icon
+    on_value:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w06_action
+    entity_id: input_text.esp_panel_w06_action
+  - platform: homeassistant
+    id: w07_type
+    entity_id: input_select.esp_panel_w07_type
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
+    id: w07_label
+    entity_id: input_text.esp_panel_w07_label
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
+    id: w07_value
+    entity_id: input_text.esp_panel_w07_value
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
+    id: w07_icon
+    entity_id: input_text.esp_panel_w07_icon
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
+    id: w07_action
+    entity_id: input_text.esp_panel_w07_action
+  - platform: homeassistant
+    id: w08_type
+    entity_id: input_select.esp_panel_w08_type
+    on_value:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w08_label
+    entity_id: input_text.esp_panel_w08_label
+    on_value:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w08_value
+    entity_id: input_text.esp_panel_w08_value
+    on_value:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w08_icon
+    entity_id: input_text.esp_panel_w08_icon
+    on_value:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w08_action
+    entity_id: input_text.esp_panel_w08_action
+  - platform: homeassistant
+    id: w09_type
+    entity_id: input_select.esp_panel_w09_type
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
+    id: w09_label
+    entity_id: input_text.esp_panel_w09_label
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
+    id: w09_value
+    entity_id: input_text.esp_panel_w09_value
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
+    id: w09_icon
+    entity_id: input_text.esp_panel_w09_icon
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
+    id: w09_action
+    entity_id: input_text.esp_panel_w09_action
+  - platform: homeassistant
+    id: w10_type
+    entity_id: input_select.esp_panel_w10_type
+    on_value:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w10_label
+    entity_id: input_text.esp_panel_w10_label
+    on_value:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w10_value
+    entity_id: input_text.esp_panel_w10_value
+    on_value:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w10_icon
+    entity_id: input_text.esp_panel_w10_icon
+    on_value:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w10_action
+    entity_id: input_text.esp_panel_w10_action
+  - platform: homeassistant
+    id: w11_type
+    entity_id: input_select.esp_panel_w11_type
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
+    id: w11_label
+    entity_id: input_text.esp_panel_w11_label
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
+    id: w11_value
+    entity_id: input_text.esp_panel_w11_value
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
+    id: w11_icon
+    entity_id: input_text.esp_panel_w11_icon
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
+    id: w11_action
+    entity_id: input_text.esp_panel_w11_action
+  - platform: homeassistant
+    id: w12_type
+    entity_id: input_select.esp_panel_w12_type
+    on_value:
+      - script.execute: render_w12
+  - platform: homeassistant
+    id: w12_label
+    entity_id: input_text.esp_panel_w12_label
+    on_value:
+      - script.execute: render_w12
+  - platform: homeassistant
+    id: w12_value
+    entity_id: input_text.esp_panel_w12_value
+    on_value:
+      - script.execute: render_w12
+  - platform: homeassistant
+    id: w12_icon
+    entity_id: input_text.esp_panel_w12_icon
+    on_value:
+      - script.execute: render_w12
+  - platform: homeassistant
+    id: w12_action
+    entity_id: input_text.esp_panel_w12_action
+
+interval:
+  - interval: 5s
+    then:
+      - script.execute: update_clock_widgets
+  - interval: 60s
+    then:
+      - script.execute: update_date_widgets
+
+lvgl:
+  rotation: 180
+  pages:
+    - id: main_page
+      bg_color: 0x08142D
+      pad_all: 0
+      scrollbar_mode: "OFF"
+      widgets:
+        - obj:
+            x: 0
+            y: 0
+            width: 480
+            height: 480
+            bg_color: 0x08142D
+            border_width: 0
+            radius: 0
+            scrollbar_mode: "OFF"
+            pad_all: 0
+            widgets:
+              - obj:
+                  id: w01_card
+                  x: 3
+                  y: 3
+                  width: 234
+                  height: 74
+                  bg_color: 0x070E1B
+                  bg_opa: 95%
+                  border_width: 0
+                  radius: 10
+                  scrollbar_mode: "OFF"
+                  pad_all: 0
+                  on_click:
+                    then:
+                      - homeassistant.event:
+                          event: esphome.esp_panel_widget_tap
+                          data:
+                            widget: w01
+                  widgets:
+                    - label:
+                        id: w01_icon_label
+                        x: 7
+                        y: 8
+                        width: 38
+                        height: 38
+                        text: "\U000F0150"
+                        text_font: mdi_icons_32
+                        text_align: CENTER
+                        text_color: 0xF59E0B
+                    - label:
+                        id: w01_label_label
+                        x: 48
+                        y: 8
+                        width: 170
+                        height: 18
+                        text: "Clock"
+                        text_color: 0x8E9FB8
+                        text_align: LEFT
+                        text_font: montserrat_12
+                        long_mode: DOT
+                    - label:
+                        id: w01_value_label
+                        x: 48
+                        y: 26
+                        width: 170
+                        height: 42
+                        text: "--:--"
+                        text_color: 0xF1F5F9
+                        text_align: LEFT
+                        text_font: montserrat_28
+                        long_mode: DOT
+              - obj:
+                  id: w02_card
+                  x: 243
+                  y: 3
+                  width: 234
+                  height: 74
+                  bg_color: 0x070E1B
+                  bg_opa: 95%
+                  border_width: 0
+                  radius: 10
+                  scrollbar_mode: "OFF"
+                  pad_all: 0
+                  on_click:
+                    then:
+                      - homeassistant.event:
+                          event: esphome.esp_panel_widget_tap
+                          data:
+                            widget: w02
+                  widgets:
+                    - label:
+                        id: w02_icon_label
+                        x: 7
+                        y: 8
+                        width: 38
+                        height: 38
+                        text: "\U000F00ED"
+                        text_font: mdi_icons_32
+                        text_align: CENTER
+                        text_color: 0xF59E0B
+                    - label:
+                        id: w02_label_label
+                        x: 48
+                        y: 8
+                        width: 170
+                        height: 18
+                        text: "Date"
+                        text_color: 0x8E9FB8
+                        text_align: LEFT
+                        text_font: montserrat_12
+                        long_mode: DOT
+                    - label:
+                        id: w02_value_label
+                        x: 48
+                        y: 26
+                        width: 170
+                        height: 42
+                        text: "--"
+                        text_color: 0xF1F5F9
+                        text_align: LEFT
+                        text_font: montserrat_22
+                        long_mode: DOT
+              - obj:
+                  id: w03_card
+                  x: 3
+                  y: 83
+                  width: 234
+                  height: 74
+                  bg_color: 0x070E1B
+                  bg_opa: 95%
+                  border_width: 0
+                  radius: 10
+                  scrollbar_mode: "OFF"
+                  pad_all: 0
+                  on_click:
+                    then:
+                      - homeassistant.event:
+                          event: esphome.esp_panel_widget_tap
+                          data:
+                            widget: w03
+                  widgets:
+                    - label:
+                        id: w03_icon_label
+                        x: 7
+                        y: 8
+                        width: 38
+                        height: 38
+                        text: "\U000F0595"
+                        text_font: mdi_icons_32
+                        text_align: CENTER
+                        text_color: 0xF59E0B
+                    - label:
+                        id: w03_label_label
+                        x: 48
+                        y: 8
+                        width: 170
+                        height: 18
+                        text: "Weather"
+                        text_color: 0x8E9FB8
+                        text_align: LEFT
+                        text_font: montserrat_12
+                        long_mode: DOT
+                    - label:
+                        id: w03_value_label
+                        x: 48
+                        y: 26
+                        width: 170
+                        height: 42
+                        text: "--"
+                        text_color: 0xF1F5F9
+                        text_align: LEFT
+                        text_font: montserrat_22
+                        long_mode: DOT
+              - obj:
+                  id: w04_card
+                  x: 243
+                  y: 83
+                  width: 154
+                  height: 74
+                  bg_color: 0x070E1B
+                  bg_opa: 95%
+                  border_width: 0
+                  radius: 10
+                  scrollbar_mode: "OFF"
+                  pad_all: 0
+                  on_click:
+                    then:
+                      - homeassistant.event:
+                          event: esphome.esp_panel_widget_tap
+                          data:
+                            widget: w04
+                  widgets:
+                    - label:
+                        id: w04_icon_label
+                        x: 7
+                        y: 8
+                        width: 38
+                        height: 38
+                        text: "\U000F050F"
+                        text_font: mdi_icons_32
+                        text_align: CENTER
+                        text_color: 0xF59E0B
+                    - label:
+                        id: w04_label_label
+                        x: 48
+                        y: 8
+                        width: 90
+                        height: 18
+                        text: "Temp"
+                        text_color: 0x8E9FB8
+                        text_align: LEFT
+                        text_font: montserrat_12
+                        long_mode: DOT
+                    - label:
+                        id: w04_value_label
+                        x: 48
+                        y: 26
+                        width: 90
+                        height: 42
+                        text: "--"
+                        text_color: 0xF1F5F9
+                        text_align: LEFT
+                        text_font: montserrat_22
+                        long_mode: DOT
+              - obj:
+                  id: w05_card
+                  x: 403
+                  y: 83
+                  width: 74
+                  height: 74
+                  bg_color: 0x070E1B
+                  bg_opa: 95%
+                  border_width: 0
+                  radius: 10
+                  scrollbar_mode: "OFF"
+                  pad_all: 0
+                  on_click:
+                    then:
+                      - homeassistant.event:
+                          event: esphome.esp_panel_widget_tap
+                          data:
+                            widget: w05
+                  widgets:
+                    - label:
+                        id: w05_icon_label
+                        x: 18
+                        y: 5
+                        width: 38
+                        height: 38
+                        text: "\U000F058E"
+                        text_font: mdi_icons_32
+                        text_align: CENTER
+                        text_color: 0xF59E0B
+                    - label:
+                        id: w05_label_label
+                        x: 4
+                        y: 39
+                        width: 66
+                        height: 18
+                        text: "Humidity"
+                        text_color: 0x8E9FB8
+                        text_align: CENTER
+                        text_font: montserrat_12
+                        long_mode: DOT
+                    - label:
+                        id: w05_value_label
+                        x: 4
+                        y: 54
+                        width: 66
+                        height: 42
+                        text: "--"
+                        text_color: 0xF1F5F9
+                        text_align: CENTER
+                        text_font: montserrat_16
+                        long_mode: DOT
+              - obj:
+                  id: w06_card
+                  x: 3
+                  y: 323
+                  width: 154
+                  height: 154
+                  bg_color: 0x070E1B
+                  bg_opa: 95%
+                  border_width: 0
+                  radius: 10
+                  scrollbar_mode: "OFF"
+                  pad_all: 0
+                  on_click:
+                    then:
+                      - homeassistant.event:
+                          event: esphome.esp_panel_widget_tap
+                          data:
+                            widget: w06
+                  widgets:
+                    - label:
+                        id: w06_icon_label
+                        x: 56
+                        y: 14
+                        width: 42
+                        height: 38
+                        text: "\U000F0769"
+                        text_font: mdi_icons_32
+                        text_align: CENTER
+                        text_color: 0xF59E0B
+                    - label:
+                        id: w06_label_label
+                        x: 8
+                        y: 62
+                        width: 138
+                        height: 18
+                        text: "Main Light"
+                        text_color: 0x8E9FB8
+                        text_align: CENTER
+                        text_font: montserrat_14
+                        long_mode: DOT
+                    - label:
+                        id: w06_value_label
+                        x: 8
+                        y: 88
+                        width: 138
+                        height: 42
+                        text: "--"
+                        text_color: 0xF1F5F9
+                        text_align: CENTER
+                        text_font: montserrat_28
+                        long_mode: DOT
+              - obj:
+                  id: w07_card
+                  hidden: true
+                  x: 163
+                  y: 323
+                  width: 154
+                  height: 74
+                  bg_color: 0x070E1B
+                  bg_opa: 95%
+                  border_width: 0
+                  radius: 10
+                  scrollbar_mode: "OFF"
+                  pad_all: 8
+                  on_click:
+                    then:
+                      - homeassistant.event:
+                          event: esphome.esp_panel_widget_tap
+                          data:
+                            widget: w07
+                  widgets:
+                    - label:
+                        id: w07_icon_label
+                        x: 7
+                        y: 8
+                        width: 38
+                        height: 38
+                        text: "\U000F05A9"
+                        text_font: mdi_icons_32
+                        text_align: CENTER
+                        text_color: 0xF59E0B
+                    - label:
+                        id: w07_label_label
+                        x: 48
+                        y: 8
+                        width: 90
+                        height: 18
+                        text: "WiFi"
+                        text_color: 0x8E9FB8
+                        text_align: LEFT
+                        text_font: montserrat_12
+                        long_mode: DOT
+                    - label:
+                        id: w07_value_label
+                        x: 48
+                        y: 26
+                        width: 90
+                        height: 42
+                        text: "Online"
+                        text_color: 0xF1F5F9
+                        text_align: LEFT
+                        text_font: montserrat_16
+                        long_mode: DOT
+              - obj:
+                  id: w08_card
+                  hidden: true
+                  x: 163
+                  y: 403
+                  width: 154
+                  height: 74
+                  bg_color: 0x070E1B
+                  bg_opa: 95%
+                  border_width: 0
+                  radius: 10
+                  scrollbar_mode: "OFF"
+                  pad_all: 8
+                  on_click:
+                    then:
+                      - homeassistant.event:
+                          event: esphome.esp_panel_widget_tap
+                          data:
+                            widget: w08
+                  widgets:
+                    - label:
+                        id: w08_icon_label
+                        x: 7
+                        y: 8
+                        width: 38
+                        height: 38
+                        text: "\U000F07D0"
+                        text_font: mdi_icons_32
+                        text_align: CENTER
+                        text_color: 0xF59E0B
+                    - label:
+                        id: w08_label_label
+                        x: 48
+                        y: 8
+                        width: 90
+                        height: 18
+                        text: "Scene"
+                        text_color: 0x8E9FB8
+                        text_align: LEFT
+                        text_font: montserrat_12
+                        long_mode: DOT
+                    - label:
+                        id: w08_value_label
+                        x: 48
+                        y: 26
+                        width: 90
+                        height: 42
+                        text: "Home"
+                        text_color: 0xF1F5F9
+                        text_align: LEFT
+                        text_font: montserrat_16
+                        long_mode: DOT
+              - obj:
+                  id: w09_card
+                  hidden: true
+                  x: 323
+                  y: 323
+                  width: 154
+                  height: 74
+                  bg_color: 0x070E1B
+                  bg_opa: 95%
+                  border_width: 0
+                  radius: 10
+                  scrollbar_mode: "OFF"
+                  pad_all: 8
+                  on_click:
+                    then:
+                      - homeassistant.event:
+                          event: esphome.esp_panel_widget_tap
+                          data:
+                            widget: w09
+                  widgets:
+                    - label:
+                        id: w09_icon_label
+                        x: 7
+                        y: 8
+                        width: 38
+                        height: 38
+                        text: "\U000F081C"
+                        text_font: mdi_icons_32
+                        text_align: CENTER
+                        text_color: 0xF59E0B
+                    - label:
+                        id: w09_label_label
+                        x: 48
+                        y: 8
+                        width: 90
+                        height: 18
+                        text: "Door"
+                        text_color: 0x8E9FB8
+                        text_align: LEFT
+                        text_font: montserrat_12
+                        long_mode: DOT
+                    - label:
+                        id: w09_value_label
+                        x: 48
+                        y: 26
+                        width: 90
+                        height: 42
+                        text: "Closed"
+                        text_color: 0xF1F5F9
+                        text_align: LEFT
+                        text_font: montserrat_16
+                        long_mode: DOT
+              - obj:
+                  id: w10_card
+                  hidden: true
+                  x: 323
+                  y: 403
+                  width: 154
+                  height: 74
+                  bg_color: 0x070E1B
+                  bg_opa: 95%
+                  border_width: 0
+                  radius: 10
+                  scrollbar_mode: "OFF"
+                  pad_all: 8
+                  on_click:
+                    then:
+                      - homeassistant.event:
+                          event: esphome.esp_panel_widget_tap
+                          data:
+                            widget: w10
+                  widgets:
+                    - label:
+                        id: w10_icon_label
+                        x: 7
+                        y: 8
+                        width: 38
+                        height: 38
+                        text: "\U000F04B9"
+                        text_font: mdi_icons_32
+                        text_align: CENTER
+                        text_color: 0xF59E0B
+                    - label:
+                        id: w10_label_label
+                        x: 48
+                        y: 8
+                        width: 90
+                        height: 18
+                        text: "Sofa"
+                        text_color: 0x8E9FB8
+                        text_align: LEFT
+                        text_font: montserrat_12
+                        long_mode: DOT
+                    - label:
+                        id: w10_value_label
+                        x: 48
+                        y: 26
+                        width: 90
+                        height: 42
+                        text: "Ready"
+                        text_color: 0xF1F5F9
+                        text_align: LEFT
+                        text_font: montserrat_16
+                        long_mode: DOT
+              - obj:
+                  id: w11_card
+                  hidden: true
+                  x: 3
+                  y: 163
+                  width: 154
+                  height: 74
+                  bg_color: 0x070E1B
+                  bg_opa: 95%
+                  border_width: 0
+                  radius: 10
+                  scrollbar_mode: "OFF"
+                  pad_all: 8
+                  on_click:
+                    then:
+                      - homeassistant.event:
+                          event: esphome.esp_panel_widget_tap
+                          data:
+                            widget: w11
+                  widgets:
+                    - label:
+                        id: w11_icon_label
+                        x: 7
+                        y: 8
+                        width: 38
+                        height: 38
+                        text: "\U000F06E8"
+                        text_font: mdi_icons_32
+                        text_align: CENTER
+                        text_color: 0xF59E0B
+                    - label:
+                        id: w11_label_label
+                        x: 48
+                        y: 8
+                        width: 90
+                        height: 18
+                        text: "Blank"
+                        text_color: 0x8E9FB8
+                        text_align: LEFT
+                        text_font: montserrat_12
+                        long_mode: DOT
+                    - label:
+                        id: w11_value_label
+                        x: 48
+                        y: 26
+                        width: 90
+                        height: 42
+                        text: ""
+                        text_color: 0xF1F5F9
+                        text_align: LEFT
+                        text_font: montserrat_16
+                        long_mode: DOT
+              - obj:
+                  id: w12_card
+                  hidden: true
+                  x: 163
+                  y: 163
+                  width: 154
+                  height: 74
+                  bg_color: 0x070E1B
+                  bg_opa: 95%
+                  border_width: 0
+                  radius: 10
+                  scrollbar_mode: "OFF"
+                  pad_all: 8
+                  on_click:
+                    then:
+                      - homeassistant.event:
+                          event: esphome.esp_panel_widget_tap
+                          data:
+                            widget: w12
+                  widgets:
+                    - label:
+                        id: w12_icon_label
+                        x: 7
+                        y: 8
+                        width: 38
+                        height: 38
+                        text: "\U000F06E8"
+                        text_font: mdi_icons_32
+                        text_align: CENTER
+                        text_color: 0xF59E0B
+                    - label:
+                        id: w12_label_label
+                        x: 48
+                        y: 8
+                        width: 90
+                        height: 18
+                        text: "Blank"
+                        text_color: 0x8E9FB8
+                        text_align: LEFT
+                        text_font: montserrat_12
+                        long_mode: DOT
+                    - label:
+                        id: w12_value_label
+                        x: 48
+                        y: 26
+                        width: 90
+                        height: 42
+                        text: ""
+                        text_color: 0xF1F5F9
+                        text_align: LEFT
+                        text_font: montserrat_16
+                        long_mode: DOT
+
+              - obj:
+                  id: notification_overlay
+                  hidden: true
+                  x: 0
+                  y: 0
+                  width: 480
+                  height: 480
+                  bg_color: 0x000000
+                  bg_opa: 90%
+                  border_width: 0
+                  scrollbar_mode: "OFF"
+                  pad_all: 20
+                  widgets:
+                    - label:
+                        text: "Notification"
+                        text_font: montserrat_36
+                        text_color: 0xF59E0B
+                        align: TOP_MID
+                        y: 55
+                    - label:
+                        id: notification_message_label
+                        text: ""
+                        text_font: montserrat_22
+                        text_color: 0xF1F5F9
+                        align: CENTER
+                        width: 420
+                        long_mode: WRAP
+                        text_align: CENTER

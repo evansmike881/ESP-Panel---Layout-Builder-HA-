@@ -24,6 +24,8 @@ esp-panel-layout-builder/
         api.ts
         types.ts
         styles.css
+  household-panel-responsive.yaml
+  household-panel-full-responsive.yaml
 ```
 
 ## Add repository to Home Assistant
@@ -68,11 +70,24 @@ esp-panel-layout-builder/
    - `input_number.esp_panel_w06_w`
    - `input_number.esp_panel_w06_h`
 
-## Extend from 6 widgets to 12 later
+## Widget count
+
+The editor now supports `w01` through `w12`.
+
+Widgets `w07` to `w12` start hidden by default so you can turn them on as needed without changing the add-on code.
+
+## ESPHome template
+
+The repository root includes:
+
+- [household-panel-full-responsive.yaml](/192.168.4.229/html/!HA Integrations/ESP Panel - Layout Builder/household-panel-full-responsive.yaml): full standalone ESPHome config based on your current panel file, updated for `w01` to `w12`.
+- [household-panel-responsive.yaml](/192.168.4.229/html/!HA Integrations/ESP Panel - Layout Builder/household-panel-responsive.yaml): the earlier merge-style extension file.
+
+## Extend beyond 12 widgets later
 
 1. Update the widget ID list in `app/server.js` and `app/src/types.ts`.
 2. Expand the default layout array in `app/server.js` and `app/src/types.ts`.
-3. The helper YAML generator automatically follows the widget ID list, so add `w07` to `w12`.
+3. The helper YAML generator automatically follows the widget ID list, so add the new IDs there once.
 4. If the screen layout stays 6x6, no grid logic changes are required.
 5. If you want paging or more on-screen widgets, extend the helper schema and preview rendering rules in the React app.
 
