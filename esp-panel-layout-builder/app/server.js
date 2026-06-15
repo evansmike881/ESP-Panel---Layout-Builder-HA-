@@ -148,6 +148,20 @@ function sanitizeWidget(input, fallback) {
   return widget;
 }
 
+function compareWidgetValues(expected, actual) {
+  const mismatches = [];
+
+  for (const field of ["type", "visible", "label", "value", "icon", "action", "x", "y", "w", "h"]) {
+    if (expected[field] !== actual[field]) {
+      mismatches.push(
+        `${expected.id} ${field} expected "${expected[field]}" but Home Assistant has "${actual[field]}"`
+      );
+    }
+  }
+
+  return mismatches;
+}
+
 async function hassFetch(endpoint, options = {}) {
   if (!TOKEN) {
     throw new Error("Missing SUPERVISOR_TOKEN or HASSIO_TOKEN environment variable.");
@@ -378,6 +392,22 @@ async function buildWidgetResponse() {
   };
 }
 
+async function verifyWrittenWidgets(expectedWidgets) {
+  const current = await buildWidgetResponse();
+  const mismatches = expectedWidgets.flatMap((expected) => {
+    const actual = current.widgets.find((widget) => widget.id === expected.id);
+    if (!actual) {
+      return [`${expected.id} could not be read back from Home Assistant after apply.`];
+    }
+    return compareWidgetValues(expected, actual);
+  });
+
+  return {
+    current,
+    mismatches
+  };
+}
+
 app.get("/api/widgets", async (_request, response) => {
   try {
     response.json(await buildWidgetResponse());
@@ -416,9 +446,10 @@ app.post("/api/widgets/:id", async (request, response) => {
     }
 
     await writeWidget(widget);
-    const current = await buildWidgetResponse();
-    const warnings = findOverlapWarnings(current.widgets);
-    response.json({ ok: true, widget, warnings });
+    const { current, mismatches } = await verifyWrittenWidgets([widget]);
+    const storedWidget = current.widgets.find((item) => item.id === widget.id) || widget;
+    const warnings = [...current.warnings, ...mismatches];
+    response.json({ ok: true, widget: storedWidget, warnings });
   } catch (error) {
     log("Failed to update widget", error);
     response.status(500).json({
@@ -451,10 +482,12 @@ app.post("/api/apply", async (request, response) => {
       await writeWidget(widget);
     }
 
+    const { current, mismatches } = await verifyWrittenWidgets(widgets);
+
     response.json({
       ok: true,
-      widgets,
-      warnings: findOverlapWarnings(widgets)
+      widgets: current.widgets,
+      warnings: [...current.warnings, ...mismatches]
     });
   } catch (error) {
     log("Failed to apply widget layout", error);
