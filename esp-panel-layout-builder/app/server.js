@@ -10,6 +10,21 @@ const HASS_URL = process.env.HASS_URL || "http://supervisor/core/api";
 const TOKEN = process.env.SUPERVISOR_TOKEN || process.env.HASSIO_TOKEN || "";
 const GRID_SIZE = 6;
 const WIDGET_IDS = ["w01", "w02", "w03", "w04", "w05", "w06", "w07", "w08", "w09", "w10", "w11", "w12"];
+const ACTION_ENTITY_DOMAINS = new Set([
+  "light",
+  "switch",
+  "scene",
+  "script",
+  "fan",
+  "cover",
+  "lock",
+  "climate",
+  "media_player",
+  "input_boolean",
+  "input_select",
+  "automation",
+  "button"
+]);
 const WIDGET_TYPES = [
   "blank",
   "clock",
@@ -21,18 +36,18 @@ const WIDGET_TYPES = [
   "status"
 ];
 const DEFAULT_LAYOUT = [
-  { id: "w01", type: "clock", visible: true, label: "Clock", value: "--:--", icon: "clock", action: "clock", x: 0, y: 0, w: 3, h: 1 },
-  { id: "w02", type: "date", visible: true, label: "Date", value: "--", icon: "calendar", action: "date", x: 3, y: 0, w: 3, h: 1 },
-  { id: "w03", type: "weather", visible: true, label: "Weather", value: "Partly Cloudy", icon: "weather-partly-cloudy", action: "weather", x: 0, y: 1, w: 3, h: 1 },
-  { id: "w04", type: "temperature", visible: true, label: "Temp", value: "12.5", icon: "thermometer", action: "temperature", x: 3, y: 1, w: 2, h: 1 },
-  { id: "w05", type: "humidity", visible: true, label: "Humidity", value: "80", icon: "water-percent", action: "humidity", x: 5, y: 1, w: 1, h: 1 },
-  { id: "w06", type: "button", visible: true, label: "Main Light", value: "OFF", icon: "ceiling-light", action: "office_light", x: 0, y: 4, w: 2, h: 2 },
-  { id: "w07", type: "status", visible: false, label: "WiFi", value: "Online", icon: "wifi", action: "wifi_status", x: 2, y: 4, w: 2, h: 1 },
-  { id: "w08", type: "status", visible: false, label: "Scene", value: "Home", icon: "home", action: "home_scene", x: 2, y: 5, w: 2, h: 1 },
-  { id: "w09", type: "button", visible: false, label: "Door", value: "Closed", icon: "door", action: "front_door", x: 4, y: 4, w: 2, h: 1 },
-  { id: "w10", type: "status", visible: false, label: "Sofa", value: "Ready", icon: "sofa", action: "sofa_status", x: 4, y: 5, w: 2, h: 1 },
-  { id: "w11", type: "blank", visible: false, label: "Blank", value: "", icon: "shape", action: "", x: 0, y: 2, w: 2, h: 1 },
-  { id: "w12", type: "blank", visible: false, label: "Blank", value: "", icon: "shape", action: "", x: 2, y: 2, w: 2, h: 1 }
+  { id: "w01", type: "clock", visible: true, label: "Clock", value: "--:--", valueSource: "", icon: "clock", action: "clock", x: 0, y: 0, w: 3, h: 1 },
+  { id: "w02", type: "date", visible: true, label: "Date", value: "--", valueSource: "", icon: "calendar", action: "date", x: 3, y: 0, w: 3, h: 1 },
+  { id: "w03", type: "weather", visible: true, label: "Weather", value: "Partly Cloudy", valueSource: "", icon: "weather-partly-cloudy", action: "weather", x: 0, y: 1, w: 3, h: 1 },
+  { id: "w04", type: "temperature", visible: true, label: "Temp", value: "12.5", valueSource: "", icon: "thermometer", action: "temperature", x: 3, y: 1, w: 2, h: 1 },
+  { id: "w05", type: "humidity", visible: true, label: "Humidity", value: "80", valueSource: "", icon: "water-percent", action: "humidity", x: 5, y: 1, w: 1, h: 1 },
+  { id: "w06", type: "button", visible: true, label: "Main Light", value: "OFF", valueSource: "switch.office_main_light", icon: "ceiling-light", action: "office_light", x: 0, y: 4, w: 2, h: 2 },
+  { id: "w07", type: "status", visible: false, label: "WiFi", value: "Online", valueSource: "", icon: "wifi", action: "wifi_status", x: 2, y: 4, w: 2, h: 1 },
+  { id: "w08", type: "status", visible: false, label: "Scene", value: "Home", valueSource: "", icon: "home", action: "home_scene", x: 2, y: 5, w: 2, h: 1 },
+  { id: "w09", type: "button", visible: false, label: "Door", value: "Closed", valueSource: "", icon: "door", action: "front_door", x: 4, y: 4, w: 2, h: 1 },
+  { id: "w10", type: "status", visible: false, label: "Sofa", value: "Ready", valueSource: "", icon: "sofa", action: "sofa_status", x: 4, y: 5, w: 2, h: 1 },
+  { id: "w11", type: "blank", visible: false, label: "Blank", value: "", valueSource: "", icon: "shape", action: "", x: 0, y: 2, w: 2, h: 1 },
+  { id: "w12", type: "blank", visible: false, label: "Blank", value: "", valueSource: "", icon: "shape", action: "", x: 2, y: 2, w: 2, h: 1 }
 ];
 
 const app = express();
@@ -52,6 +67,7 @@ function helperMap(id) {
     visible: `input_boolean.esp_panel_${id}_visible`,
     label: `input_text.esp_panel_${id}_label`,
     value: `input_text.esp_panel_${id}_value`,
+    valueSource: `input_text.esp_panel_${id}_value_source`,
     icon: `input_text.esp_panel_${id}_icon`,
     action: `input_text.esp_panel_${id}_action`,
     x: `input_number.esp_panel_${id}_x`,
@@ -143,6 +159,7 @@ function sanitizeWidget(input, fallback) {
     visible: typeof input?.visible === "boolean" ? input.visible : fallback.visible,
     label: normalizeText(input?.label ?? fallback.label),
     value: normalizeText(input?.value ?? fallback.value),
+    valueSource: normalizeText(input?.valueSource ?? fallback.valueSource),
     icon: normalizeText(input?.icon ?? fallback.icon),
     action: normalizeText(input?.action ?? fallback.action),
     x: normalizeNumber(input?.x, fallback.x),
@@ -157,7 +174,7 @@ function sanitizeWidget(input, fallback) {
 function compareWidgetValues(expected, actual) {
   const mismatches = [];
 
-  for (const field of ["type", "visible", "label", "value", "icon", "action", "x", "y", "w", "h"]) {
+  for (const field of ["type", "visible", "label", "value", "valueSource", "icon", "action", "x", "y", "w", "h"]) {
     if (expected[field] !== actual[field]) {
       mismatches.push(
         `${expected.id} ${field} expected "${expected[field]}" but Home Assistant has "${actual[field]}"`
@@ -200,6 +217,19 @@ async function getStatesMap() {
   return new Map(states.map((state) => [state.entity_id, state]));
 }
 
+async function getEntityOptions() {
+  const states = await hassFetch("/states");
+  return states
+    .filter((state) => ACTION_ENTITY_DOMAINS.has(state.entity_id.split(".")[0]))
+    .map((state) => ({
+      entity_id: state.entity_id,
+      name: state.attributes?.friendly_name || state.entity_id,
+      domain: state.entity_id.split(".")[0],
+      state: state.state
+    }))
+    .sort((left, right) => left.name.localeCompare(right.name));
+}
+
 function widgetFromStates(id, statesMap) {
   const helpers = helperMap(id);
   const fallback = copyDefaultWidget(id);
@@ -218,6 +248,7 @@ function widgetFromStates(id, statesMap) {
   const visible = readState(helpers.visible);
   const label = readState(helpers.label);
   const value = readState(helpers.value);
+  const valueSource = readState(helpers.valueSource);
   const icon = readState(helpers.icon);
   const action = readState(helpers.action);
   const x = readState(helpers.x);
@@ -232,6 +263,7 @@ function widgetFromStates(id, statesMap) {
       visible: visible === undefined ? fallback.visible : visible === "on",
       label: normalizeText(label ?? fallback.label),
       value: normalizeText(value ?? fallback.value),
+      valueSource: normalizeText(valueSource ?? fallback.valueSource),
       icon: normalizeText(icon ?? fallback.icon),
       action: normalizeText(action ?? fallback.action),
       x: normalizeNumber(x, fallback.x),
@@ -269,6 +301,10 @@ ${WIDGET_TYPES.map((type) => `      - ${type}`).join("\n")}
       `  esp_panel_${id}_value:
     name: ESP Panel ${id.toUpperCase()} Value
     initial: "${fallback.value}"`,
+      `  esp_panel_${id}_value_source:
+    name: ESP Panel ${id.toUpperCase()} Value Source
+    initial: "${fallback.valueSource}"
+    max: 120`,
       `  esp_panel_${id}_icon:
     name: ESP Panel ${id.toUpperCase()} Icon
     initial: "${fallback.icon}"`,
@@ -347,6 +383,7 @@ async function writeWidget(widget) {
   for (const [field, entityId] of Object.entries({
     label: helpers.label,
     value: helpers.value,
+    valueSource: helpers.valueSource,
     icon: helpers.icon,
     action: helpers.action
   })) {
@@ -372,6 +409,49 @@ async function writeWidget(widget) {
         value: widget[field]
       })
     });
+  }
+}
+
+function formatEntityState(state) {
+  const rawState = normalizeText(state?.state);
+  const unit = normalizeText(state?.attributes?.unit_of_measurement);
+  if (!rawState) {
+    return "";
+  }
+  if (rawState === "unknown" || rawState === "unavailable") {
+    return rawState;
+  }
+  if (unit && !rawState.endsWith(unit)) {
+    return `${rawState} ${unit}`.trim();
+  }
+  return rawState;
+}
+
+async function syncValueSources() {
+  const states = await hassFetch("/states");
+  const statesMap = new Map(states.map((state) => [state.entity_id, state]));
+  const widgets = WIDGET_IDS.map((id) => widgetFromStates(id, statesMap).widget);
+
+  for (const widget of widgets) {
+    if (!widget.valueSource) {
+      continue;
+    }
+
+    const sourceState = statesMap.get(widget.valueSource);
+    if (!sourceState) {
+      continue;
+    }
+
+    const nextValue = formatEntityState(sourceState);
+    if (nextValue && nextValue !== widget.value) {
+      await hassFetch("/services/input_text/set_value", {
+        method: "POST",
+        body: JSON.stringify({
+          entity_id: helperMap(widget.id).value,
+          value: nextValue
+        })
+      });
+    }
   }
 }
 
@@ -432,6 +512,19 @@ app.get("/api/widgets", async (_request, response) => {
 
 app.get("/api/helper-yaml", (_request, response) => {
   response.type("text/plain").send(helperPackageYaml());
+});
+
+app.get("/api/entities", async (_request, response) => {
+  try {
+    response.json({
+      entities: await getEntityOptions()
+    });
+  } catch (error) {
+    log("Failed to load entity options", error);
+    response.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error while loading entity options."
+    });
+  }
 });
 
 app.post("/api/widgets/:id", async (request, response) => {
@@ -526,3 +619,7 @@ app.listen(PORT, "0.0.0.0", () => {
     log("Warning: no Home Assistant supervisor token found. API calls will fail until the add-on runs inside Home Assistant.");
   }
 });
+
+setInterval(() => {
+  void syncValueSources().catch((error) => log("Value source sync failed", error));
+}, 15000);

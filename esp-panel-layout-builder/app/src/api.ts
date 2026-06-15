@@ -1,5 +1,12 @@
 import type { WidgetConfig, WidgetResponse } from "./types";
 
+export interface EntityOption {
+  entity_id: string;
+  name: string;
+  domain: string;
+  state: string;
+}
+
 function apiUrl(path: string) {
   const href = window.location.href.replace(/[#?].*$/, "");
   const base = href.endsWith("/") ? href : `${href}/`;
@@ -48,4 +55,8 @@ export function applyWidget(widget: WidgetConfig) {
     method: "POST",
     body: JSON.stringify(widget)
   });
+}
+
+export function fetchEntities() {
+  return request<{ entities: EntityOption[] }>("api/entities");
 }

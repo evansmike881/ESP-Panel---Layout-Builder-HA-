@@ -370,6 +370,104 @@ h1 {
   gap: 12px;
 }
 
+.field-hint,
+.suggestion-header {
+  font-size: 0.84rem;
+  color: #5c7094;
+}
+
+.field-warning {
+  color: #a86600;
+}
+
+.field-hint {
+  margin-top: -6px;
+}
+
+.suggestion-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid rgba(55, 81, 126, 0.14);
+  border-radius: 16px;
+  background: #f8fbff;
+}
+
+.suggestion-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suggestion-chip {
+  border: 1px solid rgba(55, 81, 126, 0.14);
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #ffffff;
+  color: #14213d;
+}
+
+.suggestion-chip.active {
+  border-color: #0f6fff;
+  background: #eaf2ff;
+  color: #0f4eb8;
+}
+
+.scope-toggle,
+.entity-results {
+  display: flex;
+  gap: 8px;
+}
+
+.scope-toggle {
+  flex-wrap: wrap;
+}
+
+.scope-toggle button {
+  border: 1px solid rgba(55, 81, 126, 0.14);
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #ffffff;
+  color: #37517e;
+}
+
+.scope-toggle .scope-active {
+  border-color: #0f6fff;
+  background: #eaf2ff;
+  color: #0f4eb8;
+}
+
+.entity-results {
+  flex-direction: column;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.entity-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  border: 1px solid rgba(55, 81, 126, 0.12);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: #14213d;
+  text-align: left;
+}
+
+.entity-option.active {
+  border-color: #0f6fff;
+  background: #eef5ff;
+}
+
+.entity-option span,
+.entity-option small {
+  color: #5c7094;
+}
+
 .icon-picker {
   display: flex;
   flex-direction: column;
