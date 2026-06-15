@@ -60,3 +60,7 @@ export function applyWidget(widget: WidgetConfig) {
 export function fetchEntities() {
   return request<{ entities: EntityOption[] }>("api/entities");
 }
+
+export function fetchValueSources() {
+  return request<{ entities: EntityOption[] }>("api/value-sources");
+}

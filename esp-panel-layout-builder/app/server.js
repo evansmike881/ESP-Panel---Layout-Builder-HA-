@@ -25,6 +25,16 @@ const ACTION_ENTITY_DOMAINS = new Set([
   "automation",
   "button"
 ]);
+const VALUE_SOURCE_ENTITY_DOMAINS = new Set([
+  ...ACTION_ENTITY_DOMAINS,
+  "sensor",
+  "binary_sensor",
+  "person",
+  "device_tracker",
+  "sun",
+  "weather",
+  "vacuum"
+]);
 const WIDGET_TYPES = [
   "blank",
   "clock",
@@ -217,10 +227,10 @@ async function getStatesMap() {
   return new Map(states.map((state) => [state.entity_id, state]));
 }
 
-async function getEntityOptions() {
+async function getEntityOptions(domainSet) {
   const states = await hassFetch("/states");
   return states
-    .filter((state) => ACTION_ENTITY_DOMAINS.has(state.entity_id.split(".")[0]))
+    .filter((state) => domainSet.has(state.entity_id.split(".")[0]))
     .map((state) => ({
       entity_id: state.entity_id,
       name: state.attributes?.friendly_name || state.entity_id,
@@ -517,12 +527,25 @@ app.get("/api/helper-yaml", (_request, response) => {
 app.get("/api/entities", async (_request, response) => {
   try {
     response.json({
-      entities: await getEntityOptions()
+      entities: await getEntityOptions(ACTION_ENTITY_DOMAINS)
     });
   } catch (error) {
     log("Failed to load entity options", error);
     response.status(500).json({
       error: error instanceof Error ? error.message : "Unknown error while loading entity options."
+    });
+  }
+});
+
+app.get("/api/value-sources", async (_request, response) => {
+  try {
+    response.json({
+      entities: await getEntityOptions(VALUE_SOURCE_ENTITY_DOMAINS)
+    });
+  } catch (error) {
+    log("Failed to load value source options", error);
+    response.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error while loading value source options."
     });
   }
 });

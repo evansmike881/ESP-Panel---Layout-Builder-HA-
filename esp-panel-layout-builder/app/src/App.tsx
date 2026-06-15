@@ -1,6 +1,6 @@
 import mdiIcons from "@iconify-json/mdi/icons.json";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
-import { applyWidget, applyWidgets, fetchEntities, fetchWidgets, reloadWidgets, type EntityOption } from "./api";
+import { applyWidget, applyWidgets, fetchEntities, fetchValueSources, fetchWidgets, reloadWidgets, type EntityOption } from "./api";
 import { DEFAULT_LAYOUT, GRID_SIZE, WIDGET_TYPES, type WidgetConfig, type WidgetResponse } from "./types";
 
 type Interaction =
@@ -213,6 +213,7 @@ export default function App() {
   const [iconQuery, setIconQuery] = useState("");
   const [iconScope, setIconScope] = useState<"panel" | "all">("panel");
   const [entities, setEntities] = useState<EntityOption[]>([]);
+  const [valueSourceEntities, setValueSourceEntities] = useState<EntityOption[]>([]);
   const [entityQuery, setEntityQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -266,13 +267,26 @@ export default function App() {
       )
       .slice(0, 30);
   }, [entities, entityQuery, selectedWidget]);
+  const valueSourceSuggestions = useMemo(() => {
+    const query = (selectedWidget?.valueSource || "").trim().toLowerCase();
+    if (!query) {
+      return valueSourceEntities.slice(0, 30);
+    }
+
+    return valueSourceEntities
+      .filter((entity) =>
+        entity.entity_id.toLowerCase().includes(query) ||
+        entity.name.toLowerCase().includes(query)
+      )
+      .slice(0, 30);
+  }, [valueSourceEntities, selectedWidget]);
   const selectedActionEntity = useMemo(
     () => entities.find((entity) => entity.entity_id === selectedWidget?.action),
     [entities, selectedWidget]
   );
   const selectedValueEntity = useMemo(
-    () => entities.find((entity) => entity.entity_id === selectedWidget?.valueSource),
-    [entities, selectedWidget]
+    () => valueSourceEntities.find((entity) => entity.entity_id === selectedWidget?.valueSource),
+    [valueSourceEntities, selectedWidget]
   );
   const isPanelSafeIcon = useMemo(
     () => PANEL_SUPPORTED_ICON_SET.has((selectedWidget?.icon || "").replace(/^mdi:/i, "").toLowerCase()),
@@ -282,6 +296,7 @@ export default function App() {
   useEffect(() => {
     void loadWidgets();
     void loadEntities();
+    void loadValueSources();
   }, []);
 
   useEffect(() => {
@@ -373,6 +388,15 @@ export default function App() {
     try {
       const data = await fetchEntities();
       setEntities(data.entities);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function loadValueSources() {
+    try {
+      const data = await fetchValueSources();
+      setValueSourceEntities(data.entities);
     } catch (error) {
       console.error(error);
     }
@@ -647,7 +671,7 @@ export default function App() {
                     />
                   </label>
                   <datalist id="value-entity-options">
-                    {entitySuggestions.map((entity) => (
+                    {valueSourceSuggestions.map((entity) => (
                       <option key={`value-${entity.entity_id}`} value={entity.entity_id}>
                         {entity.name}
                       </option>
@@ -656,10 +680,10 @@ export default function App() {
                   <div className="suggestion-block">
                     <div className="suggestion-header">
                       <span>Entity state for widget content</span>
-                      <span>{entitySuggestions.length} shown</span>
+                      <span>{valueSourceSuggestions.length} shown</span>
                     </div>
                     <div className="entity-results">
-                      {entitySuggestions.map((entity) => (
+                      {valueSourceSuggestions.map((entity) => (
                         <button
                           key={`value-entity-${entity.entity_id}`}
                           type="button"
