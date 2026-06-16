@@ -62,6 +62,11 @@ const FONT_WEIGHT_OPTIONS = [
   { value: "normal", label: "Regular" },
   { value: "bold", label: "Bold" }
 ] as const;
+const PREVIEW_SCALE_OPTIONS = [
+  { value: 1, label: "100%" },
+  { value: 0.5, label: "50%" },
+  { value: 0.25, label: "25%" }
+] as const;
 const VALUE_PRESETS: Partial<Record<WidgetConfig["type"], string[]>> = {
   weather: ["Sunny", "Cloudy", "Partly Cloudy", "Rain", "Storm"],
   temperature: ["12.5", "18.0", "21.5", "24.0"],
@@ -306,6 +311,8 @@ export default function App() {
   const [valueSourceEntities, setValueSourceEntities] = useState<EntityOption[]>([]);
   const [entityQuery, setEntityQuery] = useState("");
   const [busy, setBusy] = useState(false);
+  const [previewScale, setPreviewScale] = useState<(typeof PREVIEW_SCALE_OPTIONS)[number]["value"]>(1);
+  const [menuOpen, setMenuOpen] = useState(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
   const interactionRef = useRef<Interaction | null>(null);
 
@@ -378,6 +385,8 @@ export default function App() {
     () => PANEL_SUPPORTED_ICON_SET.has((selectedWidget?.icon || "").replace(/^mdi:/i, "").toLowerCase()),
     [selectedWidget]
   );
+  const visibleWidgets = useMemo(() => widgets.filter((widget) => widget.visible), [widgets]);
+  const hiddenWidgets = useMemo(() => widgets.filter((widget) => !widget.visible), [widgets]);
 
   useEffect(() => {
     void loadWidgets();
@@ -389,6 +398,18 @@ export default function App() {
     setIconQuery(selectedWidget?.icon || "");
     setEntityQuery(selectedWidget?.action || "");
   }, [selectedWidget?.id, selectedWidget?.icon, selectedWidget?.action]);
+
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest(".menu-wrap")) {
+        setMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => window.removeEventListener("pointerdown", onPointerDown);
+  }, []);
 
   useEffect(() => {
     const onPointerMove = (event: PointerEvent) => {
@@ -595,24 +616,59 @@ export default function App() {
           <p className="eyebrow">Home Assistant Add-on</p>
           <h1>ESP Panel Layout Builder</h1>
         </div>
-        <div className={`status-pill status-${statusTone}`}>
-          <span className="status-dot" />
-          <span>{status}</span>
+        <div className="topbar-actions">
+          <div className={`status-pill status-${statusTone}`}>
+            <span className="status-dot" />
+            <span>{status}</span>
+          </div>
+          <div className="menu-wrap">
+            <button
+              type="button"
+              className="menu-trigger"
+              aria-label="Open tools menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((current) => !current)}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+            {menuOpen && (
+              <div className="menu-dropdown">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    void handleReload();
+                  }}
+                  disabled={busy}
+                >
+                  Reload from Home Assistant
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    handleReset();
+                  }}
+                  disabled={busy}
+                >
+                  Reset to default layout
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setShowHelperYaml(true);
+                  }}
+                >
+                  Helper YAML
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
-
-      <div className="toolbar">
-        <button className="primary" onClick={() => void handleApplyAll()} disabled={busy}>
-          Apply all changes
-        </button>
-        <button onClick={() => void handleReload()} disabled={busy}>
-          Reload from Home Assistant
-        </button>
-        <button onClick={handleReset} disabled={busy}>
-          Reset to default layout
-        </button>
-        <button onClick={() => setShowHelperYaml(true)}>Helper YAML</button>
-      </div>
 
       {(warnings.length > 0 || missingHelpers.length > 0) && (
         <section className="notice-panel">
@@ -630,72 +686,138 @@ export default function App() {
               <h2>480x480 Preview</h2>
               <p>6 columns x 6 rows, 80px slots</p>
             </div>
-            <div className="grid-key">
-              <span>Drag cards to move</span>
-              <span>Use corner handle to resize</span>
+            <div className="preview-header-tools">
+              <div className="scale-toggle" aria-label="Preview scale">
+                {PREVIEW_SCALE_OPTIONS.map((option) => (
+                  <button
+                    key={option.label}
+                    type="button"
+                    className={previewScale === option.value ? "scale-active" : ""}
+                    onClick={() => setPreviewScale(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <div className="grid-key">
+                <span>Drag cards to move</span>
+                <span>Use corner handle to resize</span>
+              </div>
             </div>
           </div>
 
           <div className="board-wrap">
-            <div className="board" ref={boardRef}>
-              <div className="grid-overlay">
-                {GRID_LABELS.map((cell) => (
-                  <div
-                    key={`${cell.col}-${cell.row}`}
-                    className="grid-cell"
-                    style={{
-                      left: `${(cell.col / GRID_SIZE) * 100}%`,
-                      top: `${(cell.row / GRID_SIZE) * 100}%`,
-                      width: `${100 / GRID_SIZE}%`,
-                      height: `${100 / GRID_SIZE}%`
-                    }}
-                  >
-                    <span>
-                      {cell.col},{cell.row}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {widgets.map((widget) => {
-                const previewLabel = transformLabel(widget.label || "Untitled", widget.labelTransform);
-                const previewValue =
-                  widget.type === "blank" ? "" : widget.value || (isAutoValueType(widget.type) ? valuePlaceholder(widget.type) : "No value");
-
-                return (
-                  <button
-                    key={widget.id}
-                    type="button"
-                    className={`widget-card ${selectedId === widget.id ? "selected" : ""} ${widget.visible ? "" : "hidden-card"} ${widget.type === "blank" ? "blank-widget" : ""}`}
-                    style={widgetStyle(widget)}
-                    onClick={() => setSelectedId(widget.id)}
-                    onPointerDown={(event) => handlePointerStart(event, widget, "drag")}
-                  >
-                    <div className="widget-meta">
-                      <span>{widget.id}</span>
-                      <span>{widget.type}</span>
+            <div className="board-stage" style={{ width: `${480 * previewScale}px` }}>
+              <div className="board" ref={boardRef}>
+                <div className="grid-overlay">
+                  {GRID_LABELS.map((cell) => (
+                    <div
+                      key={`${cell.col}-${cell.row}`}
+                      className="grid-cell"
+                      style={{
+                        left: `${(cell.col / GRID_SIZE) * 100}%`,
+                        top: `${(cell.row / GRID_SIZE) * 100}%`,
+                        width: `${100 / GRID_SIZE}%`,
+                        height: `${100 / GRID_SIZE}%`
+                      }}
+                    >
+                      <span>
+                        {cell.col},{cell.row}
+                      </span>
                     </div>
-                    <div className="widget-main">
-                      {widget.type !== "blank" && <MdiIcon icon={widget.icon} />}
-                      <div className="widget-text">
-                        {widget.type === "blank" ? (
-                          <strong className="blank-widget-copy">Blank spacer</strong>
-                        ) : (
-                          <>
-                            <strong>{previewLabel}</strong>
-                            <span>{previewValue}</span>
-                          </>
-                        )}
+                  ))}
+                </div>
+
+                {visibleWidgets.map((widget) => {
+                  const previewLabel = transformLabel(widget.label || "Untitled", widget.labelTransform);
+                  const previewValue =
+                    widget.type === "blank" ? "" : widget.value || (isAutoValueType(widget.type) ? valuePlaceholder(widget.type) : "No value");
+
+                  return (
+                    <button
+                      key={widget.id}
+                      type="button"
+                      className={`widget-card ${selectedId === widget.id ? "selected" : ""} ${widget.type === "blank" ? "blank-widget" : ""}`}
+                      style={widgetStyle(widget)}
+                      onClick={() => setSelectedId(widget.id)}
+                      onPointerDown={(event) => handlePointerStart(event, widget, "drag")}
+                    >
+                      <div className="widget-meta">
+                        <span>{widget.id}</span>
+                        <span>{widget.type}</span>
                       </div>
-                    </div>
-                    <span className="widget-size">
-                      {widget.w}x{widget.h}
-                    </span>
-                    <span className="resize-handle" onPointerDown={(event) => handlePointerStart(event, widget, "resize")} />
-                  </button>
-                );
-              })}
+                      <div className="widget-main">
+                        {widget.type !== "blank" && <MdiIcon icon={widget.icon} />}
+                        <div className="widget-text">
+                          {widget.type === "blank" ? (
+                            <strong className="blank-widget-copy">Blank spacer</strong>
+                          ) : (
+                            <>
+                              <strong>{previewLabel}</strong>
+                              <span>{previewValue}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <span className="widget-size">
+                        {widget.w}x{widget.h}
+                      </span>
+                      <span className="resize-handle" onPointerDown={(event) => handlePointerStart(event, widget, "resize")} />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+          </div>
+
+          <div className="holding-area">
+            <div className="holding-header">
+              <div>
+                <h3>Hidden Widgets</h3>
+                <p>These stay off the screen preview until you mark them visible.</p>
+              </div>
+              <span>{hiddenWidgets.length} hidden</span>
+            </div>
+            {hiddenWidgets.length > 0 ? (
+              <div className="holding-grid">
+                {hiddenWidgets.map((widget) => {
+                  const previewLabel = transformLabel(widget.label || "Untitled", widget.labelTransform);
+                  const previewValue =
+                    widget.type === "blank" ? "Blank spacer" : widget.value || (isAutoValueType(widget.type) ? valuePlaceholder(widget.type) : "No value");
+
+                  return (
+                    <button
+                      key={widget.id}
+                      type="button"
+                      className={`holding-card ${selectedId === widget.id ? "selected" : ""}`}
+                      onClick={() => setSelectedId(widget.id)}
+                    >
+                      <div className="holding-card-top">
+                        <span>{widget.id}</span>
+                        <small>{widget.type}</small>
+                      </div>
+                      <div className="holding-card-main">
+                        {widget.type !== "blank" && <MdiIcon icon={widget.icon} className="holding-icon" />}
+                        <div className="holding-text">
+                          <strong>{previewLabel}</strong>
+                          <span>{previewValue}</span>
+                        </div>
+                      </div>
+                      <div className="holding-card-meta">
+                        <span>
+                          {widget.w}x{widget.h}
+                        </span>
+                        <span>
+                          {widget.x},{widget.y}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="holding-empty">All widgets are currently visible on the panel preview.</p>
+            )}
           </div>
         </section>
 
@@ -733,7 +855,7 @@ export default function App() {
               </EditorGroup>
 
               {(capabilities.showLabel || capabilities.showValueInput || valueSuggestions.length > 0) && (
-                <EditorGroup title="Content" subtitle="What the widget says">
+                <EditorGroup title="Content" subtitle="What the widget says" defaultOpen={false}>
                   {capabilities.showLabel && (
                     <label className="field">
                       <span>Label</span>
@@ -791,7 +913,7 @@ export default function App() {
               )}
 
               {capabilities.showAppearance && (
-                <EditorGroup title="Appearance" subtitle="Alignment, colours, and icon style">
+                <EditorGroup title="Appearance" subtitle="Alignment, colours, and icon style" defaultOpen={false}>
                   <label className="field">
                     <span>Content alignment</span>
                     <select
@@ -1006,7 +1128,7 @@ export default function App() {
               )}
 
               {(capabilities.showValueSource || capabilities.showAction) && (
-                <EditorGroup title="Data And Actions" subtitle="Only shown when this type needs it">
+                <EditorGroup title="Data And Actions" subtitle="Only shown when this type needs it" defaultOpen={false}>
                   {capabilities.showValueSource && (
                     <>
                       <label className="field">
@@ -1168,31 +1290,18 @@ export default function App() {
                 </div>
               </EditorGroup>
 
-              <button className="primary" onClick={() => void handleApplySelected()} disabled={busy}>
-                Apply selected widget
-              </button>
+              <div className="editor-actions">
+                <button className="primary" onClick={() => void handleApplySelected()} disabled={busy}>
+                  Apply selected widget
+                </button>
+                <button className="primary secondary-primary" onClick={() => void handleApplyAll()} disabled={busy}>
+                  Apply all changes
+                </button>
+              </div>
             </>
           )}
         </aside>
       </main>
-
-      <section className="docs-panel">
-        <h2>Automation Example</h2>
-        <pre>{`alias: ESP Panel Widget Tap Handler
-mode: queued
-triggers:
-  - trigger: event
-    event_type: esphome.esp_panel_widget_tap
-actions:
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.widget == 'w06' }}"
-        sequence:
-          - action: switch.toggle
-            target:
-              entity_id: switch.office_main_light`}</pre>
-      </section>
 
       {showHelperYaml && (
         <div className="modal-backdrop" onClick={() => setShowHelperYaml(false)}>

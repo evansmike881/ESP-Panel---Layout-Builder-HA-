@@ -1,4 +1,4 @@
-# ESP32 Smart Display Panel - Dynamic Dashboard V1 Helpers
+﻿# ESP32 Smart Display Panel - Dynamic Dashboard V1 Helpers
 # Save as: /config/packages/esp_panel_dynamic_v1_full.yaml
 # Then make sure packages are enabled in configuration.yaml:
 # homeassistant:
@@ -25,6 +25,15 @@ input_select:
       - center
       - end
     initial: start
+
+  esp_panel_w01_layout_mode:
+    name: ESP Panel W01 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
 
   esp_panel_w01_label_transform:
     name: ESP Panel W01 Label Transform
@@ -68,6 +77,15 @@ input_select:
       - end
     initial: start
 
+  esp_panel_w02_layout_mode:
+    name: ESP Panel W02 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
   esp_panel_w02_label_transform:
     name: ESP Panel W02 Label Transform
     options:
@@ -109,6 +127,15 @@ input_select:
       - center
       - end
     initial: start
+
+  esp_panel_w03_layout_mode:
+    name: ESP Panel W03 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
 
   esp_panel_w03_label_transform:
     name: ESP Panel W03 Label Transform
@@ -152,6 +179,15 @@ input_select:
       - end
     initial: start
 
+  esp_panel_w04_layout_mode:
+    name: ESP Panel W04 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
   esp_panel_w04_label_transform:
     name: ESP Panel W04 Label Transform
     options:
@@ -192,7 +228,16 @@ input_select:
       - start
       - center
       - end
-    initial: start
+    initial: center
+
+  esp_panel_w05_layout_mode:
+    name: ESP Panel W05 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
 
   esp_panel_w05_label_transform:
     name: ESP Panel W05 Label Transform
@@ -234,7 +279,16 @@ input_select:
       - start
       - center
       - end
-    initial: start
+    initial: center
+
+  esp_panel_w06_layout_mode:
+    name: ESP Panel W06 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
 
   esp_panel_w06_label_transform:
     name: ESP Panel W06 Label Transform
@@ -278,6 +332,15 @@ input_select:
       - end
     initial: start
 
+  esp_panel_w07_layout_mode:
+    name: ESP Panel W07 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
   esp_panel_w07_label_transform:
     name: ESP Panel W07 Label Transform
     options:
@@ -320,6 +383,15 @@ input_select:
       - end
     initial: start
 
+  esp_panel_w08_layout_mode:
+    name: ESP Panel W08 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
   esp_panel_w08_label_transform:
     name: ESP Panel W08 Label Transform
     options:
@@ -352,7 +424,7 @@ input_select:
       - humidity
       - button
       - status
-    initial: button
+    initial: status
 
   esp_panel_w09_content_align:
     name: ESP Panel W09 Content Align
@@ -361,6 +433,15 @@ input_select:
       - center
       - end
     initial: start
+
+  esp_panel_w09_layout_mode:
+    name: ESP Panel W09 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
 
   esp_panel_w09_label_transform:
     name: ESP Panel W09 Label Transform
@@ -404,6 +485,15 @@ input_select:
       - end
     initial: start
 
+  esp_panel_w10_layout_mode:
+    name: ESP Panel W10 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
   esp_panel_w10_label_transform:
     name: ESP Panel W10 Label Transform
     options:
@@ -446,6 +536,15 @@ input_select:
       - end
     initial: start
 
+  esp_panel_w11_layout_mode:
+    name: ESP Panel W11 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
   esp_panel_w11_label_transform:
     name: ESP Panel W11 Label Transform
     options:
@@ -487,6 +586,15 @@ input_select:
       - center
       - end
     initial: start
+
+  esp_panel_w12_layout_mode:
+    name: ESP Panel W12 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
 
   esp_panel_w12_label_transform:
     name: ESP Panel W12 Label Transform
@@ -586,17 +694,17 @@ input_text:
 
   esp_panel_w01_icon_color:
     name: ESP Panel W01 Icon Color
-    initial: "#eff7ff"
+    initial: "#f59e0b"
     max: 7
 
   esp_panel_w01_label_color:
     name: ESP Panel W01 Label Color
-    initial: "#ffffff"
+    initial: "#8e9fb8"
     max: 7
 
   esp_panel_w01_value_color:
     name: ESP Panel W01 Value Color
-    initial: "#dbeafe"
+    initial: "#f1f5f9"
     max: 7
 
   esp_panel_w02_label:
@@ -626,17 +734,17 @@ input_text:
 
   esp_panel_w02_icon_color:
     name: ESP Panel W02 Icon Color
-    initial: "#eff7ff"
+    initial: "#f59e0b"
     max: 7
 
   esp_panel_w02_label_color:
     name: ESP Panel W02 Label Color
-    initial: "#ffffff"
+    initial: "#8e9fb8"
     max: 7
 
   esp_panel_w02_value_color:
     name: ESP Panel W02 Value Color
-    initial: "#dbeafe"
+    initial: "#f1f5f9"
     max: 7
 
   esp_panel_w03_label:
@@ -646,7 +754,7 @@ input_text:
 
   esp_panel_w03_value:
     name: ESP Panel W03 Value
-    initial: "Partly Cloudy"
+    initial: "--"
     max: 40
 
   esp_panel_w03_value_source:
@@ -666,17 +774,17 @@ input_text:
 
   esp_panel_w03_icon_color:
     name: ESP Panel W03 Icon Color
-    initial: "#eff7ff"
+    initial: "#f59e0b"
     max: 7
 
   esp_panel_w03_label_color:
     name: ESP Panel W03 Label Color
-    initial: "#ffffff"
+    initial: "#8e9fb8"
     max: 7
 
   esp_panel_w03_value_color:
     name: ESP Panel W03 Value Color
-    initial: "#dbeafe"
+    initial: "#f1f5f9"
     max: 7
 
   esp_panel_w04_label:
@@ -686,7 +794,7 @@ input_text:
 
   esp_panel_w04_value:
     name: ESP Panel W04 Value
-    initial: "12.5"
+    initial: "--"
     max: 40
 
   esp_panel_w04_value_source:
@@ -706,17 +814,17 @@ input_text:
 
   esp_panel_w04_icon_color:
     name: ESP Panel W04 Icon Color
-    initial: "#eff7ff"
+    initial: "#f59e0b"
     max: 7
 
   esp_panel_w04_label_color:
     name: ESP Panel W04 Label Color
-    initial: "#ffffff"
+    initial: "#8e9fb8"
     max: 7
 
   esp_panel_w04_value_color:
     name: ESP Panel W04 Value Color
-    initial: "#dbeafe"
+    initial: "#f1f5f9"
     max: 7
 
   esp_panel_w05_label:
@@ -726,7 +834,7 @@ input_text:
 
   esp_panel_w05_value:
     name: ESP Panel W05 Value
-    initial: "80"
+    initial: "--"
     max: 40
 
   esp_panel_w05_value_source:
@@ -746,17 +854,17 @@ input_text:
 
   esp_panel_w05_icon_color:
     name: ESP Panel W05 Icon Color
-    initial: "#eff7ff"
+    initial: "#f59e0b"
     max: 7
 
   esp_panel_w05_label_color:
     name: ESP Panel W05 Label Color
-    initial: "#ffffff"
+    initial: "#8e9fb8"
     max: 7
 
   esp_panel_w05_value_color:
     name: ESP Panel W05 Value Color
-    initial: "#dbeafe"
+    initial: "#f1f5f9"
     max: 7
 
   esp_panel_w06_label:
@@ -766,7 +874,7 @@ input_text:
 
   esp_panel_w06_value:
     name: ESP Panel W06 Value
-    initial: "OFF"
+    initial: "--"
     max: 40
 
   esp_panel_w06_value_source:
@@ -786,17 +894,17 @@ input_text:
 
   esp_panel_w06_icon_color:
     name: ESP Panel W06 Icon Color
-    initial: "#eff7ff"
+    initial: "#f59e0b"
     max: 7
 
   esp_panel_w06_label_color:
     name: ESP Panel W06 Label Color
-    initial: "#ffffff"
+    initial: "#8e9fb8"
     max: 7
 
   esp_panel_w06_value_color:
     name: ESP Panel W06 Value Color
-    initial: "#dbeafe"
+    initial: "#f1f5f9"
     max: 7
 
   esp_panel_w07_label:
@@ -826,17 +934,17 @@ input_text:
 
   esp_panel_w07_icon_color:
     name: ESP Panel W07 Icon Color
-    initial: "#eff7ff"
+    initial: "#f59e0b"
     max: 7
 
   esp_panel_w07_label_color:
     name: ESP Panel W07 Label Color
-    initial: "#ffffff"
+    initial: "#8e9fb8"
     max: 7
 
   esp_panel_w07_value_color:
     name: ESP Panel W07 Value Color
-    initial: "#dbeafe"
+    initial: "#f1f5f9"
     max: 7
 
   esp_panel_w08_label:
@@ -866,17 +974,17 @@ input_text:
 
   esp_panel_w08_icon_color:
     name: ESP Panel W08 Icon Color
-    initial: "#eff7ff"
+    initial: "#f59e0b"
     max: 7
 
   esp_panel_w08_label_color:
     name: ESP Panel W08 Label Color
-    initial: "#ffffff"
+    initial: "#8e9fb8"
     max: 7
 
   esp_panel_w08_value_color:
     name: ESP Panel W08 Value Color
-    initial: "#dbeafe"
+    initial: "#f1f5f9"
     max: 7
 
   esp_panel_w09_label:
@@ -906,17 +1014,17 @@ input_text:
 
   esp_panel_w09_icon_color:
     name: ESP Panel W09 Icon Color
-    initial: "#eff7ff"
+    initial: "#f59e0b"
     max: 7
 
   esp_panel_w09_label_color:
     name: ESP Panel W09 Label Color
-    initial: "#ffffff"
+    initial: "#8e9fb8"
     max: 7
 
   esp_panel_w09_value_color:
     name: ESP Panel W09 Value Color
-    initial: "#dbeafe"
+    initial: "#f1f5f9"
     max: 7
 
   esp_panel_w10_label:
@@ -946,17 +1054,17 @@ input_text:
 
   esp_panel_w10_icon_color:
     name: ESP Panel W10 Icon Color
-    initial: "#eff7ff"
+    initial: "#f59e0b"
     max: 7
 
   esp_panel_w10_label_color:
     name: ESP Panel W10 Label Color
-    initial: "#ffffff"
+    initial: "#8e9fb8"
     max: 7
 
   esp_panel_w10_value_color:
     name: ESP Panel W10 Value Color
-    initial: "#dbeafe"
+    initial: "#f1f5f9"
     max: 7
 
   esp_panel_w11_label:
@@ -986,17 +1094,17 @@ input_text:
 
   esp_panel_w11_icon_color:
     name: ESP Panel W11 Icon Color
-    initial: "#eff7ff"
+    initial: "#f59e0b"
     max: 7
 
   esp_panel_w11_label_color:
     name: ESP Panel W11 Label Color
-    initial: "#ffffff"
+    initial: "#8e9fb8"
     max: 7
 
   esp_panel_w11_value_color:
     name: ESP Panel W11 Value Color
-    initial: "#dbeafe"
+    initial: "#f1f5f9"
     max: 7
 
   esp_panel_w12_label:
@@ -1026,17 +1134,17 @@ input_text:
 
   esp_panel_w12_icon_color:
     name: ESP Panel W12 Icon Color
-    initial: "#eff7ff"
+    initial: "#f59e0b"
     max: 7
 
   esp_panel_w12_label_color:
     name: ESP Panel W12 Label Color
-    initial: "#ffffff"
+    initial: "#8e9fb8"
     max: 7
 
   esp_panel_w12_value_color:
     name: ESP Panel W12 Value Color
-    initial: "#dbeafe"
+    initial: "#f1f5f9"
     max: 7
 
 input_number:
@@ -1730,4 +1838,6 @@ automation:
               - action: switch.toggle
                 target:
                   entity_id: switch.office_main_light
+
+
 
