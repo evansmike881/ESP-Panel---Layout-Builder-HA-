@@ -1,5 +1,5 @@
 import mdiIcons from "@iconify-json/mdi/icons.json";
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { applyWidget, applyWidgets, fetchEntities, fetchValueSources, fetchWidgets, reloadWidgets, type EntityOption } from "./api";
 import { DEFAULT_LAYOUT, GRID_SIZE, WIDGET_TYPES, type WidgetConfig, type WidgetResponse } from "./types";
 
@@ -49,6 +49,19 @@ const PANEL_SUPPORTED_ICONS = [
   "cog"
 ] as const;
 const PANEL_SUPPORTED_ICON_SET = new Set(PANEL_SUPPORTED_ICONS);
+const CONTENT_ALIGN_OPTIONS = [
+  { value: "start", label: "Left" },
+  { value: "center", label: "Center" },
+  { value: "end", label: "Right" }
+] as const;
+const TEXT_TRANSFORM_OPTIONS = [
+  { value: "none", label: "Normal case" },
+  { value: "uppercase", label: "Uppercase" }
+] as const;
+const FONT_WEIGHT_OPTIONS = [
+  { value: "normal", label: "Regular" },
+  { value: "bold", label: "Bold" }
+] as const;
 const VALUE_PRESETS: Partial<Record<WidgetConfig["type"], string[]>> = {
   weather: ["Sunny", "Cloudy", "Partly Cloudy", "Rain", "Storm"],
   temperature: ["12.5", "18.0", "21.5", "24.0"],
@@ -68,6 +81,25 @@ const ACTION_PRESETS: Partial<Record<WidgetConfig["type"], string[]>> = {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function isAutoValueType(type: WidgetConfig["type"]) {
+  return type === "clock" || type === "date";
+}
+
+function widgetCapabilities(type: WidgetConfig["type"]) {
+  const blank = type === "blank";
+  const autoValue = isAutoValueType(type);
+  const action = type === "button" || type === "status";
+  return {
+    showLabel: !blank,
+    showValueInput: !blank && !autoValue,
+    showValueSource: !blank && !autoValue,
+    showIcon: !blank,
+    showAction: action,
+    showAppearance: !blank,
+    showValueAppearance: !blank
+  };
 }
 
 function detectWarnings(widgets: WidgetConfig[]) {
@@ -120,6 +152,10 @@ function widgetScale(widget: WidgetConfig) {
 
 function widgetStyle(widget: WidgetConfig): CSSProperties {
   const scale = widgetScale(widget);
+  const justifyContent =
+    widget.contentAlign === "center" ? "center" : widget.contentAlign === "end" ? "flex-end" : "flex-start";
+  const textAlign = widget.contentAlign === "center" ? "center" : widget.contentAlign === "end" ? "right" : "left";
+
   return {
     left: `${(widget.x / GRID_SIZE) * 100}%`,
     top: `${(widget.y / GRID_SIZE) * 100}%`,
@@ -127,8 +163,22 @@ function widgetStyle(widget: WidgetConfig): CSSProperties {
     height: `${(widget.h / GRID_SIZE) * 100}%`,
     ["--widget-scale" as string]: String(scale),
     ["--widget-padding" as string]: `${clamp(10 + widget.h * 2 + widget.w, 10, 24)}px`,
-    ["--widget-gap" as string]: `${clamp(6 + widget.h * 2, 6, 18)}px`
+    ["--widget-gap" as string]: `${clamp(6 + widget.h * 2, 6, 18)}px`,
+    ["--widget-main-justify" as string]: justifyContent,
+    ["--widget-text-align" as string]: textAlign,
+    ["--widget-icon-color" as string]: widget.iconColor,
+    ["--widget-label-color" as string]: widget.labelColor,
+    ["--widget-value-color" as string]: widget.valueColor,
+    ["--widget-icon-scale" as string]: String(widget.iconScale / 100),
+    ["--widget-label-scale" as string]: String(widget.labelScale / 100),
+    ["--widget-value-scale" as string]: String(widget.valueScale / 100),
+    ["--widget-label-weight" as string]: widget.labelWeight,
+    ["--widget-value-weight" as string]: widget.valueWeight
   };
+}
+
+function transformLabel(label: string, transform: WidgetConfig["labelTransform"]) {
+  return transform === "uppercase" ? label.toUpperCase() : label;
 }
 
 function MdiIcon({ icon, className }: { icon: string; className?: string }) {
@@ -147,10 +197,6 @@ function MdiIcon({ icon, className }: { icon: string; className?: string }) {
       <g dangerouslySetInnerHTML={{ __html: iconData.body }} />
     </svg>
   );
-}
-
-function isAutoValueType(type: WidgetConfig["type"]) {
-  return type === "clock" || type === "date";
 }
 
 function valuePlaceholder(type: WidgetConfig["type"]) {
@@ -177,9 +223,9 @@ function valuePlaceholder(type: WidgetConfig["type"]) {
 function actionPlaceholder(type: WidgetConfig["type"]) {
   switch (type) {
     case "button":
-      return "Example: office_light";
+      return "Example: switch.office_main_light";
     case "status":
-      return "Example: wifi_status";
+      return "Example: binary_sensor.front_door";
     default:
       return "Automation key used by your panel tap handler";
   }
@@ -198,6 +244,50 @@ function valueSourcePlaceholder(type: WidgetConfig["type"]) {
     default:
       return "Optional Home Assistant entity to mirror into this widget value";
   }
+}
+
+function EditorGroup({
+  title,
+  subtitle,
+  defaultOpen = true,
+  children
+}: {
+  title: string;
+  subtitle?: string;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <details className="editor-group" open={defaultOpen}>
+      <summary>
+        <span>{title}</span>
+        {subtitle ? <small>{subtitle}</small> : null}
+      </summary>
+      <div className="editor-group-body">{children}</div>
+    </details>
+  );
+}
+
+function ColorField({
+  label,
+  value,
+  onChange
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const pickerValue = /^#[0-9a-fA-F]{6}$/.test(value) ? value : "#ffffff";
+
+  return (
+    <label className="field">
+      <span>{label}</span>
+      <div className="color-field-row">
+        <input type="color" value={pickerValue} onChange={(event) => onChange(event.target.value)} />
+        <input type="text" value={value} placeholder="#ffffff" onChange={(event) => onChange(event.target.value)} />
+      </div>
+    </label>
+  );
 }
 
 export default function App() {
@@ -223,6 +313,10 @@ export default function App() {
     () => widgets.find((widget) => widget.id === selectedId) || widgets[0],
     [selectedId, widgets]
   );
+  const capabilities = useMemo(
+    () => (selectedWidget ? widgetCapabilities(selectedWidget.type) : widgetCapabilities("blank")),
+    [selectedWidget]
+  );
   const filteredIcons = useMemo(() => {
     const query = iconQuery.trim().replace(/^mdi:/i, "").toLowerCase();
     const iconSource = iconScope === "panel" ? PANEL_SUPPORTED_ICONS : MDI_ICON_NAMES;
@@ -240,17 +334,15 @@ export default function App() {
       .map((widget) => widget.action.trim())
       .filter((action) => action.length > 0);
 
-    return Array.from(
-      new Set([...(ACTION_PRESETS[selectedWidget.type] || []), ...existingActions])
-    ).slice(0, 20);
+    return Array.from(new Set([...(ACTION_PRESETS[selectedWidget.type] || []), ...existingActions])).slice(0, 20);
   }, [selectedWidget, widgets]);
   const valueSuggestions = useMemo(() => {
-    if (!selectedWidget || isAutoValueType(selectedWidget.type)) {
+    if (!selectedWidget || !capabilities.showValueInput) {
       return [];
     }
 
     return VALUE_PRESETS[selectedWidget.type] || [];
-  }, [selectedWidget]);
+  }, [capabilities.showValueInput, selectedWidget]);
   const entitySuggestions = useMemo(() => {
     const query = entityQuery.trim().toLowerCase();
     const actionQuery = selectedWidget?.action.trim().toLowerCase() || "";
@@ -261,10 +353,7 @@ export default function App() {
     }
 
     return entities
-      .filter((entity) =>
-        entity.entity_id.toLowerCase().includes(effectiveQuery) ||
-        entity.name.toLowerCase().includes(effectiveQuery)
-      )
+      .filter((entity) => entity.entity_id.toLowerCase().includes(effectiveQuery) || entity.name.toLowerCase().includes(effectiveQuery))
       .slice(0, 30);
   }, [entities, entityQuery, selectedWidget]);
   const valueSourceSuggestions = useMemo(() => {
@@ -274,10 +363,7 @@ export default function App() {
     }
 
     return valueSourceEntities
-      .filter((entity) =>
-        entity.entity_id.toLowerCase().includes(query) ||
-        entity.name.toLowerCase().includes(query)
-      )
+      .filter((entity) => entity.entity_id.toLowerCase().includes(query) || entity.name.toLowerCase().includes(query))
       .slice(0, 30);
   }, [valueSourceEntities, selectedWidget]);
   const selectedActionEntity = useMemo(
@@ -286,7 +372,7 @@ export default function App() {
   );
   const selectedValueEntity = useMemo(
     () => valueSourceEntities.find((entity) => entity.entity_id === selectedWidget?.valueSource),
-    [valueSourceEntities, selectedWidget]
+    [selectedWidget, valueSourceEntities]
   );
   const isPanelSafeIcon = useMemo(
     () => PANEL_SUPPORTED_ICON_SET.has((selectedWidget?.icon || "").replace(/^mdi:/i, "").toLowerCase()),
@@ -571,32 +657,44 @@ export default function App() {
                 ))}
               </div>
 
-              {widgets.map((widget) => (
-                <button
-                  key={widget.id}
-                  type="button"
-                  className={`widget-card ${selectedId === widget.id ? "selected" : ""} ${widget.visible ? "" : "hidden-card"}`}
-                  style={widgetStyle(widget)}
-                  onClick={() => setSelectedId(widget.id)}
-                  onPointerDown={(event) => handlePointerStart(event, widget, "drag")}
-                >
-                  <div className="widget-meta">
-                    <span>{widget.id}</span>
-                    <span>{widget.type}</span>
-                  </div>
-                  <div className="widget-main">
-                    <MdiIcon icon={widget.icon} />
-                    <div className="widget-text">
-                      <strong>{widget.label || "Untitled"}</strong>
-                      <span>{widget.value || "No value"}</span>
+              {widgets.map((widget) => {
+                const previewLabel = transformLabel(widget.label || "Untitled", widget.labelTransform);
+                const previewValue =
+                  widget.type === "blank" ? "" : widget.value || (isAutoValueType(widget.type) ? valuePlaceholder(widget.type) : "No value");
+
+                return (
+                  <button
+                    key={widget.id}
+                    type="button"
+                    className={`widget-card ${selectedId === widget.id ? "selected" : ""} ${widget.visible ? "" : "hidden-card"} ${widget.type === "blank" ? "blank-widget" : ""}`}
+                    style={widgetStyle(widget)}
+                    onClick={() => setSelectedId(widget.id)}
+                    onPointerDown={(event) => handlePointerStart(event, widget, "drag")}
+                  >
+                    <div className="widget-meta">
+                      <span>{widget.id}</span>
+                      <span>{widget.type}</span>
                     </div>
-                  </div>
-                  <span className="widget-size">
-                    {widget.w}x{widget.h}
-                  </span>
-                  <span className="resize-handle" onPointerDown={(event) => handlePointerStart(event, widget, "resize")} />
-                </button>
-              ))}
+                    <div className="widget-main">
+                      {widget.type !== "blank" && <MdiIcon icon={widget.icon} />}
+                      <div className="widget-text">
+                        {widget.type === "blank" ? (
+                          <strong className="blank-widget-copy">Blank spacer</strong>
+                        ) : (
+                          <>
+                            <strong>{previewLabel}</strong>
+                            <span>{previewValue}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <span className="widget-size">
+                      {widget.w}x{widget.h}
+                    </span>
+                    <span className="resize-handle" onPointerDown={(event) => handlePointerStart(event, widget, "resize")} />
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -609,294 +707,466 @@ export default function App() {
                 <span>{selectedWidget.id}</span>
               </div>
 
-              <label className="field checkbox-field">
-                <span>Visible</span>
-                <input
-                  type="checkbox"
-                  checked={selectedWidget.visible}
-                  onChange={(event) => updateWidget(selectedWidget.id, { visible: event.target.checked })}
-                />
-              </label>
+              <EditorGroup title="Basics" subtitle="Visibility and widget type">
+                <label className="field checkbox-field">
+                  <span>Visible</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedWidget.visible}
+                    onChange={(event) => updateWidget(selectedWidget.id, { visible: event.target.checked })}
+                  />
+                </label>
 
-              <label className="field">
-                <span>Type</span>
-                <select
-                  value={selectedWidget.type}
-                  onChange={(event) => updateWidget(selectedWidget.id, { type: event.target.value as WidgetConfig["type"] })}
-                >
-                  {WIDGET_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="field">
-                <span>Label</span>
-                <input
-                  type="text"
-                  value={selectedWidget.label}
-                  onChange={(event) => updateWidget(selectedWidget.id, { label: event.target.value })}
-                />
-              </label>
-
-              <label className="field">
-                <span>Value</span>
-                <input
-                  type="text"
-                  value={selectedWidget.value}
-                  placeholder={valuePlaceholder(selectedWidget.type)}
-                  disabled={isAutoValueType(selectedWidget.type)}
-                  onChange={(event) => updateWidget(selectedWidget.id, { value: event.target.value })}
-                />
-              </label>
-              <p className="field-hint">
-                {isAutoValueType(selectedWidget.type)
-                  ? "This widget type fills its value automatically on the panel."
-                  : selectedWidget.valueSource
-                    ? "This value is being kept in sync from the selected Home Assistant entity."
-                    : "This is the text shown as the main reading on the widget."}
-              </p>
-              {!isAutoValueType(selectedWidget.type) && (
-                <>
-                  <label className="field">
-                    <span>Value Source</span>
-                    <input
-                      type="text"
-                      list="value-entity-options"
-                      value={selectedWidget.valueSource}
-                      placeholder={valueSourcePlaceholder(selectedWidget.type)}
-                      onChange={(event) => updateWidget(selectedWidget.id, { valueSource: event.target.value })}
-                    />
-                  </label>
-                  <datalist id="value-entity-options">
-                    {valueSourceSuggestions.map((entity) => (
-                      <option key={`value-${entity.entity_id}`} value={entity.entity_id}>
-                        {entity.name}
+                <label className="field">
+                  <span>Type</span>
+                  <select
+                    value={selectedWidget.type}
+                    onChange={(event) => updateWidget(selectedWidget.id, { type: event.target.value as WidgetConfig["type"] })}
+                  >
+                    {WIDGET_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
                       </option>
                     ))}
-                  </datalist>
-                  <div className="suggestion-block">
-                    <div className="suggestion-header">
-                      <span>Entity state for widget content</span>
-                      <span>{valueSourceSuggestions.length} shown</span>
-                    </div>
-                    <div className="entity-results">
-                      {valueSourceSuggestions.map((entity) => (
-                        <button
-                          key={`value-entity-${entity.entity_id}`}
-                          type="button"
-                          className={`entity-option ${selectedWidget.valueSource === entity.entity_id ? "active" : ""}`}
-                          onClick={() => updateWidget(selectedWidget.id, { valueSource: entity.entity_id })}
-                        >
-                          <strong>{entity.name}</strong>
-                          <span>{entity.entity_id}</span>
-                          <small>
-                            {entity.domain} • {entity.state}
-                          </small>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <p className="field-hint">
-                    {selectedValueEntity
-                      ? `The add-on will copy ${selectedValueEntity.name} into this widget every 15 seconds.`
-                      : "Pick an entity here if you want the widget content to follow a sensor, switch, binary sensor, or similar entity."}
-                  </p>
-                </>
-              )}
-              {valueSuggestions.length > 0 && (
-                <div className="suggestion-block">
-                  <div className="suggestion-header">
-                    <span>Quick values</span>
-                  </div>
-                  <div className="suggestion-chips">
-                    {valueSuggestions.map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        type="button"
-                        className={`suggestion-chip ${selectedWidget.value === suggestion ? "active" : ""}`}
-                        onClick={() => updateWidget(selectedWidget.id, { value: suggestion })}
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+                  </select>
+                </label>
+              </EditorGroup>
 
-              <label className="field">
-                <span>Icon</span>
-                <input
-                  type="text"
-                  value={iconQuery}
-                  list="mdi-icons"
-                  placeholder="Search MDI icons, for example weather-partly-cloudy"
-                  onChange={(event) => {
-                    const nextValue = event.target.value.replace(/^mdi:/i, "");
-                    setIconQuery(nextValue);
-                    updateWidget(selectedWidget.id, { icon: nextValue });
-                  }}
-                />
-              </label>
-              <div className="scope-toggle">
-                <button
-                  type="button"
-                  className={iconScope === "panel" ? "scope-active" : ""}
-                  onClick={() => setIconScope("panel")}
-                >
-                  Panel-safe icons
-                </button>
-                <button
-                  type="button"
-                  className={iconScope === "all" ? "scope-active" : ""}
-                  onClick={() => setIconScope("all")}
-                >
-                  All MDI icons
-                </button>
-              </div>
-              <p className={`field-hint ${isPanelSafeIcon ? "" : "field-warning"}`}>
-                {isPanelSafeIcon
-                  ? "This icon is supported by the physical panel mapping."
-                  : "This icon currently only works in the web preview. Pick a panel-safe icon for the touchscreen."}
-              </p>
-              <datalist id="mdi-icons">
-                {MDI_ICON_NAMES.map((iconName) => (
-                  <option key={iconName} value={iconName} />
-                ))}
-              </datalist>
-
-              <div className="icon-picker">
-                <div className="icon-picker-header">
-                  <span>Matching MDI icons</span>
-                  <span>{filteredIcons.length} shown</span>
-                </div>
-                <div className="icon-preview">
-                  <MdiIcon icon={selectedWidget.icon} className="editor-icon-preview" />
-                  <strong>{selectedWidget.icon || "No icon selected"}</strong>
-                </div>
-                <div className="icon-results">
-                  {filteredIcons.map((iconName) => (
-                    <button
-                      key={iconName}
-                      type="button"
-                      className={`icon-option ${selectedWidget.icon === iconName ? "active" : ""}`}
-                      onClick={() => {
-                        setIconQuery(iconName);
-                        updateWidget(selectedWidget.id, { icon: iconName });
-                      }}
-                    >
-                      <MdiIcon icon={iconName} className="icon-option-glyph" />
-                      <span>{iconName}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <label className="field">
-                <span>Action Key</span>
-                <input
-                  type="text"
-                  list="action-keys"
-                  value={selectedWidget.action}
-                  placeholder={actionPlaceholder(selectedWidget.type)}
-                  onChange={(event) => updateWidget(selectedWidget.id, { action: event.target.value })}
-                />
-              </label>
-              <datalist id="action-keys">
-                {actionSuggestions.map((action) => (
-                  <option key={action} value={action} />
-                ))}
-              </datalist>
-              <label className="field">
-                <span>Target Entity</span>
-                <input
-                  type="text"
-                  list="entity-options"
-                  value={entityQuery}
-                  placeholder="Search Home Assistant entities, for example switch.office_main_light"
-                  onChange={(event) => setEntityQuery(event.target.value)}
-                />
-              </label>
-              <datalist id="entity-options">
-                {entitySuggestions.map((entity) => (
-                  <option key={entity.entity_id} value={entity.entity_id}>
-                    {entity.name}
-                  </option>
-                ))}
-              </datalist>
-              <div className="suggestion-block">
-                <div className="suggestion-header">
-                  <span>Matching entities</span>
-                  <span>{entitySuggestions.length} shown</span>
-                </div>
-                <div className="entity-results">
-                  {entitySuggestions.map((entity) => (
-                    <button
-                      key={entity.entity_id}
-                      type="button"
-                      className={`entity-option ${selectedWidget.action === entity.entity_id ? "active" : ""}`}
-                      onClick={() => {
-                        setEntityQuery(entity.entity_id);
-                        updateWidget(selectedWidget.id, { action: entity.entity_id });
-                      }}
-                    >
-                      <strong>{entity.name}</strong>
-                      <span>{entity.entity_id}</span>
-                      <small>
-                        {entity.domain} • {entity.state}
-                      </small>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <p className="field-hint">
-                Store a Home Assistant entity ID here to make tap automations much easier to wire up.
-                {selectedActionEntity ? ` Selected: ${selectedActionEntity.name}` : ""}
-              </p>
-              {actionSuggestions.length > 0 && (
-                <div className="suggestion-block">
-                  <div className="suggestion-header">
-                    <span>Suggested action keys</span>
-                  </div>
-                  <div className="suggestion-chips">
-                    {actionSuggestions.map((action) => (
-                      <button
-                        key={action}
-                        type="button"
-                        className={`suggestion-chip ${selectedWidget.action === action ? "active" : ""}`}
-                        onClick={() => updateWidget(selectedWidget.id, { action })}
-                      >
-                        {action}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="field-grid">
-                {(["x", "y", "w", "h"] as const).map((field) => {
-                  const max = field === "x" || field === "y" ? GRID_SIZE - 1 : GRID_SIZE;
-                  const min = field === "w" || field === "h" ? 1 : 0;
-                  return (
-                    <label key={field} className="field">
-                      <span>{field.toUpperCase()}</span>
+              {(capabilities.showLabel || capabilities.showValueInput || valueSuggestions.length > 0) && (
+                <EditorGroup title="Content" subtitle="What the widget says">
+                  {capabilities.showLabel && (
+                    <label className="field">
+                      <span>Label</span>
                       <input
-                        type="number"
-                        min={min}
-                        max={max}
-                        value={selectedWidget[field]}
-                        onChange={(event) =>
-                          updateWidget(selectedWidget.id, {
-                            [field]: Number.parseInt(event.target.value || String(min), 10)
-                          } as Partial<WidgetConfig>)
-                        }
+                        type="text"
+                        value={selectedWidget.label}
+                        onChange={(event) => updateWidget(selectedWidget.id, { label: event.target.value })}
                       />
                     </label>
-                  );
-                })}
-              </div>
+                  )}
+
+                  {capabilities.showValueInput && (
+                    <>
+                      <label className="field">
+                        <span>Value</span>
+                        <input
+                          type="text"
+                          value={selectedWidget.value}
+                          placeholder={valuePlaceholder(selectedWidget.type)}
+                          onChange={(event) => updateWidget(selectedWidget.id, { value: event.target.value })}
+                        />
+                      </label>
+                      <p className="field-hint">
+                        {selectedWidget.valueSource
+                          ? "This value is being kept in sync from the selected Home Assistant entity."
+                          : "This is the text shown as the main reading on the widget."}
+                      </p>
+                    </>
+                  )}
+
+                  {!capabilities.showValueInput && selectedWidget.type !== "blank" && (
+                    <p className="field-hint">This widget type fills its value automatically on the panel, so the manual value field is hidden.</p>
+                  )}
+
+                  {valueSuggestions.length > 0 && (
+                    <div className="suggestion-block">
+                      <div className="suggestion-header">
+                        <span>Quick values</span>
+                      </div>
+                      <div className="suggestion-chips">
+                        {valueSuggestions.map((suggestion) => (
+                          <button
+                            key={suggestion}
+                            type="button"
+                            className={`suggestion-chip ${selectedWidget.value === suggestion ? "active" : ""}`}
+                            onClick={() => updateWidget(selectedWidget.id, { value: suggestion })}
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </EditorGroup>
+              )}
+
+              {capabilities.showAppearance && (
+                <EditorGroup title="Appearance" subtitle="Alignment, colours, and icon style">
+                  <label className="field">
+                    <span>Content alignment</span>
+                    <select
+                      value={selectedWidget.contentAlign}
+                      onChange={(event) =>
+                        updateWidget(selectedWidget.id, {
+                          contentAlign: event.target.value as WidgetConfig["contentAlign"]
+                        })
+                      }
+                    >
+                      {CONTENT_ALIGN_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  {capabilities.showLabel && (
+                    <>
+                      <div className="field-grid">
+                        <label className="field">
+                          <span>Label case</span>
+                          <select
+                            value={selectedWidget.labelTransform}
+                            onChange={(event) =>
+                              updateWidget(selectedWidget.id, {
+                                labelTransform: event.target.value as WidgetConfig["labelTransform"]
+                              })
+                            }
+                          >
+                            {TEXT_TRANSFORM_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="field">
+                          <span>Label weight</span>
+                          <select
+                            value={selectedWidget.labelWeight}
+                            onChange={(event) =>
+                              updateWidget(selectedWidget.id, {
+                                labelWeight: event.target.value as WidgetConfig["labelWeight"]
+                              })
+                            }
+                          >
+                            {FONT_WEIGHT_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                      <ColorField
+                        label="Label colour"
+                        value={selectedWidget.labelColor}
+                        onChange={(value) => updateWidget(selectedWidget.id, { labelColor: value })}
+                      />
+                    </>
+                  )}
+
+                  {capabilities.showValueAppearance && (
+                    <>
+                      <label className="field">
+                        <span>Value weight</span>
+                        <select
+                          value={selectedWidget.valueWeight}
+                          onChange={(event) =>
+                            updateWidget(selectedWidget.id, {
+                              valueWeight: event.target.value as WidgetConfig["valueWeight"]
+                            })
+                          }
+                        >
+                          {FONT_WEIGHT_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <ColorField
+                        label="Value colour"
+                        value={selectedWidget.valueColor}
+                        onChange={(value) => updateWidget(selectedWidget.id, { valueColor: value })}
+                      />
+                    </>
+                  )}
+
+                  {capabilities.showIcon && (
+                    <>
+                      <ColorField
+                        label="Icon colour"
+                        value={selectedWidget.iconColor}
+                        onChange={(value) => updateWidget(selectedWidget.id, { iconColor: value })}
+                      />
+
+                      <label className="field">
+                        <span>Icon</span>
+                        <input
+                          type="text"
+                          value={iconQuery}
+                          list="mdi-icons"
+                          placeholder="Search MDI icons, for example weather-partly-cloudy"
+                          onChange={(event) => {
+                            const nextValue = event.target.value.replace(/^mdi:/i, "");
+                            setIconQuery(nextValue);
+                            updateWidget(selectedWidget.id, { icon: nextValue });
+                          }}
+                        />
+                      </label>
+                      <div className="scope-toggle">
+                        <button
+                          type="button"
+                          className={iconScope === "panel" ? "scope-active" : ""}
+                          onClick={() => setIconScope("panel")}
+                        >
+                          Panel-safe icons
+                        </button>
+                        <button
+                          type="button"
+                          className={iconScope === "all" ? "scope-active" : ""}
+                          onClick={() => setIconScope("all")}
+                        >
+                          All MDI icons
+                        </button>
+                      </div>
+                      <p className={`field-hint ${isPanelSafeIcon ? "" : "field-warning"}`}>
+                        {isPanelSafeIcon
+                          ? "This icon is supported by the physical panel mapping."
+                          : "This icon currently only works in the web preview. Pick a panel-safe icon for the touchscreen."}
+                      </p>
+                      <datalist id="mdi-icons">
+                        {MDI_ICON_NAMES.map((iconName) => (
+                          <option key={iconName} value={iconName} />
+                        ))}
+                      </datalist>
+
+                      <div className="icon-picker">
+                        <div className="icon-picker-header">
+                          <span>Matching MDI icons</span>
+                          <span>{filteredIcons.length} shown</span>
+                        </div>
+                        <div className="icon-preview">
+                          <MdiIcon icon={selectedWidget.icon} className="editor-icon-preview" />
+                          <strong>{selectedWidget.icon || "No icon selected"}</strong>
+                        </div>
+                        <div className="icon-results">
+                          {filteredIcons.map((iconName) => (
+                            <button
+                              key={iconName}
+                              type="button"
+                              className={`icon-option ${selectedWidget.icon === iconName ? "active" : ""}`}
+                              onClick={() => {
+                                setIconQuery(iconName);
+                                updateWidget(selectedWidget.id, { icon: iconName });
+                              }}
+                            >
+                              <MdiIcon icon={iconName} className="icon-option-glyph" />
+                              <span>{iconName}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="field-grid">
+                    {capabilities.showIcon && (
+                      <label className="field">
+                        <span>Icon size %</span>
+                        <input
+                          type="range"
+                          min={60}
+                          max={180}
+                          value={selectedWidget.iconScale}
+                          onChange={(event) => updateWidget(selectedWidget.id, { iconScale: Number.parseInt(event.target.value, 10) })}
+                        />
+                        <small className="range-value">{selectedWidget.iconScale}%</small>
+                      </label>
+                    )}
+                    {capabilities.showLabel && (
+                      <label className="field">
+                        <span>Label size %</span>
+                        <input
+                          type="range"
+                          min={60}
+                          max={180}
+                          value={selectedWidget.labelScale}
+                          onChange={(event) => updateWidget(selectedWidget.id, { labelScale: Number.parseInt(event.target.value, 10) })}
+                        />
+                        <small className="range-value">{selectedWidget.labelScale}%</small>
+                      </label>
+                    )}
+                    {capabilities.showValueAppearance && (
+                      <label className="field">
+                        <span>Value size %</span>
+                        <input
+                          type="range"
+                          min={60}
+                          max={180}
+                          value={selectedWidget.valueScale}
+                          onChange={(event) => updateWidget(selectedWidget.id, { valueScale: Number.parseInt(event.target.value, 10) })}
+                        />
+                        <small className="range-value">{selectedWidget.valueScale}%</small>
+                      </label>
+                    )}
+                  </div>
+                </EditorGroup>
+              )}
+
+              {(capabilities.showValueSource || capabilities.showAction) && (
+                <EditorGroup title="Data And Actions" subtitle="Only shown when this type needs it">
+                  {capabilities.showValueSource && (
+                    <>
+                      <label className="field">
+                        <span>Value Source</span>
+                        <input
+                          type="text"
+                          list="value-entity-options"
+                          value={selectedWidget.valueSource}
+                          placeholder={valueSourcePlaceholder(selectedWidget.type)}
+                          onChange={(event) => updateWidget(selectedWidget.id, { valueSource: event.target.value })}
+                        />
+                      </label>
+                      <datalist id="value-entity-options">
+                        {valueSourceSuggestions.map((entity) => (
+                          <option key={`value-${entity.entity_id}`} value={entity.entity_id}>
+                            {entity.name}
+                          </option>
+                        ))}
+                      </datalist>
+                      <div className="suggestion-block">
+                        <div className="suggestion-header">
+                          <span>Entity state for widget content</span>
+                          <span>{valueSourceSuggestions.length} shown</span>
+                        </div>
+                        <div className="entity-results">
+                          {valueSourceSuggestions.map((entity) => (
+                            <button
+                              key={`value-entity-${entity.entity_id}`}
+                              type="button"
+                              className={`entity-option ${selectedWidget.valueSource === entity.entity_id ? "active" : ""}`}
+                              onClick={() => updateWidget(selectedWidget.id, { valueSource: entity.entity_id })}
+                            >
+                              <strong>{entity.name}</strong>
+                              <span>{entity.entity_id}</span>
+                              <small>
+                                {entity.domain} | {entity.state}
+                              </small>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="field-hint">
+                        {selectedValueEntity
+                          ? `The add-on will copy ${selectedValueEntity.name} into this widget every 15 seconds.`
+                          : "Pick an entity here if you want the widget content to follow a sensor, switch, binary sensor, or similar entity."}
+                      </p>
+                    </>
+                  )}
+
+                  {capabilities.showAction && (
+                    <>
+                      <label className="field">
+                        <span>Action Key</span>
+                        <input
+                          type="text"
+                          list="action-keys"
+                          value={selectedWidget.action}
+                          placeholder={actionPlaceholder(selectedWidget.type)}
+                          onChange={(event) => updateWidget(selectedWidget.id, { action: event.target.value })}
+                        />
+                      </label>
+                      <datalist id="action-keys">
+                        {actionSuggestions.map((action) => (
+                          <option key={action} value={action} />
+                        ))}
+                      </datalist>
+                      <label className="field">
+                        <span>Target Entity</span>
+                        <input
+                          type="text"
+                          list="entity-options"
+                          value={entityQuery}
+                          placeholder="Search Home Assistant entities, for example switch.office_main_light"
+                          onChange={(event) => setEntityQuery(event.target.value)}
+                        />
+                      </label>
+                      <datalist id="entity-options">
+                        {entitySuggestions.map((entity) => (
+                          <option key={entity.entity_id} value={entity.entity_id}>
+                            {entity.name}
+                          </option>
+                        ))}
+                      </datalist>
+                      <div className="suggestion-block">
+                        <div className="suggestion-header">
+                          <span>Matching entities</span>
+                          <span>{entitySuggestions.length} shown</span>
+                        </div>
+                        <div className="entity-results">
+                          {entitySuggestions.map((entity) => (
+                            <button
+                              key={entity.entity_id}
+                              type="button"
+                              className={`entity-option ${selectedWidget.action === entity.entity_id ? "active" : ""}`}
+                              onClick={() => {
+                                setEntityQuery(entity.entity_id);
+                                updateWidget(selectedWidget.id, { action: entity.entity_id });
+                              }}
+                            >
+                              <strong>{entity.name}</strong>
+                              <span>{entity.entity_id}</span>
+                              <small>
+                                {entity.domain} | {entity.state}
+                              </small>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="field-hint">
+                        Store a Home Assistant entity ID here to make tap automations much easier to wire up.
+                        {selectedActionEntity ? ` Selected: ${selectedActionEntity.name}` : ""}
+                      </p>
+                      {actionSuggestions.length > 0 && (
+                        <div className="suggestion-block">
+                          <div className="suggestion-header">
+                            <span>Suggested action keys</span>
+                          </div>
+                          <div className="suggestion-chips">
+                            {actionSuggestions.map((action) => (
+                              <button
+                                key={action}
+                                type="button"
+                                className={`suggestion-chip ${selectedWidget.action === action ? "active" : ""}`}
+                                onClick={() => updateWidget(selectedWidget.id, { action })}
+                              >
+                                {action}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </EditorGroup>
+              )}
+
+              <EditorGroup title="Layout" subtitle="Grid position and size" defaultOpen={false}>
+                <div className="field-grid">
+                  {(["x", "y", "w", "h"] as const).map((field) => {
+                    const max = field === "x" || field === "y" ? GRID_SIZE - 1 : GRID_SIZE;
+                    const min = field === "w" || field === "h" ? 1 : 0;
+                    return (
+                      <label key={field} className="field">
+                        <span>{field.toUpperCase()}</span>
+                        <input
+                          type="number"
+                          min={min}
+                          max={max}
+                          value={selectedWidget[field]}
+                          onChange={(event) =>
+                            updateWidget(selectedWidget.id, {
+                              [field]: Number.parseInt(event.target.value || String(min), 10)
+                            } as Partial<WidgetConfig>)
+                          }
+                        />
+                      </label>
+                    );
+                  })}
+                </div>
+              </EditorGroup>
 
               <button className="primary" onClick={() => void handleApplySelected()} disabled={busy}>
                 Apply selected widget

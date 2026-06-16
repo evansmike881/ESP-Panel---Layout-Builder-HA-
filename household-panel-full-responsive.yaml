@@ -6,6 +6,8 @@ esphome:
   name: household-panel
   friendly_name: Household Panel
   min_version: 2026.4.0
+  includes:
+    - esp_panel_widget_helpers.h
   on_boot:
     priority: -200
     then:
@@ -133,6 +135,10 @@ media_player:
 
 font:
   - file: "gfonts://Montserrat"
+    id: montserrat_10
+    size: 10
+    bpp: 4
+  - file: "gfonts://Montserrat"
     id: montserrat_12
     size: 12
     bpp: 4
@@ -143,6 +149,10 @@ font:
   - file: "gfonts://Montserrat"
     id: montserrat_16
     size: 16
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_18
+    size: 18
     bpp: 4
   - file: "gfonts://Montserrat"
     id: montserrat_22
@@ -156,11 +166,126 @@ font:
     id: montserrat_36
     size: 36
     bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_bold_10
+    size: 10
+    weight: 700
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_bold_12
+    size: 12
+    weight: 700
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_bold_14
+    size: 14
+    weight: 700
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_bold_16
+    size: 16
+    weight: 700
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_bold_18
+    size: 18
+    weight: 700
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_bold_22
+    size: 22
+    weight: 700
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_bold_28
+    size: 28
+    weight: 700
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_bold_36
+    size: 36
+    weight: 700
+    bpp: 4
+  - file:
+      url: "https://cdn.jsdelivr.net/npm/@mdi/font@latest/fonts/materialdesignicons-webfont.ttf"
+      type: web
+    id: mdi_icons_24
+    size: 24
+    glyphs:
+      - "\U000F0599" # weather-sunny
+      - "\U000F0595" # weather-partly-cloudy
+      - "\U000F0590" # weather-cloudy
+      - "\U000F0597" # weather-rainy
+      - "\U000F0596" # weather-pouring
+      - "\U000F0593" # weather-lightning
+      - "\U000F0598" # weather-snowy
+      - "\U000F0594" # weather-fog
+      - "\U000F050F" # thermometer
+      - "\U000F058E" # water-percent
+      - "\U000F0769" # ceiling-light
+      - "\U000F0150" # clock
+      - "\U000F00ED" # calendar
+      - "\U000F06E8" # blank/shape
+      - "\U000F05A9" # wifi
+      - "\U000F04B9" # sofa
+      - "\U000F081C" # door
+      - "\U000F07D0" # home
+      - "\U000F0493" # cog
   - file:
       url: "https://cdn.jsdelivr.net/npm/@mdi/font@latest/fonts/materialdesignicons-webfont.ttf"
       type: web
     id: mdi_icons_32
     size: 32
+    glyphs:
+      - "\U000F0599" # weather-sunny
+      - "\U000F0595" # weather-partly-cloudy
+      - "\U000F0590" # weather-cloudy
+      - "\U000F0597" # weather-rainy
+      - "\U000F0596" # weather-pouring
+      - "\U000F0593" # weather-lightning
+      - "\U000F0598" # weather-snowy
+      - "\U000F0594" # weather-fog
+      - "\U000F050F" # thermometer
+      - "\U000F058E" # water-percent
+      - "\U000F0769" # ceiling-light
+      - "\U000F0150" # clock
+      - "\U000F00ED" # calendar
+      - "\U000F06E8" # blank/shape
+      - "\U000F05A9" # wifi
+      - "\U000F04B9" # sofa
+      - "\U000F081C" # door
+      - "\U000F07D0" # home
+      - "\U000F0493" # cog
+  - file:
+      url: "https://cdn.jsdelivr.net/npm/@mdi/font@latest/fonts/materialdesignicons-webfont.ttf"
+      type: web
+    id: mdi_icons_48
+    size: 48
+    glyphs:
+      - "\U000F0599" # weather-sunny
+      - "\U000F0595" # weather-partly-cloudy
+      - "\U000F0590" # weather-cloudy
+      - "\U000F0597" # weather-rainy
+      - "\U000F0596" # weather-pouring
+      - "\U000F0593" # weather-lightning
+      - "\U000F0598" # weather-snowy
+      - "\U000F0594" # weather-fog
+      - "\U000F050F" # thermometer
+      - "\U000F058E" # water-percent
+      - "\U000F0769" # ceiling-light
+      - "\U000F0150" # clock
+      - "\U000F00ED" # calendar
+      - "\U000F06E8" # blank/shape
+      - "\U000F05A9" # wifi
+      - "\U000F04B9" # sofa
+      - "\U000F081C" # door
+      - "\U000F07D0" # home
+      - "\U000F0493" # cog
+  - file:
+      url: "https://cdn.jsdelivr.net/npm/@mdi/font@latest/fonts/materialdesignicons-webfont.ttf"
+      type: web
+    id: mdi_icons_64
+    size: 64
     glyphs:
       - "\U000F0599" # weather-sunny
       - "\U000F0595" # weather-partly-cloudy
@@ -378,6 +503,7 @@ script:
           y: !lambda "return (int) id(w01_y).state * id(slot_h) + 3;"
           width: !lambda "return ((int) id(w01_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w01_h).state * id(slot_h)) - id(slot_gap);"
+      - script.execute: render_w01
   - id: layout_w02
     mode: restart
     then:
@@ -387,6 +513,7 @@ script:
           y: !lambda "return (int) id(w02_y).state * id(slot_h) + 3;"
           width: !lambda "return ((int) id(w02_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w02_h).state * id(slot_h)) - id(slot_gap);"
+      - script.execute: render_w02
   - id: layout_w03
     mode: restart
     then:
@@ -396,6 +523,7 @@ script:
           y: !lambda "return (int) id(w03_y).state * id(slot_h) + 3;"
           width: !lambda "return ((int) id(w03_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w03_h).state * id(slot_h)) - id(slot_gap);"
+      - script.execute: render_w03
   - id: layout_w04
     mode: restart
     then:
@@ -405,6 +533,7 @@ script:
           y: !lambda "return (int) id(w04_y).state * id(slot_h) + 3;"
           width: !lambda "return ((int) id(w04_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w04_h).state * id(slot_h)) - id(slot_gap);"
+      - script.execute: render_w04
   - id: layout_w05
     mode: restart
     then:
@@ -414,6 +543,7 @@ script:
           y: !lambda "return (int) id(w05_y).state * id(slot_h) + 3;"
           width: !lambda "return ((int) id(w05_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w05_h).state * id(slot_h)) - id(slot_gap);"
+      - script.execute: render_w05
   - id: layout_w06
     mode: restart
     then:
@@ -423,6 +553,7 @@ script:
           y: !lambda "return (int) id(w06_y).state * id(slot_h) + 3;"
           width: !lambda "return ((int) id(w06_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w06_h).state * id(slot_h)) - id(slot_gap);"
+      - script.execute: render_w06
   - id: layout_w07
     mode: restart
     then:
@@ -432,6 +563,7 @@ script:
           y: !lambda "return (int) id(w07_y).state * id(slot_h) + 3;"
           width: !lambda "return ((int) id(w07_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w07_h).state * id(slot_h)) - id(slot_gap);"
+      - script.execute: render_w07
   - id: layout_w08
     mode: restart
     then:
@@ -441,6 +573,7 @@ script:
           y: !lambda "return (int) id(w08_y).state * id(slot_h) + 3;"
           width: !lambda "return ((int) id(w08_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w08_h).state * id(slot_h)) - id(slot_gap);"
+      - script.execute: render_w08
   - id: layout_w09
     mode: restart
     then:
@@ -450,6 +583,7 @@ script:
           y: !lambda "return (int) id(w09_y).state * id(slot_h) + 3;"
           width: !lambda "return ((int) id(w09_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w09_h).state * id(slot_h)) - id(slot_gap);"
+      - script.execute: render_w09
   - id: layout_w10
     mode: restart
     then:
@@ -459,6 +593,7 @@ script:
           y: !lambda "return (int) id(w10_y).state * id(slot_h) + 3;"
           width: !lambda "return ((int) id(w10_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w10_h).state * id(slot_h)) - id(slot_gap);"
+      - script.execute: render_w10
   - id: layout_w11
     mode: restart
     then:
@@ -468,6 +603,7 @@ script:
           y: !lambda "return (int) id(w11_y).state * id(slot_h) + 3;"
           width: !lambda "return ((int) id(w11_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w11_h).state * id(slot_h)) - id(slot_gap);"
+      - script.execute: render_w11
   - id: layout_w12
     mode: restart
     then:
@@ -477,6 +613,7 @@ script:
           y: !lambda "return (int) id(w12_y).state * id(slot_h) + 3;"
           width: !lambda "return ((int) id(w12_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w12_h).state * id(slot_h)) - id(slot_gap);"
+      - script.execute: render_w12
 
   - id: render_w01
     mode: restart
@@ -484,9 +621,53 @@ script:
       - lvgl.widget.update:
           id: w01_card
           hidden: !lambda 'return !id(w01_visible).state || id(w01_type).state == "blank";'
+      - lvgl.widget.update:
+          id: w01_icon_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state).icon_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state).icon_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state).icon_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state).icon_h;'
+      - lvgl.widget.update:
+          id: w01_label_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state).label_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state).label_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state).label_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state).label_h;'
+      - lvgl.widget.update:
+          id: w01_value_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state).value_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state).value_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state).value_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state).value_h;'
       - lvgl.label.update:
           id: w01_label_label
-          text: !lambda 'return id(w01_label).state;'
+          text: !lambda 'return esp_panel_transform_label(id(w01_label).state, id(w01_label_transform).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w01_label_color).state, 0x8E9FB8));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state);
+            int px = geometry.label_px;
+            bool bold = id(w01_label_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w01_value_label
           text: !lambda |-
@@ -505,42 +686,97 @@ script:
               return std::string(buffer);
             }
             return id(w01_value).state;
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w01_value_color).state, 0xF1F5F9));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state);
+            int px = geometry.value_px;
+            bool bold = id(w01_value_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w01_icon_label
-          text: !lambda |-
-            std::string s = id(w01_icon).state;
-            std::string t = id(w01_type).state;
-            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-
-            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
-            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
-            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
-            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
-            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
-            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
-            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
-            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
-            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
-            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
-            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
-            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
-            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
-            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
-            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
-            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
-            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
-            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
-            if (t == "weather") return std::string("\U000F0595");
-            return std::string("\U000F06E8");
+          text: !lambda 'return esp_panel_icon_glyph(id(w01_icon).state, id(w01_type).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w01_icon_color).state, 0xF59E0B));'
+          text_align: CENTER
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state);
+            int px = geometry.icon_px;
+            if (px <= 24) return id(mdi_icons_24);
+            if (px <= 32) return id(mdi_icons_32);
+            if (px <= 48) return id(mdi_icons_48);
+            return id(mdi_icons_64);
   - id: render_w02
     mode: restart
     then:
       - lvgl.widget.update:
           id: w02_card
           hidden: !lambda 'return !id(w02_visible).state || id(w02_type).state == "blank";'
+      - lvgl.widget.update:
+          id: w02_icon_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state).icon_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state).icon_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state).icon_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state).icon_h;'
+      - lvgl.widget.update:
+          id: w02_label_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state).label_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state).label_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state).label_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state).label_h;'
+      - lvgl.widget.update:
+          id: w02_value_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state).value_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state).value_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state).value_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state).value_h;'
       - lvgl.label.update:
           id: w02_label_label
-          text: !lambda 'return id(w02_label).state;'
+          text: !lambda 'return esp_panel_transform_label(id(w02_label).state, id(w02_label_transform).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w02_label_color).state, 0x8E9FB8));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state);
+            int px = geometry.label_px;
+            bool bold = id(w02_label_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w02_value_label
           text: !lambda |-
@@ -559,42 +795,97 @@ script:
               return std::string(buffer);
             }
             return id(w02_value).state;
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w02_value_color).state, 0xF1F5F9));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state);
+            int px = geometry.value_px;
+            bool bold = id(w02_value_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w02_icon_label
-          text: !lambda |-
-            std::string s = id(w02_icon).state;
-            std::string t = id(w02_type).state;
-            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-
-            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
-            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
-            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
-            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
-            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
-            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
-            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
-            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
-            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
-            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
-            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
-            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
-            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
-            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
-            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
-            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
-            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
-            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
-            if (t == "weather") return std::string("\U000F0595");
-            return std::string("\U000F06E8");
+          text: !lambda 'return esp_panel_icon_glyph(id(w02_icon).state, id(w02_type).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w02_icon_color).state, 0xF59E0B));'
+          text_align: CENTER
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state);
+            int px = geometry.icon_px;
+            if (px <= 24) return id(mdi_icons_24);
+            if (px <= 32) return id(mdi_icons_32);
+            if (px <= 48) return id(mdi_icons_48);
+            return id(mdi_icons_64);
   - id: render_w03
     mode: restart
     then:
       - lvgl.widget.update:
           id: w03_card
           hidden: !lambda 'return !id(w03_visible).state || id(w03_type).state == "blank";'
+      - lvgl.widget.update:
+          id: w03_icon_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state).icon_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state).icon_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state).icon_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state).icon_h;'
+      - lvgl.widget.update:
+          id: w03_label_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state).label_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state).label_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state).label_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state).label_h;'
+      - lvgl.widget.update:
+          id: w03_value_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state).value_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state).value_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state).value_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state).value_h;'
       - lvgl.label.update:
           id: w03_label_label
-          text: !lambda 'return id(w03_label).state;'
+          text: !lambda 'return esp_panel_transform_label(id(w03_label).state, id(w03_label_transform).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w03_label_color).state, 0x8E9FB8));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state);
+            int px = geometry.label_px;
+            bool bold = id(w03_label_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w03_value_label
           text: !lambda |-
@@ -613,42 +904,97 @@ script:
               return std::string(buffer);
             }
             return id(w03_value).state;
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w03_value_color).state, 0xF1F5F9));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state);
+            int px = geometry.value_px;
+            bool bold = id(w03_value_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w03_icon_label
-          text: !lambda |-
-            std::string s = id(w03_icon).state;
-            std::string t = id(w03_type).state;
-            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-
-            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
-            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
-            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
-            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
-            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
-            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
-            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
-            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
-            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
-            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
-            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
-            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
-            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
-            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
-            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
-            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
-            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
-            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
-            if (t == "weather") return std::string("\U000F0595");
-            return std::string("\U000F06E8");
+          text: !lambda 'return esp_panel_icon_glyph(id(w03_icon).state, id(w03_type).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w03_icon_color).state, 0xF59E0B));'
+          text_align: CENTER
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state);
+            int px = geometry.icon_px;
+            if (px <= 24) return id(mdi_icons_24);
+            if (px <= 32) return id(mdi_icons_32);
+            if (px <= 48) return id(mdi_icons_48);
+            return id(mdi_icons_64);
   - id: render_w04
     mode: restart
     then:
       - lvgl.widget.update:
           id: w04_card
           hidden: !lambda 'return !id(w04_visible).state || id(w04_type).state == "blank";'
+      - lvgl.widget.update:
+          id: w04_icon_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state).icon_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state).icon_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state).icon_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state).icon_h;'
+      - lvgl.widget.update:
+          id: w04_label_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state).label_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state).label_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state).label_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state).label_h;'
+      - lvgl.widget.update:
+          id: w04_value_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state).value_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state).value_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state).value_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state).value_h;'
       - lvgl.label.update:
           id: w04_label_label
-          text: !lambda 'return id(w04_label).state;'
+          text: !lambda 'return esp_panel_transform_label(id(w04_label).state, id(w04_label_transform).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w04_label_color).state, 0x8E9FB8));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state);
+            int px = geometry.label_px;
+            bool bold = id(w04_label_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w04_value_label
           text: !lambda |-
@@ -667,42 +1013,97 @@ script:
               return std::string(buffer);
             }
             return id(w04_value).state;
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w04_value_color).state, 0xF1F5F9));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state);
+            int px = geometry.value_px;
+            bool bold = id(w04_value_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w04_icon_label
-          text: !lambda |-
-            std::string s = id(w04_icon).state;
-            std::string t = id(w04_type).state;
-            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-
-            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
-            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
-            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
-            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
-            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
-            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
-            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
-            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
-            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
-            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
-            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
-            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
-            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
-            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
-            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
-            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
-            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
-            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
-            if (t == "weather") return std::string("\U000F0595");
-            return std::string("\U000F06E8");
+          text: !lambda 'return esp_panel_icon_glyph(id(w04_icon).state, id(w04_type).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w04_icon_color).state, 0xF59E0B));'
+          text_align: CENTER
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state);
+            int px = geometry.icon_px;
+            if (px <= 24) return id(mdi_icons_24);
+            if (px <= 32) return id(mdi_icons_32);
+            if (px <= 48) return id(mdi_icons_48);
+            return id(mdi_icons_64);
   - id: render_w05
     mode: restart
     then:
       - lvgl.widget.update:
           id: w05_card
           hidden: !lambda 'return !id(w05_visible).state || id(w05_type).state == "blank";'
+      - lvgl.widget.update:
+          id: w05_icon_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state).icon_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state).icon_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state).icon_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state).icon_h;'
+      - lvgl.widget.update:
+          id: w05_label_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state).label_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state).label_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state).label_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state).label_h;'
+      - lvgl.widget.update:
+          id: w05_value_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state).value_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state).value_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state).value_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state).value_h;'
       - lvgl.label.update:
           id: w05_label_label
-          text: !lambda 'return id(w05_label).state;'
+          text: !lambda 'return esp_panel_transform_label(id(w05_label).state, id(w05_label_transform).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w05_label_color).state, 0x8E9FB8));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state);
+            int px = geometry.label_px;
+            bool bold = id(w05_label_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w05_value_label
           text: !lambda |-
@@ -721,42 +1122,97 @@ script:
               return std::string(buffer);
             }
             return id(w05_value).state;
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w05_value_color).state, 0xF1F5F9));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state);
+            int px = geometry.value_px;
+            bool bold = id(w05_value_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w05_icon_label
-          text: !lambda |-
-            std::string s = id(w05_icon).state;
-            std::string t = id(w05_type).state;
-            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-
-            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
-            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
-            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
-            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
-            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
-            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
-            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
-            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
-            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
-            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
-            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
-            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
-            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
-            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
-            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
-            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
-            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
-            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
-            if (t == "weather") return std::string("\U000F0595");
-            return std::string("\U000F06E8");
+          text: !lambda 'return esp_panel_icon_glyph(id(w05_icon).state, id(w05_type).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w05_icon_color).state, 0xF59E0B));'
+          text_align: CENTER
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state);
+            int px = geometry.icon_px;
+            if (px <= 24) return id(mdi_icons_24);
+            if (px <= 32) return id(mdi_icons_32);
+            if (px <= 48) return id(mdi_icons_48);
+            return id(mdi_icons_64);
   - id: render_w06
     mode: restart
     then:
       - lvgl.widget.update:
           id: w06_card
           hidden: !lambda 'return !id(w06_visible).state || id(w06_type).state == "blank";'
+      - lvgl.widget.update:
+          id: w06_icon_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state).icon_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state).icon_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state).icon_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state).icon_h;'
+      - lvgl.widget.update:
+          id: w06_label_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state).label_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state).label_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state).label_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state).label_h;'
+      - lvgl.widget.update:
+          id: w06_value_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state).value_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state).value_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state).value_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state).value_h;'
       - lvgl.label.update:
           id: w06_label_label
-          text: !lambda 'return id(w06_label).state;'
+          text: !lambda 'return esp_panel_transform_label(id(w06_label).state, id(w06_label_transform).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w06_label_color).state, 0x8E9FB8));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state);
+            int px = geometry.label_px;
+            bool bold = id(w06_label_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w06_value_label
           text: !lambda |-
@@ -775,42 +1231,97 @@ script:
               return std::string(buffer);
             }
             return id(w06_value).state;
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w06_value_color).state, 0xF1F5F9));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state);
+            int px = geometry.value_px;
+            bool bold = id(w06_value_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w06_icon_label
-          text: !lambda |-
-            std::string s = id(w06_icon).state;
-            std::string t = id(w06_type).state;
-            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-
-            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
-            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
-            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
-            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
-            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
-            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
-            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
-            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
-            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
-            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
-            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
-            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
-            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
-            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
-            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
-            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
-            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
-            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
-            if (t == "weather") return std::string("\U000F0595");
-            return std::string("\U000F06E8");
+          text: !lambda 'return esp_panel_icon_glyph(id(w06_icon).state, id(w06_type).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w06_icon_color).state, 0xF59E0B));'
+          text_align: CENTER
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state);
+            int px = geometry.icon_px;
+            if (px <= 24) return id(mdi_icons_24);
+            if (px <= 32) return id(mdi_icons_32);
+            if (px <= 48) return id(mdi_icons_48);
+            return id(mdi_icons_64);
   - id: render_w07
     mode: restart
     then:
       - lvgl.widget.update:
           id: w07_card
           hidden: !lambda 'return !id(w07_visible).state || id(w07_type).state == "blank";'
+      - lvgl.widget.update:
+          id: w07_icon_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state).icon_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state).icon_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state).icon_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state).icon_h;'
+      - lvgl.widget.update:
+          id: w07_label_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state).label_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state).label_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state).label_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state).label_h;'
+      - lvgl.widget.update:
+          id: w07_value_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state).value_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state).value_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state).value_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state).value_h;'
       - lvgl.label.update:
           id: w07_label_label
-          text: !lambda 'return id(w07_label).state;'
+          text: !lambda 'return esp_panel_transform_label(id(w07_label).state, id(w07_label_transform).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w07_label_color).state, 0x8E9FB8));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state);
+            int px = geometry.label_px;
+            bool bold = id(w07_label_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w07_value_label
           text: !lambda |-
@@ -829,42 +1340,97 @@ script:
               return std::string(buffer);
             }
             return id(w07_value).state;
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w07_value_color).state, 0xF1F5F9));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state);
+            int px = geometry.value_px;
+            bool bold = id(w07_value_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w07_icon_label
-          text: !lambda |-
-            std::string s = id(w07_icon).state;
-            std::string t = id(w07_type).state;
-            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-
-            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
-            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
-            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
-            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
-            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
-            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
-            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
-            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
-            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
-            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
-            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
-            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
-            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
-            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
-            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
-            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
-            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
-            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
-            if (t == "weather") return std::string("\U000F0595");
-            return std::string("\U000F06E8");
+          text: !lambda 'return esp_panel_icon_glyph(id(w07_icon).state, id(w07_type).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w07_icon_color).state, 0xF59E0B));'
+          text_align: CENTER
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state);
+            int px = geometry.icon_px;
+            if (px <= 24) return id(mdi_icons_24);
+            if (px <= 32) return id(mdi_icons_32);
+            if (px <= 48) return id(mdi_icons_48);
+            return id(mdi_icons_64);
   - id: render_w08
     mode: restart
     then:
       - lvgl.widget.update:
           id: w08_card
           hidden: !lambda 'return !id(w08_visible).state || id(w08_type).state == "blank";'
+      - lvgl.widget.update:
+          id: w08_icon_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state).icon_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state).icon_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state).icon_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state).icon_h;'
+      - lvgl.widget.update:
+          id: w08_label_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state).label_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state).label_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state).label_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state).label_h;'
+      - lvgl.widget.update:
+          id: w08_value_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state).value_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state).value_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state).value_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state).value_h;'
       - lvgl.label.update:
           id: w08_label_label
-          text: !lambda 'return id(w08_label).state;'
+          text: !lambda 'return esp_panel_transform_label(id(w08_label).state, id(w08_label_transform).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w08_label_color).state, 0x8E9FB8));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state);
+            int px = geometry.label_px;
+            bool bold = id(w08_label_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w08_value_label
           text: !lambda |-
@@ -883,42 +1449,97 @@ script:
               return std::string(buffer);
             }
             return id(w08_value).state;
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w08_value_color).state, 0xF1F5F9));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state);
+            int px = geometry.value_px;
+            bool bold = id(w08_value_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w08_icon_label
-          text: !lambda |-
-            std::string s = id(w08_icon).state;
-            std::string t = id(w08_type).state;
-            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-
-            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
-            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
-            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
-            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
-            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
-            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
-            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
-            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
-            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
-            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
-            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
-            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
-            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
-            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
-            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
-            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
-            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
-            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
-            if (t == "weather") return std::string("\U000F0595");
-            return std::string("\U000F06E8");
+          text: !lambda 'return esp_panel_icon_glyph(id(w08_icon).state, id(w08_type).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w08_icon_color).state, 0xF59E0B));'
+          text_align: CENTER
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state);
+            int px = geometry.icon_px;
+            if (px <= 24) return id(mdi_icons_24);
+            if (px <= 32) return id(mdi_icons_32);
+            if (px <= 48) return id(mdi_icons_48);
+            return id(mdi_icons_64);
   - id: render_w09
     mode: restart
     then:
       - lvgl.widget.update:
           id: w09_card
           hidden: !lambda 'return !id(w09_visible).state || id(w09_type).state == "blank";'
+      - lvgl.widget.update:
+          id: w09_icon_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state).icon_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state).icon_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state).icon_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state).icon_h;'
+      - lvgl.widget.update:
+          id: w09_label_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state).label_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state).label_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state).label_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state).label_h;'
+      - lvgl.widget.update:
+          id: w09_value_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state).value_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state).value_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state).value_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state).value_h;'
       - lvgl.label.update:
           id: w09_label_label
-          text: !lambda 'return id(w09_label).state;'
+          text: !lambda 'return esp_panel_transform_label(id(w09_label).state, id(w09_label_transform).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w09_label_color).state, 0x8E9FB8));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state);
+            int px = geometry.label_px;
+            bool bold = id(w09_label_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w09_value_label
           text: !lambda |-
@@ -937,42 +1558,97 @@ script:
               return std::string(buffer);
             }
             return id(w09_value).state;
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w09_value_color).state, 0xF1F5F9));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state);
+            int px = geometry.value_px;
+            bool bold = id(w09_value_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w09_icon_label
-          text: !lambda |-
-            std::string s = id(w09_icon).state;
-            std::string t = id(w09_type).state;
-            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-
-            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
-            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
-            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
-            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
-            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
-            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
-            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
-            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
-            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
-            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
-            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
-            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
-            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
-            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
-            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
-            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
-            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
-            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
-            if (t == "weather") return std::string("\U000F0595");
-            return std::string("\U000F06E8");
+          text: !lambda 'return esp_panel_icon_glyph(id(w09_icon).state, id(w09_type).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w09_icon_color).state, 0xF59E0B));'
+          text_align: CENTER
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state);
+            int px = geometry.icon_px;
+            if (px <= 24) return id(mdi_icons_24);
+            if (px <= 32) return id(mdi_icons_32);
+            if (px <= 48) return id(mdi_icons_48);
+            return id(mdi_icons_64);
   - id: render_w10
     mode: restart
     then:
       - lvgl.widget.update:
           id: w10_card
           hidden: !lambda 'return !id(w10_visible).state || id(w10_type).state == "blank";'
+      - lvgl.widget.update:
+          id: w10_icon_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state).icon_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state).icon_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state).icon_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state).icon_h;'
+      - lvgl.widget.update:
+          id: w10_label_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state).label_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state).label_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state).label_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state).label_h;'
+      - lvgl.widget.update:
+          id: w10_value_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state).value_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state).value_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state).value_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state).value_h;'
       - lvgl.label.update:
           id: w10_label_label
-          text: !lambda 'return id(w10_label).state;'
+          text: !lambda 'return esp_panel_transform_label(id(w10_label).state, id(w10_label_transform).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w10_label_color).state, 0x8E9FB8));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state);
+            int px = geometry.label_px;
+            bool bold = id(w10_label_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w10_value_label
           text: !lambda |-
@@ -991,42 +1667,97 @@ script:
               return std::string(buffer);
             }
             return id(w10_value).state;
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w10_value_color).state, 0xF1F5F9));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state);
+            int px = geometry.value_px;
+            bool bold = id(w10_value_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w10_icon_label
-          text: !lambda |-
-            std::string s = id(w10_icon).state;
-            std::string t = id(w10_type).state;
-            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-
-            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
-            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
-            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
-            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
-            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
-            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
-            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
-            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
-            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
-            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
-            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
-            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
-            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
-            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
-            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
-            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
-            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
-            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
-            if (t == "weather") return std::string("\U000F0595");
-            return std::string("\U000F06E8");
+          text: !lambda 'return esp_panel_icon_glyph(id(w10_icon).state, id(w10_type).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w10_icon_color).state, 0xF59E0B));'
+          text_align: CENTER
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state);
+            int px = geometry.icon_px;
+            if (px <= 24) return id(mdi_icons_24);
+            if (px <= 32) return id(mdi_icons_32);
+            if (px <= 48) return id(mdi_icons_48);
+            return id(mdi_icons_64);
   - id: render_w11
     mode: restart
     then:
       - lvgl.widget.update:
           id: w11_card
           hidden: !lambda 'return !id(w11_visible).state || id(w11_type).state == "blank";'
+      - lvgl.widget.update:
+          id: w11_icon_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state).icon_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state).icon_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state).icon_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state).icon_h;'
+      - lvgl.widget.update:
+          id: w11_label_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state).label_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state).label_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state).label_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state).label_h;'
+      - lvgl.widget.update:
+          id: w11_value_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state).value_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state).value_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state).value_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state).value_h;'
       - lvgl.label.update:
           id: w11_label_label
-          text: !lambda 'return id(w11_label).state;'
+          text: !lambda 'return esp_panel_transform_label(id(w11_label).state, id(w11_label_transform).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w11_label_color).state, 0x8E9FB8));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state);
+            int px = geometry.label_px;
+            bool bold = id(w11_label_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w11_value_label
           text: !lambda |-
@@ -1045,42 +1776,97 @@ script:
               return std::string(buffer);
             }
             return id(w11_value).state;
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w11_value_color).state, 0xF1F5F9));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state);
+            int px = geometry.value_px;
+            bool bold = id(w11_value_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w11_icon_label
-          text: !lambda |-
-            std::string s = id(w11_icon).state;
-            std::string t = id(w11_type).state;
-            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-
-            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
-            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
-            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
-            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
-            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
-            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
-            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
-            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
-            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
-            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
-            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
-            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
-            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
-            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
-            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
-            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
-            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
-            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
-            if (t == "weather") return std::string("\U000F0595");
-            return std::string("\U000F06E8");
+          text: !lambda 'return esp_panel_icon_glyph(id(w11_icon).state, id(w11_type).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w11_icon_color).state, 0xF59E0B));'
+          text_align: CENTER
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state);
+            int px = geometry.icon_px;
+            if (px <= 24) return id(mdi_icons_24);
+            if (px <= 32) return id(mdi_icons_32);
+            if (px <= 48) return id(mdi_icons_48);
+            return id(mdi_icons_64);
   - id: render_w12
     mode: restart
     then:
       - lvgl.widget.update:
           id: w12_card
           hidden: !lambda 'return !id(w12_visible).state || id(w12_type).state == "blank";'
+      - lvgl.widget.update:
+          id: w12_icon_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state).icon_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state).icon_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state).icon_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state).icon_h;'
+      - lvgl.widget.update:
+          id: w12_label_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state).label_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state).label_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state).label_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state).label_h;'
+      - lvgl.widget.update:
+          id: w12_value_label
+          x: !lambda 'return esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state).value_x;'
+          y: !lambda 'return esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state).value_y;'
+          width: !lambda 'return esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state).value_w;'
+          height: !lambda 'return esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state).value_h;'
       - lvgl.label.update:
           id: w12_label_label
-          text: !lambda 'return id(w12_label).state;'
+          text: !lambda 'return esp_panel_transform_label(id(w12_label).state, id(w12_label_transform).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w12_label_color).state, 0x8E9FB8));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state);
+            int px = geometry.label_px;
+            bool bold = id(w12_label_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w12_value_label
           text: !lambda |-
@@ -1099,33 +1885,44 @@ script:
               return std::string(buffer);
             }
             return id(w12_value).state;
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w12_value_color).state, 0xF1F5F9));'
+          text_align: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state);
+            return geometry.text_align_code == 2 ? LV_TEXT_ALIGN_RIGHT : geometry.text_align_code == 1 ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state);
+            int px = geometry.value_px;
+            bool bold = id(w12_value_weight).state == "bold";
+            if (bold) {
+              if (px <= 10) return id(montserrat_bold_10);
+              if (px <= 12) return id(montserrat_bold_12);
+              if (px <= 14) return id(montserrat_bold_14);
+              if (px <= 16) return id(montserrat_bold_16);
+              if (px <= 18) return id(montserrat_bold_18);
+              if (px <= 22) return id(montserrat_bold_22);
+              if (px <= 28) return id(montserrat_bold_28);
+              return id(montserrat_bold_36);
+            }
+            if (px <= 10) return id(montserrat_10);
+            if (px <= 12) return id(montserrat_12);
+            if (px <= 14) return id(montserrat_14);
+            if (px <= 16) return id(montserrat_16);
+            if (px <= 18) return id(montserrat_18);
+            if (px <= 22) return id(montserrat_22);
+            if (px <= 28) return id(montserrat_28);
+            return id(montserrat_36);
       - lvgl.label.update:
           id: w12_icon_label
-          text: !lambda |-
-            std::string s = id(w12_icon).state;
-            std::string t = id(w12_type).state;
-            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-
-            if (s.find("weather-sunny") != std::string::npos || s == "sunny") return std::string("\U000F0599");
-            if (s.find("weather-partly") != std::string::npos || s.find("partly") != std::string::npos) return std::string("\U000F0595");
-            if (s.find("weather-cloudy") != std::string::npos || s.find("cloud") != std::string::npos) return std::string("\U000F0590");
-            if (s.find("weather-rainy") != std::string::npos || s.find("rain") != std::string::npos) return std::string("\U000F0597");
-            if (s.find("weather-pouring") != std::string::npos || s.find("shower") != std::string::npos) return std::string("\U000F0596");
-            if (s.find("weather-lightning") != std::string::npos || s.find("thunder") != std::string::npos) return std::string("\U000F0593");
-            if (s.find("weather-snowy") != std::string::npos || s.find("snow") != std::string::npos) return std::string("\U000F0598");
-            if (s.find("weather-fog") != std::string::npos || s.find("fog") != std::string::npos || s.find("mist") != std::string::npos) return std::string("\U000F0594");
-            if (s.find("thermometer") != std::string::npos || t == "temperature") return std::string("\U000F050F");
-            if (s.find("water-percent") != std::string::npos || t == "humidity") return std::string("\U000F058E");
-            if (s.find("ceiling-light") != std::string::npos || s.find("lightbulb") != std::string::npos || t == "button") return std::string("\U000F0769");
-            if (s.find("clock") != std::string::npos || t == "clock") return std::string("\U000F0150");
-            if (s.find("calendar") != std::string::npos || t == "date") return std::string("\U000F00ED");
-            if (s.find("wifi") != std::string::npos) return std::string("\U000F05A9");
-            if (s.find("sofa") != std::string::npos) return std::string("\U000F04B9");
-            if (s.find("door") != std::string::npos) return std::string("\U000F081C");
-            if (s.find("home") != std::string::npos) return std::string("\U000F07D0");
-            if (s.find("cog") != std::string::npos) return std::string("\U000F0493");
-            if (t == "weather") return std::string("\U000F0595");
-            return std::string("\U000F06E8");
+          text: !lambda 'return esp_panel_icon_glyph(id(w12_icon).state, id(w12_type).state);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w12_icon_color).state, 0xF59E0B));'
+          text_align: CENTER
+          text_font: !lambda |-
+            auto geometry = esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state);
+            int px = geometry.icon_px;
+            if (px <= 24) return id(mdi_icons_24);
+            if (px <= 32) return id(mdi_icons_32);
+            if (px <= 48) return id(mdi_icons_48);
+            return id(mdi_icons_64);
 
 binary_sensor:
   - platform: homeassistant
@@ -1211,6 +2008,21 @@ sensor:
     on_value:
       - script.execute: layout_w01
   - platform: homeassistant
+    id: w01_icon_scale
+    entity_id: input_number.esp_panel_w01_icon_scale
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
+    id: w01_label_scale
+    entity_id: input_number.esp_panel_w01_label_scale
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
+    id: w01_value_scale
+    entity_id: input_number.esp_panel_w01_value_scale
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
     id: w02_x
     entity_id: input_number.esp_panel_w02_x
     on_value:
@@ -1230,6 +2042,21 @@ sensor:
     entity_id: input_number.esp_panel_w02_h
     on_value:
       - script.execute: layout_w02
+  - platform: homeassistant
+    id: w02_icon_scale
+    entity_id: input_number.esp_panel_w02_icon_scale
+    on_value:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w02_label_scale
+    entity_id: input_number.esp_panel_w02_label_scale
+    on_value:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w02_value_scale
+    entity_id: input_number.esp_panel_w02_value_scale
+    on_value:
+      - script.execute: render_w02
   - platform: homeassistant
     id: w03_x
     entity_id: input_number.esp_panel_w03_x
@@ -1251,6 +2078,21 @@ sensor:
     on_value:
       - script.execute: layout_w03
   - platform: homeassistant
+    id: w03_icon_scale
+    entity_id: input_number.esp_panel_w03_icon_scale
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
+    id: w03_label_scale
+    entity_id: input_number.esp_panel_w03_label_scale
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
+    id: w03_value_scale
+    entity_id: input_number.esp_panel_w03_value_scale
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
     id: w04_x
     entity_id: input_number.esp_panel_w04_x
     on_value:
@@ -1270,6 +2112,21 @@ sensor:
     entity_id: input_number.esp_panel_w04_h
     on_value:
       - script.execute: layout_w04
+  - platform: homeassistant
+    id: w04_icon_scale
+    entity_id: input_number.esp_panel_w04_icon_scale
+    on_value:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w04_label_scale
+    entity_id: input_number.esp_panel_w04_label_scale
+    on_value:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w04_value_scale
+    entity_id: input_number.esp_panel_w04_value_scale
+    on_value:
+      - script.execute: render_w04
   - platform: homeassistant
     id: w05_x
     entity_id: input_number.esp_panel_w05_x
@@ -1291,6 +2148,21 @@ sensor:
     on_value:
       - script.execute: layout_w05
   - platform: homeassistant
+    id: w05_icon_scale
+    entity_id: input_number.esp_panel_w05_icon_scale
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
+    id: w05_label_scale
+    entity_id: input_number.esp_panel_w05_label_scale
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
+    id: w05_value_scale
+    entity_id: input_number.esp_panel_w05_value_scale
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
     id: w06_x
     entity_id: input_number.esp_panel_w06_x
     on_value:
@@ -1310,6 +2182,21 @@ sensor:
     entity_id: input_number.esp_panel_w06_h
     on_value:
       - script.execute: layout_w06
+  - platform: homeassistant
+    id: w06_icon_scale
+    entity_id: input_number.esp_panel_w06_icon_scale
+    on_value:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w06_label_scale
+    entity_id: input_number.esp_panel_w06_label_scale
+    on_value:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w06_value_scale
+    entity_id: input_number.esp_panel_w06_value_scale
+    on_value:
+      - script.execute: render_w06
   - platform: homeassistant
     id: w07_x
     entity_id: input_number.esp_panel_w07_x
@@ -1331,6 +2218,21 @@ sensor:
     on_value:
       - script.execute: layout_w07
   - platform: homeassistant
+    id: w07_icon_scale
+    entity_id: input_number.esp_panel_w07_icon_scale
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
+    id: w07_label_scale
+    entity_id: input_number.esp_panel_w07_label_scale
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
+    id: w07_value_scale
+    entity_id: input_number.esp_panel_w07_value_scale
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
     id: w08_x
     entity_id: input_number.esp_panel_w08_x
     on_value:
@@ -1350,6 +2252,21 @@ sensor:
     entity_id: input_number.esp_panel_w08_h
     on_value:
       - script.execute: layout_w08
+  - platform: homeassistant
+    id: w08_icon_scale
+    entity_id: input_number.esp_panel_w08_icon_scale
+    on_value:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w08_label_scale
+    entity_id: input_number.esp_panel_w08_label_scale
+    on_value:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w08_value_scale
+    entity_id: input_number.esp_panel_w08_value_scale
+    on_value:
+      - script.execute: render_w08
   - platform: homeassistant
     id: w09_x
     entity_id: input_number.esp_panel_w09_x
@@ -1371,6 +2288,21 @@ sensor:
     on_value:
       - script.execute: layout_w09
   - platform: homeassistant
+    id: w09_icon_scale
+    entity_id: input_number.esp_panel_w09_icon_scale
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
+    id: w09_label_scale
+    entity_id: input_number.esp_panel_w09_label_scale
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
+    id: w09_value_scale
+    entity_id: input_number.esp_panel_w09_value_scale
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
     id: w10_x
     entity_id: input_number.esp_panel_w10_x
     on_value:
@@ -1390,6 +2322,21 @@ sensor:
     entity_id: input_number.esp_panel_w10_h
     on_value:
       - script.execute: layout_w10
+  - platform: homeassistant
+    id: w10_icon_scale
+    entity_id: input_number.esp_panel_w10_icon_scale
+    on_value:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w10_label_scale
+    entity_id: input_number.esp_panel_w10_label_scale
+    on_value:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w10_value_scale
+    entity_id: input_number.esp_panel_w10_value_scale
+    on_value:
+      - script.execute: render_w10
   - platform: homeassistant
     id: w11_x
     entity_id: input_number.esp_panel_w11_x
@@ -1411,6 +2358,21 @@ sensor:
     on_value:
       - script.execute: layout_w11
   - platform: homeassistant
+    id: w11_icon_scale
+    entity_id: input_number.esp_panel_w11_icon_scale
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
+    id: w11_label_scale
+    entity_id: input_number.esp_panel_w11_label_scale
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
+    id: w11_value_scale
+    entity_id: input_number.esp_panel_w11_value_scale
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
     id: w12_x
     entity_id: input_number.esp_panel_w12_x
     on_value:
@@ -1430,6 +2392,21 @@ sensor:
     entity_id: input_number.esp_panel_w12_h
     on_value:
       - script.execute: layout_w12
+  - platform: homeassistant
+    id: w12_icon_scale
+    entity_id: input_number.esp_panel_w12_icon_scale
+    on_value:
+      - script.execute: render_w12
+  - platform: homeassistant
+    id: w12_label_scale
+    entity_id: input_number.esp_panel_w12_label_scale
+    on_value:
+      - script.execute: render_w12
+  - platform: homeassistant
+    id: w12_value_scale
+    entity_id: input_number.esp_panel_w12_value_scale
+    on_value:
+      - script.execute: render_w12
 
 text_sensor:
   - platform: homeassistant
@@ -1456,6 +2433,41 @@ text_sensor:
     id: w01_action
     entity_id: input_text.esp_panel_w01_action
   - platform: homeassistant
+    id: w01_content_align
+    entity_id: input_select.esp_panel_w01_content_align
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
+    id: w01_label_transform
+    entity_id: input_select.esp_panel_w01_label_transform
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
+    id: w01_label_weight
+    entity_id: input_select.esp_panel_w01_label_weight
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
+    id: w01_value_weight
+    entity_id: input_select.esp_panel_w01_value_weight
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
+    id: w01_icon_color
+    entity_id: input_text.esp_panel_w01_icon_color
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
+    id: w01_label_color
+    entity_id: input_text.esp_panel_w01_label_color
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
+    id: w01_value_color
+    entity_id: input_text.esp_panel_w01_value_color
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
     id: w02_type
     entity_id: input_select.esp_panel_w02_type
     on_value:
@@ -1478,6 +2490,41 @@ text_sensor:
   - platform: homeassistant
     id: w02_action
     entity_id: input_text.esp_panel_w02_action
+  - platform: homeassistant
+    id: w02_content_align
+    entity_id: input_select.esp_panel_w02_content_align
+    on_value:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w02_label_transform
+    entity_id: input_select.esp_panel_w02_label_transform
+    on_value:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w02_label_weight
+    entity_id: input_select.esp_panel_w02_label_weight
+    on_value:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w02_value_weight
+    entity_id: input_select.esp_panel_w02_value_weight
+    on_value:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w02_icon_color
+    entity_id: input_text.esp_panel_w02_icon_color
+    on_value:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w02_label_color
+    entity_id: input_text.esp_panel_w02_label_color
+    on_value:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w02_value_color
+    entity_id: input_text.esp_panel_w02_value_color
+    on_value:
+      - script.execute: render_w02
   - platform: homeassistant
     id: w03_type
     entity_id: input_select.esp_panel_w03_type
@@ -1502,6 +2549,41 @@ text_sensor:
     id: w03_action
     entity_id: input_text.esp_panel_w03_action
   - platform: homeassistant
+    id: w03_content_align
+    entity_id: input_select.esp_panel_w03_content_align
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
+    id: w03_label_transform
+    entity_id: input_select.esp_panel_w03_label_transform
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
+    id: w03_label_weight
+    entity_id: input_select.esp_panel_w03_label_weight
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
+    id: w03_value_weight
+    entity_id: input_select.esp_panel_w03_value_weight
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
+    id: w03_icon_color
+    entity_id: input_text.esp_panel_w03_icon_color
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
+    id: w03_label_color
+    entity_id: input_text.esp_panel_w03_label_color
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
+    id: w03_value_color
+    entity_id: input_text.esp_panel_w03_value_color
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
     id: w04_type
     entity_id: input_select.esp_panel_w04_type
     on_value:
@@ -1524,6 +2606,41 @@ text_sensor:
   - platform: homeassistant
     id: w04_action
     entity_id: input_text.esp_panel_w04_action
+  - platform: homeassistant
+    id: w04_content_align
+    entity_id: input_select.esp_panel_w04_content_align
+    on_value:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w04_label_transform
+    entity_id: input_select.esp_panel_w04_label_transform
+    on_value:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w04_label_weight
+    entity_id: input_select.esp_panel_w04_label_weight
+    on_value:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w04_value_weight
+    entity_id: input_select.esp_panel_w04_value_weight
+    on_value:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w04_icon_color
+    entity_id: input_text.esp_panel_w04_icon_color
+    on_value:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w04_label_color
+    entity_id: input_text.esp_panel_w04_label_color
+    on_value:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w04_value_color
+    entity_id: input_text.esp_panel_w04_value_color
+    on_value:
+      - script.execute: render_w04
   - platform: homeassistant
     id: w05_type
     entity_id: input_select.esp_panel_w05_type
@@ -1548,6 +2665,41 @@ text_sensor:
     id: w05_action
     entity_id: input_text.esp_panel_w05_action
   - platform: homeassistant
+    id: w05_content_align
+    entity_id: input_select.esp_panel_w05_content_align
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
+    id: w05_label_transform
+    entity_id: input_select.esp_panel_w05_label_transform
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
+    id: w05_label_weight
+    entity_id: input_select.esp_panel_w05_label_weight
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
+    id: w05_value_weight
+    entity_id: input_select.esp_panel_w05_value_weight
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
+    id: w05_icon_color
+    entity_id: input_text.esp_panel_w05_icon_color
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
+    id: w05_label_color
+    entity_id: input_text.esp_panel_w05_label_color
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
+    id: w05_value_color
+    entity_id: input_text.esp_panel_w05_value_color
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
     id: w06_type
     entity_id: input_select.esp_panel_w06_type
     on_value:
@@ -1570,6 +2722,41 @@ text_sensor:
   - platform: homeassistant
     id: w06_action
     entity_id: input_text.esp_panel_w06_action
+  - platform: homeassistant
+    id: w06_content_align
+    entity_id: input_select.esp_panel_w06_content_align
+    on_value:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w06_label_transform
+    entity_id: input_select.esp_panel_w06_label_transform
+    on_value:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w06_label_weight
+    entity_id: input_select.esp_panel_w06_label_weight
+    on_value:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w06_value_weight
+    entity_id: input_select.esp_panel_w06_value_weight
+    on_value:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w06_icon_color
+    entity_id: input_text.esp_panel_w06_icon_color
+    on_value:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w06_label_color
+    entity_id: input_text.esp_panel_w06_label_color
+    on_value:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w06_value_color
+    entity_id: input_text.esp_panel_w06_value_color
+    on_value:
+      - script.execute: render_w06
   - platform: homeassistant
     id: w07_type
     entity_id: input_select.esp_panel_w07_type
@@ -1594,6 +2781,41 @@ text_sensor:
     id: w07_action
     entity_id: input_text.esp_panel_w07_action
   - platform: homeassistant
+    id: w07_content_align
+    entity_id: input_select.esp_panel_w07_content_align
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
+    id: w07_label_transform
+    entity_id: input_select.esp_panel_w07_label_transform
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
+    id: w07_label_weight
+    entity_id: input_select.esp_panel_w07_label_weight
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
+    id: w07_value_weight
+    entity_id: input_select.esp_panel_w07_value_weight
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
+    id: w07_icon_color
+    entity_id: input_text.esp_panel_w07_icon_color
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
+    id: w07_label_color
+    entity_id: input_text.esp_panel_w07_label_color
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
+    id: w07_value_color
+    entity_id: input_text.esp_panel_w07_value_color
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
     id: w08_type
     entity_id: input_select.esp_panel_w08_type
     on_value:
@@ -1616,6 +2838,41 @@ text_sensor:
   - platform: homeassistant
     id: w08_action
     entity_id: input_text.esp_panel_w08_action
+  - platform: homeassistant
+    id: w08_content_align
+    entity_id: input_select.esp_panel_w08_content_align
+    on_value:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w08_label_transform
+    entity_id: input_select.esp_panel_w08_label_transform
+    on_value:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w08_label_weight
+    entity_id: input_select.esp_panel_w08_label_weight
+    on_value:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w08_value_weight
+    entity_id: input_select.esp_panel_w08_value_weight
+    on_value:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w08_icon_color
+    entity_id: input_text.esp_panel_w08_icon_color
+    on_value:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w08_label_color
+    entity_id: input_text.esp_panel_w08_label_color
+    on_value:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w08_value_color
+    entity_id: input_text.esp_panel_w08_value_color
+    on_value:
+      - script.execute: render_w08
   - platform: homeassistant
     id: w09_type
     entity_id: input_select.esp_panel_w09_type
@@ -1640,6 +2897,41 @@ text_sensor:
     id: w09_action
     entity_id: input_text.esp_panel_w09_action
   - platform: homeassistant
+    id: w09_content_align
+    entity_id: input_select.esp_panel_w09_content_align
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
+    id: w09_label_transform
+    entity_id: input_select.esp_panel_w09_label_transform
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
+    id: w09_label_weight
+    entity_id: input_select.esp_panel_w09_label_weight
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
+    id: w09_value_weight
+    entity_id: input_select.esp_panel_w09_value_weight
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
+    id: w09_icon_color
+    entity_id: input_text.esp_panel_w09_icon_color
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
+    id: w09_label_color
+    entity_id: input_text.esp_panel_w09_label_color
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
+    id: w09_value_color
+    entity_id: input_text.esp_panel_w09_value_color
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
     id: w10_type
     entity_id: input_select.esp_panel_w10_type
     on_value:
@@ -1662,6 +2954,41 @@ text_sensor:
   - platform: homeassistant
     id: w10_action
     entity_id: input_text.esp_panel_w10_action
+  - platform: homeassistant
+    id: w10_content_align
+    entity_id: input_select.esp_panel_w10_content_align
+    on_value:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w10_label_transform
+    entity_id: input_select.esp_panel_w10_label_transform
+    on_value:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w10_label_weight
+    entity_id: input_select.esp_panel_w10_label_weight
+    on_value:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w10_value_weight
+    entity_id: input_select.esp_panel_w10_value_weight
+    on_value:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w10_icon_color
+    entity_id: input_text.esp_panel_w10_icon_color
+    on_value:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w10_label_color
+    entity_id: input_text.esp_panel_w10_label_color
+    on_value:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w10_value_color
+    entity_id: input_text.esp_panel_w10_value_color
+    on_value:
+      - script.execute: render_w10
   - platform: homeassistant
     id: w11_type
     entity_id: input_select.esp_panel_w11_type
@@ -1686,6 +3013,41 @@ text_sensor:
     id: w11_action
     entity_id: input_text.esp_panel_w11_action
   - platform: homeassistant
+    id: w11_content_align
+    entity_id: input_select.esp_panel_w11_content_align
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
+    id: w11_label_transform
+    entity_id: input_select.esp_panel_w11_label_transform
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
+    id: w11_label_weight
+    entity_id: input_select.esp_panel_w11_label_weight
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
+    id: w11_value_weight
+    entity_id: input_select.esp_panel_w11_value_weight
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
+    id: w11_icon_color
+    entity_id: input_text.esp_panel_w11_icon_color
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
+    id: w11_label_color
+    entity_id: input_text.esp_panel_w11_label_color
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
+    id: w11_value_color
+    entity_id: input_text.esp_panel_w11_value_color
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
     id: w12_type
     entity_id: input_select.esp_panel_w12_type
     on_value:
@@ -1708,6 +3070,41 @@ text_sensor:
   - platform: homeassistant
     id: w12_action
     entity_id: input_text.esp_panel_w12_action
+  - platform: homeassistant
+    id: w12_content_align
+    entity_id: input_select.esp_panel_w12_content_align
+    on_value:
+      - script.execute: render_w12
+  - platform: homeassistant
+    id: w12_label_transform
+    entity_id: input_select.esp_panel_w12_label_transform
+    on_value:
+      - script.execute: render_w12
+  - platform: homeassistant
+    id: w12_label_weight
+    entity_id: input_select.esp_panel_w12_label_weight
+    on_value:
+      - script.execute: render_w12
+  - platform: homeassistant
+    id: w12_value_weight
+    entity_id: input_select.esp_panel_w12_value_weight
+    on_value:
+      - script.execute: render_w12
+  - platform: homeassistant
+    id: w12_icon_color
+    entity_id: input_text.esp_panel_w12_icon_color
+    on_value:
+      - script.execute: render_w12
+  - platform: homeassistant
+    id: w12_label_color
+    entity_id: input_text.esp_panel_w12_label_color
+    on_value:
+      - script.execute: render_w12
+  - platform: homeassistant
+    id: w12_value_color
+    entity_id: input_text.esp_panel_w12_value_color
+    on_value:
+      - script.execute: render_w12
 
 interval:
   - interval: 5s
@@ -2383,3 +3780,4 @@ lvgl:
                         width: 420
                         long_mode: WRAP
                         text_align: CENTER
+

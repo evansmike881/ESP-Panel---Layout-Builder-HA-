@@ -271,9 +271,10 @@ h1 {
 }
 
 .widget-icon {
-  width: calc(28px * var(--widget-scale, 1));
-  height: calc(28px * var(--widget-scale, 1));
+  width: calc(28px * var(--widget-scale, 1) * var(--widget-icon-scale, 1));
+  height: calc(28px * var(--widget-scale, 1) * var(--widget-icon-scale, 1));
   flex: 0 0 auto;
+  color: var(--widget-icon-color, currentColor);
   fill: currentColor;
 }
 
@@ -290,7 +291,9 @@ h1 {
 .widget-main {
   flex: 1;
   align-items: center;
+  justify-content: var(--widget-main-justify, flex-start);
   gap: calc(8px * var(--widget-scale, 1));
+  width: 100%;
 }
 
 .widget-text {
@@ -298,11 +301,14 @@ h1 {
   justify-content: center;
   gap: calc(3px * var(--widget-scale, 1));
   min-width: 0;
+  text-align: var(--widget-text-align, left);
 }
 
 .widget-text strong {
-  font-size: calc(0.88rem * var(--widget-scale, 1));
+  font-size: calc(0.88rem * var(--widget-scale, 1) * var(--widget-label-scale, 1));
   line-height: 1.1;
+  color: var(--widget-label-color, #ffffff);
+  font-weight: var(--widget-label-weight, 700);
 }
 
 .widget-text span,
@@ -311,8 +317,17 @@ h1 {
 }
 
 .widget-text span {
-  font-size: calc(0.72rem * var(--widget-scale, 1));
-  color: rgba(255, 255, 255, 0.88);
+  font-size: calc(0.72rem * var(--widget-scale, 1) * var(--widget-value-scale, 1));
+  color: var(--widget-value-color, rgba(255, 255, 255, 0.88));
+  font-weight: var(--widget-value-weight, 400);
+}
+
+.blank-widget .widget-main {
+  align-items: center;
+}
+
+.blank-widget-copy {
+  opacity: 0.78;
 }
 
 .resize-handle {
@@ -329,6 +344,41 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.editor-group {
+  border: 1px solid rgba(55, 81, 126, 0.14);
+  border-radius: 18px;
+  background: #f8fbff;
+  overflow: hidden;
+}
+
+.editor-group summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  list-style: none;
+  color: #1f3557;
+  font-weight: 700;
+}
+
+.editor-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.editor-group summary small {
+  color: #5c7094;
+  font-weight: 500;
+}
+
+.editor-group-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 16px 16px;
 }
 
 .editor-header span {
@@ -362,6 +412,25 @@ h1 {
   padding: 12px 14px;
   background: #f8fbff;
   color: #14213d;
+}
+
+.field input[type="range"] {
+  padding: 0;
+}
+
+.color-field-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.color-field-row input[type="color"] {
+  padding: 6px;
+  min-height: 46px;
+}
+
+.range-value {
+  color: #5c7094;
 }
 
 .field-grid {

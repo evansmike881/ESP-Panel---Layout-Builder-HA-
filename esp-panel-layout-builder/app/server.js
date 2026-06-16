@@ -45,19 +45,34 @@ const WIDGET_TYPES = [
   "button",
   "status"
 ];
+const CONTENT_ALIGN_OPTIONS = ["start", "center", "end"];
+const TEXT_TRANSFORM_OPTIONS = ["none", "uppercase"];
+const FONT_WEIGHT_OPTIONS = ["normal", "bold"];
+const DEFAULT_STYLE = {
+  contentAlign: "start",
+  labelTransform: "none",
+  labelWeight: "bold",
+  valueWeight: "normal",
+  iconColor: "#eff7ff",
+  labelColor: "#ffffff",
+  valueColor: "#dbeafe",
+  iconScale: 100,
+  labelScale: 100,
+  valueScale: 100
+};
 const DEFAULT_LAYOUT = [
-  { id: "w01", type: "clock", visible: true, label: "Clock", value: "--:--", valueSource: "", icon: "clock", action: "clock", x: 0, y: 0, w: 3, h: 1 },
-  { id: "w02", type: "date", visible: true, label: "Date", value: "--", valueSource: "", icon: "calendar", action: "date", x: 3, y: 0, w: 3, h: 1 },
-  { id: "w03", type: "weather", visible: true, label: "Weather", value: "Partly Cloudy", valueSource: "", icon: "weather-partly-cloudy", action: "weather", x: 0, y: 1, w: 3, h: 1 },
-  { id: "w04", type: "temperature", visible: true, label: "Temp", value: "12.5", valueSource: "", icon: "thermometer", action: "temperature", x: 3, y: 1, w: 2, h: 1 },
-  { id: "w05", type: "humidity", visible: true, label: "Humidity", value: "80", valueSource: "", icon: "water-percent", action: "humidity", x: 5, y: 1, w: 1, h: 1 },
-  { id: "w06", type: "button", visible: true, label: "Main Light", value: "OFF", valueSource: "switch.office_main_light", icon: "ceiling-light", action: "office_light", x: 0, y: 4, w: 2, h: 2 },
-  { id: "w07", type: "status", visible: false, label: "WiFi", value: "Online", valueSource: "", icon: "wifi", action: "wifi_status", x: 2, y: 4, w: 2, h: 1 },
-  { id: "w08", type: "status", visible: false, label: "Scene", value: "Home", valueSource: "", icon: "home", action: "home_scene", x: 2, y: 5, w: 2, h: 1 },
-  { id: "w09", type: "button", visible: false, label: "Door", value: "Closed", valueSource: "", icon: "door", action: "front_door", x: 4, y: 4, w: 2, h: 1 },
-  { id: "w10", type: "status", visible: false, label: "Sofa", value: "Ready", valueSource: "", icon: "sofa", action: "sofa_status", x: 4, y: 5, w: 2, h: 1 },
-  { id: "w11", type: "blank", visible: false, label: "Blank", value: "", valueSource: "", icon: "shape", action: "", x: 0, y: 2, w: 2, h: 1 },
-  { id: "w12", type: "blank", visible: false, label: "Blank", value: "", valueSource: "", icon: "shape", action: "", x: 2, y: 2, w: 2, h: 1 }
+  { id: "w01", type: "clock", visible: true, label: "Clock", value: "--:--", valueSource: "", icon: "clock", action: "clock", x: 0, y: 0, w: 3, h: 1, ...DEFAULT_STYLE },
+  { id: "w02", type: "date", visible: true, label: "Date", value: "--", valueSource: "", icon: "calendar", action: "date", x: 3, y: 0, w: 3, h: 1, ...DEFAULT_STYLE },
+  { id: "w03", type: "weather", visible: true, label: "Weather", value: "Partly Cloudy", valueSource: "", icon: "weather-partly-cloudy", action: "weather", x: 0, y: 1, w: 3, h: 1, ...DEFAULT_STYLE },
+  { id: "w04", type: "temperature", visible: true, label: "Temp", value: "12.5", valueSource: "", icon: "thermometer", action: "temperature", x: 3, y: 1, w: 2, h: 1, ...DEFAULT_STYLE },
+  { id: "w05", type: "humidity", visible: true, label: "Humidity", value: "80", valueSource: "", icon: "water-percent", action: "humidity", x: 5, y: 1, w: 1, h: 1, ...DEFAULT_STYLE },
+  { id: "w06", type: "button", visible: true, label: "Main Light", value: "OFF", valueSource: "switch.office_main_light", icon: "ceiling-light", action: "office_light", x: 0, y: 4, w: 2, h: 2, ...DEFAULT_STYLE },
+  { id: "w07", type: "status", visible: false, label: "WiFi", value: "Online", valueSource: "", icon: "wifi", action: "wifi_status", x: 2, y: 4, w: 2, h: 1, ...DEFAULT_STYLE },
+  { id: "w08", type: "status", visible: false, label: "Scene", value: "Home", valueSource: "", icon: "home", action: "home_scene", x: 2, y: 5, w: 2, h: 1, ...DEFAULT_STYLE },
+  { id: "w09", type: "button", visible: false, label: "Door", value: "Closed", valueSource: "", icon: "door", action: "front_door", x: 4, y: 4, w: 2, h: 1, ...DEFAULT_STYLE },
+  { id: "w10", type: "status", visible: false, label: "Sofa", value: "Ready", valueSource: "", icon: "sofa", action: "sofa_status", x: 4, y: 5, w: 2, h: 1, ...DEFAULT_STYLE },
+  { id: "w11", type: "blank", visible: false, label: "Blank", value: "", valueSource: "", icon: "shape", action: "", x: 0, y: 2, w: 2, h: 1, ...DEFAULT_STYLE },
+  { id: "w12", type: "blank", visible: false, label: "Blank", value: "", valueSource: "", icon: "shape", action: "", x: 2, y: 2, w: 2, h: 1, ...DEFAULT_STYLE }
 ];
 
 const app = express();
@@ -80,6 +95,16 @@ function helperMap(id) {
     valueSource: `input_text.esp_panel_${id}_value_source`,
     icon: `input_text.esp_panel_${id}_icon`,
     action: `input_text.esp_panel_${id}_action`,
+    contentAlign: `input_select.esp_panel_${id}_content_align`,
+    labelTransform: `input_select.esp_panel_${id}_label_transform`,
+    labelWeight: `input_select.esp_panel_${id}_label_weight`,
+    valueWeight: `input_select.esp_panel_${id}_value_weight`,
+    iconColor: `input_text.esp_panel_${id}_icon_color`,
+    labelColor: `input_text.esp_panel_${id}_label_color`,
+    valueColor: `input_text.esp_panel_${id}_value_color`,
+    iconScale: `input_number.esp_panel_${id}_icon_scale`,
+    labelScale: `input_number.esp_panel_${id}_label_scale`,
+    valueScale: `input_number.esp_panel_${id}_value_scale`,
     x: `input_number.esp_panel_${id}_x`,
     y: `input_number.esp_panel_${id}_y`,
     w: `input_number.esp_panel_${id}_w`,
@@ -104,6 +129,15 @@ function normalizeNumber(value, fallback) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function normalizeOption(value, allowed, fallback) {
+  return allowed.includes(value) ? value : fallback;
+}
+
+function normalizeColor(value, fallback) {
+  const normalized = normalizeText(value).trim();
+  return /^#[0-9a-fA-F]{6}$/.test(normalized) ? normalized.toLowerCase() : fallback;
+}
+
 function validateWidget(widget) {
   const errors = [];
 
@@ -113,9 +147,31 @@ function validateWidget(widget) {
   if (!WIDGET_TYPES.includes(widget.type)) {
     errors.push(`Invalid widget type for ${widget.id}: ${widget.type}`);
   }
-  ["x", "y", "w", "h"].forEach((field) => {
+  if (!CONTENT_ALIGN_OPTIONS.includes(widget.contentAlign)) {
+    errors.push(`${widget.id} contentAlign must be start, center, or end`);
+  }
+  if (!TEXT_TRANSFORM_OPTIONS.includes(widget.labelTransform)) {
+    errors.push(`${widget.id} labelTransform must be none or uppercase`);
+  }
+  if (!FONT_WEIGHT_OPTIONS.includes(widget.labelWeight)) {
+    errors.push(`${widget.id} labelWeight must be normal or bold`);
+  }
+  if (!FONT_WEIGHT_OPTIONS.includes(widget.valueWeight)) {
+    errors.push(`${widget.id} valueWeight must be normal or bold`);
+  }
+  ["iconScale", "labelScale", "valueScale", "x", "y", "w", "h"].forEach((field) => {
     if (!Number.isInteger(widget[field])) {
       errors.push(`${widget.id} ${field} must be an integer`);
+    }
+  });
+  ["iconColor", "labelColor", "valueColor"].forEach((field) => {
+    if (!/^#[0-9a-f]{6}$/i.test(widget[field])) {
+      errors.push(`${widget.id} ${field} must be a hex color like #ffffff`);
+    }
+  });
+  ["iconScale", "labelScale", "valueScale"].forEach((field) => {
+    if (widget[field] < 60 || widget[field] > 180) {
+      errors.push(`${widget.id} ${field} must be between 60 and 180`);
     }
   });
   if (widget.x < 0 || widget.x > GRID_SIZE - 1) {
@@ -172,6 +228,16 @@ function sanitizeWidget(input, fallback) {
     valueSource: normalizeText(input?.valueSource ?? fallback.valueSource),
     icon: normalizeText(input?.icon ?? fallback.icon),
     action: normalizeText(input?.action ?? fallback.action),
+    contentAlign: normalizeOption(input?.contentAlign, CONTENT_ALIGN_OPTIONS, fallback.contentAlign),
+    labelTransform: normalizeOption(input?.labelTransform, TEXT_TRANSFORM_OPTIONS, fallback.labelTransform),
+    labelWeight: normalizeOption(input?.labelWeight, FONT_WEIGHT_OPTIONS, fallback.labelWeight),
+    valueWeight: normalizeOption(input?.valueWeight, FONT_WEIGHT_OPTIONS, fallback.valueWeight),
+    iconColor: normalizeColor(input?.iconColor, fallback.iconColor),
+    labelColor: normalizeColor(input?.labelColor, fallback.labelColor),
+    valueColor: normalizeColor(input?.valueColor, fallback.valueColor),
+    iconScale: normalizeNumber(input?.iconScale, fallback.iconScale),
+    labelScale: normalizeNumber(input?.labelScale, fallback.labelScale),
+    valueScale: normalizeNumber(input?.valueScale, fallback.valueScale),
     x: normalizeNumber(input?.x, fallback.x),
     y: normalizeNumber(input?.y, fallback.y),
     w: normalizeNumber(input?.w, fallback.w),
@@ -184,7 +250,7 @@ function sanitizeWidget(input, fallback) {
 function compareWidgetValues(expected, actual) {
   const mismatches = [];
 
-  for (const field of ["type", "visible", "label", "value", "valueSource", "icon", "action", "x", "y", "w", "h"]) {
+  for (const field of ["type", "visible", "label", "value", "valueSource", "icon", "action", "contentAlign", "labelTransform", "labelWeight", "valueWeight", "iconColor", "labelColor", "valueColor", "iconScale", "labelScale", "valueScale", "x", "y", "w", "h"]) {
     if (expected[field] !== actual[field]) {
       mismatches.push(
         `${expected.id} ${field} expected "${expected[field]}" but Home Assistant has "${actual[field]}"`
@@ -261,6 +327,16 @@ function widgetFromStates(id, statesMap) {
   const valueSource = readState(helpers.valueSource);
   const icon = readState(helpers.icon);
   const action = readState(helpers.action);
+  const contentAlign = readState(helpers.contentAlign);
+  const labelTransform = readState(helpers.labelTransform);
+  const labelWeight = readState(helpers.labelWeight);
+  const valueWeight = readState(helpers.valueWeight);
+  const iconColor = readState(helpers.iconColor);
+  const labelColor = readState(helpers.labelColor);
+  const valueColor = readState(helpers.valueColor);
+  const iconScale = readState(helpers.iconScale);
+  const labelScale = readState(helpers.labelScale);
+  const valueScale = readState(helpers.valueScale);
   const x = readState(helpers.x);
   const y = readState(helpers.y);
   const w = readState(helpers.w);
@@ -276,6 +352,16 @@ function widgetFromStates(id, statesMap) {
       valueSource: normalizeText(valueSource ?? fallback.valueSource),
       icon: normalizeText(icon ?? fallback.icon),
       action: normalizeText(action ?? fallback.action),
+      contentAlign: normalizeOption(contentAlign, CONTENT_ALIGN_OPTIONS, fallback.contentAlign),
+      labelTransform: normalizeOption(labelTransform, TEXT_TRANSFORM_OPTIONS, fallback.labelTransform),
+      labelWeight: normalizeOption(labelWeight, FONT_WEIGHT_OPTIONS, fallback.labelWeight),
+      valueWeight: normalizeOption(valueWeight, FONT_WEIGHT_OPTIONS, fallback.valueWeight),
+      iconColor: normalizeColor(iconColor, fallback.iconColor),
+      labelColor: normalizeColor(labelColor, fallback.labelColor),
+      valueColor: normalizeColor(valueColor, fallback.valueColor),
+      iconScale: normalizeNumber(iconScale, fallback.iconScale),
+      labelScale: normalizeNumber(labelScale, fallback.labelScale),
+      valueScale: normalizeNumber(valueScale, fallback.valueScale),
       x: normalizeNumber(x, fallback.x),
       y: normalizeNumber(y, fallback.y),
       w: normalizeNumber(w, fallback.w),
@@ -292,7 +378,27 @@ function helperPackageYaml() {
     name: ESP Panel ${id.toUpperCase()} Type
     options:
 ${WIDGET_TYPES.map((type) => `      - ${type}`).join("\n")}
-    initial: ${fallback.type}`;
+    initial: ${fallback.type}
+  esp_panel_${id}_content_align:
+    name: ESP Panel ${id.toUpperCase()} Content Align
+    options:
+${CONTENT_ALIGN_OPTIONS.map((option) => `      - ${option}`).join("\n")}
+    initial: ${fallback.contentAlign}
+  esp_panel_${id}_label_transform:
+    name: ESP Panel ${id.toUpperCase()} Label Transform
+    options:
+${TEXT_TRANSFORM_OPTIONS.map((option) => `      - ${option}`).join("\n")}
+    initial: ${fallback.labelTransform}
+  esp_panel_${id}_label_weight:
+    name: ESP Panel ${id.toUpperCase()} Label Weight
+    options:
+${FONT_WEIGHT_OPTIONS.map((option) => `      - ${option}`).join("\n")}
+    initial: ${fallback.labelWeight}
+  esp_panel_${id}_value_weight:
+    name: ESP Panel ${id.toUpperCase()} Value Weight
+    options:
+${FONT_WEIGHT_OPTIONS.map((option) => `      - ${option}`).join("\n")}
+    initial: ${fallback.valueWeight}`;
   }).join("\n");
 
   const booleanLines = WIDGET_IDS.map((id) => {
@@ -320,7 +426,19 @@ ${WIDGET_TYPES.map((type) => `      - ${type}`).join("\n")}
     initial: "${fallback.icon}"`,
       `  esp_panel_${id}_action:
     name: ESP Panel ${id.toUpperCase()} Action
-    initial: "${fallback.action}"`
+    initial: "${fallback.action}"`,
+      `  esp_panel_${id}_icon_color:
+    name: ESP Panel ${id.toUpperCase()} Icon Color
+    initial: "${fallback.iconColor}"
+    max: 7`,
+      `  esp_panel_${id}_label_color:
+    name: ESP Panel ${id.toUpperCase()} Label Color
+    initial: "${fallback.labelColor}"
+    max: 7`,
+      `  esp_panel_${id}_value_color:
+    name: ESP Panel ${id.toUpperCase()} Value Color
+    initial: "${fallback.valueColor}"
+    max: 7`
     ];
   }).join("\n");
 
@@ -354,7 +472,28 @@ ${WIDGET_TYPES.map((type) => `      - ${type}`).join("\n")}
     max: 6
     step: 1
     mode: box
-    initial: ${fallback.h}`
+    initial: ${fallback.h}`,
+      `  esp_panel_${id}_icon_scale:
+    name: ESP Panel ${id.toUpperCase()} Icon Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: ${fallback.iconScale}`,
+      `  esp_panel_${id}_label_scale:
+    name: ESP Panel ${id.toUpperCase()} Label Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: ${fallback.labelScale}`,
+      `  esp_panel_${id}_value_scale:
+    name: ESP Panel ${id.toUpperCase()} Value Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: ${fallback.valueScale}`
     ];
   }).join("\n");
 
@@ -395,7 +534,10 @@ async function writeWidget(widget) {
     value: helpers.value,
     valueSource: helpers.valueSource,
     icon: helpers.icon,
-    action: helpers.action
+    action: helpers.action,
+    iconColor: helpers.iconColor,
+    labelColor: helpers.labelColor,
+    valueColor: helpers.valueColor
   })) {
     await hassFetch("/services/input_text/set_value", {
       method: "POST",
@@ -407,6 +549,24 @@ async function writeWidget(widget) {
   }
 
   for (const [field, entityId] of Object.entries({
+    contentAlign: helpers.contentAlign,
+    labelTransform: helpers.labelTransform,
+    labelWeight: helpers.labelWeight,
+    valueWeight: helpers.valueWeight
+  })) {
+    await hassFetch("/services/input_select/select_option", {
+      method: "POST",
+      body: JSON.stringify({
+        entity_id: entityId,
+        option: widget[field]
+      })
+    });
+  }
+
+  for (const [field, entityId] of Object.entries({
+    iconScale: helpers.iconScale,
+    labelScale: helpers.labelScale,
+    valueScale: helpers.valueScale,
     x: helpers.x,
     y: helpers.y,
     w: helpers.w,
