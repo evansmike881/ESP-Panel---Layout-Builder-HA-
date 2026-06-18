@@ -765,14 +765,20 @@ async function writeWidget(widget) {
 
 async function writeTheme(theme) {
   const helpers = themeHelperMap();
+  const warnings = [];
 
-  await hassFetch("/services/input_select/select_option", {
-    method: "POST",
-    body: JSON.stringify({
-      entity_id: helpers.theme,
-      option: theme.id
-    })
-  });
+  try {
+    await hassFetch("/services/input_select/select_option", {
+      method: "POST",
+      body: JSON.stringify({
+        entity_id: helpers.theme,
+        option: theme.id
+      })
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error while updating theme selector.";
+    warnings.push(`Theme selector was not updated: ${message}`);
+  }
 
   for (const [field, entityId] of Object.entries({
     screenBg: helpers.screenBg,
@@ -782,20 +788,26 @@ async function writeTheme(theme) {
     overlayTitle: helpers.overlayTitle,
     overlayText: helpers.overlayText
   })) {
-    await hassFetch("/services/input_text/set_value", {
-      method: "POST",
-      body: JSON.stringify({
-        entity_id: entityId,
-        value: theme[field]
-      })
-    });
+    try {
+      await hassFetch("/services/input_text/set_value", {
+        method: "POST",
+        body: JSON.stringify({
+          entity_id: entityId,
+          value: theme[field]
+        })
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : `Unknown error while updating ${field}.`;
+      warnings.push(`Theme field ${field} was not updated: ${message}`);
+    }
   }
+
+  return warnings;
 }
 
 async function tryWriteTheme(theme) {
   try {
-    await writeTheme(theme);
-    return [];
+    return await writeTheme(theme);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error while updating panel theme helpers.";
     log("Theme helper update skipped", message);
