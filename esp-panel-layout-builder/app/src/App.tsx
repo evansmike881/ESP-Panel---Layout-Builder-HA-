@@ -521,6 +521,14 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    document.body.classList.remove("app-theme-light", "app-theme-dark");
+    document.body.classList.add(`app-theme-${appTheme}`);
+    return () => {
+      document.body.classList.remove("app-theme-light", "app-theme-dark");
+    };
+  }, [appTheme]);
+
+  useEffect(() => {
     const onPointerMove = (event: PointerEvent) => {
       const interaction = interactionRef.current;
       const board = boardRef.current;
@@ -748,7 +756,6 @@ export default function App() {
     <div className={`app-shell app-theme-${appTheme}`}>
       <header className="topbar">
         <div>
-          <p className="eyebrow">Home Assistant Add-on</p>
           <h1>ESP Panel Layout Builder</h1>
           <p className="topbar-subtitle">Cleaner panel editing with live preview, theme control, and room for multiple screens.</p>
         </div>
@@ -851,7 +858,6 @@ export default function App() {
             </div>
             <div className="preview-header-tools">
               <label className="preview-zoom" aria-label="Preview zoom">
-                <span>Preview size</span>
                 <div className="preview-zoom-row">
                   <input
                     type="range"
@@ -1455,7 +1461,7 @@ export default function App() {
           <div className="workbench-header">
             <div>
               <h2>Screen Workspace</h2>
-              <p>Keep the preview in view while you manage themes, hidden widgets, and layout support tools here.</p>
+              <p>Manage your themes, hidden widgets, and layout here.</p>
             </div>
             <div className="workbench-meta">
               <span>{visibleWidgets.length} visible widgets</span>
