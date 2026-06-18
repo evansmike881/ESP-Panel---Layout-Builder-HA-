@@ -25,6 +25,8 @@ export interface PanelTheme {
   screenBg: string;
   widgetBg: string;
   widgetBorder: string;
+  buttonOnBg: string;
+  buttonOffBg: string;
   iconColor: string;
   labelColor: string;
   valueColor: string;
@@ -38,6 +40,7 @@ export interface WidgetConfig {
   id: WidgetId;
   type: WidgetType;
   visible: boolean;
+  showBorder: boolean;
   showIcon: boolean;
   showLabel: boolean;
   showValue: boolean;
@@ -78,6 +81,8 @@ export const PANEL_THEMES: Record<PanelThemeId, PanelTheme> = {
     screenBg: "#f3f6fb",
     widgetBg: "#ffffff",
     widgetBorder: "#d4deee",
+    buttonOnBg: "#b7f7cb",
+    buttonOffBg: "#d8dee9",
     iconColor: "#2563eb",
     labelColor: "#5b6f8d",
     valueColor: "#14213d",
@@ -92,6 +97,8 @@ export const PANEL_THEMES: Record<PanelThemeId, PanelTheme> = {
     screenBg: "#050814",
     widgetBg: "#101826",
     widgetBorder: "#283548",
+    buttonOnBg: "#147452",
+    buttonOffBg: "#1f2937",
     iconColor: "#f59e0b",
     labelColor: "#8ea4c2",
     valueColor: "#f8fbff",
@@ -106,6 +113,8 @@ export const PANEL_THEMES: Record<PanelThemeId, PanelTheme> = {
     screenBg: "#08142d",
     widgetBg: "#0d1b33",
     widgetBorder: "#285ea8",
+    buttonOnBg: "#14b8a6",
+    buttonOffBg: "#1f2937",
     iconColor: "#ffd166",
     labelColor: "#a8c3ea",
     valueColor: "#f1f5f9",
@@ -120,6 +129,8 @@ export const PANEL_THEMES: Record<PanelThemeId, PanelTheme> = {
     screenBg: "#2a0b12",
     widgetBg: "#48121d",
     widgetBorder: "#7f1d1d",
+    buttonOnBg: "#16a34a",
+    buttonOffBg: "#3f3f46",
     iconColor: "#fca5a5",
     labelColor: "#fecaca",
     valueColor: "#fff1f2",
@@ -134,6 +145,8 @@ export const PANEL_THEMES: Record<PanelThemeId, PanelTheme> = {
     screenBg: "#071b14",
     widgetBg: "#0e2a20",
     widgetBorder: "#1f6f54",
+    buttonOnBg: "#22c55e",
+    buttonOffBg: "#1f2937",
     iconColor: "#86efac",
     labelColor: "#b7f7cb",
     valueColor: "#f0fdf4",
@@ -148,6 +161,8 @@ export const PANEL_THEMES: Record<PanelThemeId, PanelTheme> = {
     screenBg: "#08142d",
     widgetBg: "#0d1b33",
     widgetBorder: "#285ea8",
+    buttonOnBg: "#14b8a6",
+    buttonOffBg: "#1f2937",
     iconColor: "#ffd166",
     labelColor: "#a8c3ea",
     valueColor: "#f1f5f9",
@@ -159,6 +174,7 @@ export const PANEL_THEMES: Record<PanelThemeId, PanelTheme> = {
 };
 
 const DEFAULT_STYLE = {
+  showBorder: true,
   showIcon: true,
   showLabel: true,
   showValue: true,

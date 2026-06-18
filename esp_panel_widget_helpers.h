@@ -117,17 +117,22 @@ static inline int esp_panel_state_kind(std::string value) {
   return 0;
 }
 
-static inline uint32_t esp_panel_widget_bg_for_state(const std::string &type_name, const std::string &value, uint32_t fallback) {
+static inline uint32_t esp_panel_widget_bg_for_state(
+    const std::string &type_name,
+    const std::string &value,
+    uint32_t fallback,
+    uint32_t button_on,
+    uint32_t button_off) {
   if (type_name != "button") {
     return fallback;
   }
 
   const int kind = esp_panel_state_kind(value);
   if (kind > 0) {
-    return 0x147452;
+    return button_on;
   }
   if (kind < 0) {
-    return 0x1F2937;
+    return button_off;
   }
   return fallback;
 }

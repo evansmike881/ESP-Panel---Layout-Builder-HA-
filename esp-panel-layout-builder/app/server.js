@@ -56,6 +56,8 @@ const PANEL_THEMES = {
     screenBg: "#f3f6fb",
     widgetBg: "#ffffff",
     widgetBorder: "#d4deee",
+    buttonOnBg: "#b7f7cb",
+    buttonOffBg: "#d8dee9",
     iconColor: "#2563eb",
     labelColor: "#5b6f8d",
     valueColor: "#14213d",
@@ -70,6 +72,8 @@ const PANEL_THEMES = {
     screenBg: "#050814",
     widgetBg: "#101826",
     widgetBorder: "#283548",
+    buttonOnBg: "#147452",
+    buttonOffBg: "#1f2937",
     iconColor: "#f59e0b",
     labelColor: "#8ea4c2",
     valueColor: "#f8fbff",
@@ -84,6 +88,8 @@ const PANEL_THEMES = {
     screenBg: "#08142d",
     widgetBg: "#0d1b33",
     widgetBorder: "#285ea8",
+    buttonOnBg: "#14b8a6",
+    buttonOffBg: "#1f2937",
     iconColor: "#ffd166",
     labelColor: "#a8c3ea",
     valueColor: "#f1f5f9",
@@ -98,6 +104,8 @@ const PANEL_THEMES = {
     screenBg: "#2a0b12",
     widgetBg: "#48121d",
     widgetBorder: "#7f1d1d",
+    buttonOnBg: "#16a34a",
+    buttonOffBg: "#3f3f46",
     iconColor: "#fca5a5",
     labelColor: "#fecaca",
     valueColor: "#fff1f2",
@@ -112,6 +120,8 @@ const PANEL_THEMES = {
     screenBg: "#071b14",
     widgetBg: "#0e2a20",
     widgetBorder: "#1f6f54",
+    buttonOnBg: "#22c55e",
+    buttonOffBg: "#1f2937",
     iconColor: "#86efac",
     labelColor: "#b7f7cb",
     valueColor: "#f0fdf4",
@@ -126,6 +136,8 @@ const PANEL_THEMES = {
     screenBg: "#08142d",
     widgetBg: "#0d1b33",
     widgetBorder: "#285ea8",
+    buttonOnBg: "#14b8a6",
+    buttonOffBg: "#1f2937",
     iconColor: "#ffd166",
     labelColor: "#a8c3ea",
     valueColor: "#f1f5f9",
@@ -136,6 +148,7 @@ const PANEL_THEMES = {
   }
 };
 const DEFAULT_STYLE = {
+  showBorder: true,
   showIcon: true,
   showLabel: true,
   showValue: true,
@@ -180,6 +193,7 @@ function helperMap(id) {
   return {
     type: `input_select.esp_panel_${id}_type`,
     visible: `input_boolean.esp_panel_${id}_visible`,
+    showBorder: `input_boolean.esp_panel_${id}_show_border`,
     showIcon: `input_boolean.esp_panel_${id}_show_icon`,
     showLabel: `input_boolean.esp_panel_${id}_show_label`,
     showValue: `input_boolean.esp_panel_${id}_show_value`,
@@ -211,6 +225,8 @@ function themeHelperMap() {
     screenBg: "input_text.esp_panel_screen_bg_color",
     widgetBg: "input_text.esp_panel_widget_bg_color",
     widgetBorder: "input_text.esp_panel_widget_border_color",
+    buttonOnBg: "input_text.esp_panel_button_on_bg_color",
+    buttonOffBg: "input_text.esp_panel_button_off_bg_color",
     overlayBg: "input_text.esp_panel_overlay_bg_color",
     overlayTitle: "input_text.esp_panel_overlay_title_color",
     overlayText: "input_text.esp_panel_overlay_text_color"
@@ -255,6 +271,8 @@ function sanitizeTheme(input) {
     screenBg: normalizeColor(input?.screenBg, baseTheme.screenBg),
     widgetBg: normalizeColor(input?.widgetBg, baseTheme.widgetBg),
     widgetBorder: normalizeColor(input?.widgetBorder, baseTheme.widgetBorder),
+    buttonOnBg: normalizeColor(input?.buttonOnBg, baseTheme.buttonOnBg),
+    buttonOffBg: normalizeColor(input?.buttonOffBg, baseTheme.buttonOffBg),
     iconColor: normalizeColor(input?.iconColor, baseTheme.iconColor),
     labelColor: normalizeColor(input?.labelColor, baseTheme.labelColor),
     valueColor: normalizeColor(input?.valueColor, baseTheme.valueColor),
@@ -274,7 +292,7 @@ function validateWidget(widget) {
   if (!WIDGET_TYPES.includes(widget.type)) {
     errors.push(`Invalid widget type for ${widget.id}: ${widget.type}`);
   }
-  ["visible", "showIcon", "showLabel", "showValue"].forEach((field) => {
+  ["visible", "showBorder", "showIcon", "showLabel", "showValue"].forEach((field) => {
     if (typeof widget[field] !== "boolean") {
       errors.push(`${widget.id} ${field} must be true or false`);
     }
@@ -302,8 +320,8 @@ function validateWidget(widget) {
     }
   });
   ["iconScale", "labelScale", "valueScale"].forEach((field) => {
-    if (widget[field] < 60 || widget[field] > 180) {
-      errors.push(`${widget.id} ${field} must be between 60 and 180`);
+    if (widget[field] < 25 || widget[field] > 180) {
+      errors.push(`${widget.id} ${field} must be between 25 and 180`);
     }
   });
   if (widget.x < 0 || widget.x > GRID_SIZE - 1) {
@@ -355,6 +373,7 @@ function sanitizeWidget(input, fallback) {
     id: input?.id || fallback.id,
     type: WIDGET_TYPES.includes(input?.type) ? input.type : fallback.type,
     visible: typeof input?.visible === "boolean" ? input.visible : fallback.visible,
+    showBorder: typeof input?.showBorder === "boolean" ? input.showBorder : fallback.showBorder,
     showIcon: typeof input?.showIcon === "boolean" ? input.showIcon : fallback.showIcon,
     showLabel: typeof input?.showLabel === "boolean" ? input.showLabel : fallback.showLabel,
     showValue: typeof input?.showValue === "boolean" ? input.showValue : fallback.showValue,
@@ -385,7 +404,7 @@ function sanitizeWidget(input, fallback) {
 function compareWidgetValues(expected, actual) {
   const mismatches = [];
 
-  for (const field of ["type", "visible", "showIcon", "showLabel", "showValue", "label", "value", "valueSource", "icon", "action", "contentAlign", "labelTransform", "labelWeight", "valueWeight", "iconColor", "labelColor", "valueColor", "iconScale", "labelScale", "valueScale", "x", "y", "w", "h"]) {
+  for (const field of ["type", "visible", "showBorder", "showIcon", "showLabel", "showValue", "label", "value", "valueSource", "icon", "action", "contentAlign", "labelTransform", "labelWeight", "valueWeight", "iconColor", "labelColor", "valueColor", "iconScale", "labelScale", "valueScale", "x", "y", "w", "h"]) {
     if (expected[field] !== actual[field]) {
       mismatches.push(
         `${expected.id} ${field} expected "${expected[field]}" but Home Assistant has "${actual[field]}"`
@@ -457,6 +476,7 @@ function widgetFromStates(id, statesMap) {
 
   const type = readState(helpers.type);
   const visible = readState(helpers.visible);
+  const showBorder = readState(helpers.showBorder);
   const showIcon = readState(helpers.showIcon);
   const showLabel = readState(helpers.showLabel);
   const showValue = readState(helpers.showValue);
@@ -485,6 +505,7 @@ function widgetFromStates(id, statesMap) {
       id,
       type: WIDGET_TYPES.includes(type) ? type : fallback.type,
       visible: visible === undefined ? fallback.visible : visible === "on",
+      showBorder: showBorder === undefined ? fallback.showBorder : showBorder === "on",
       showIcon: showIcon === undefined ? fallback.showIcon : showIcon === "on",
       showLabel: showLabel === undefined ? fallback.showLabel : showLabel === "on",
       showValue: showValue === undefined ? fallback.showValue : showValue === "on",
@@ -530,6 +551,8 @@ function themeFromStates(statesMap) {
     screenBg: readState(helpers.screenBg),
     widgetBg: readState(helpers.widgetBg),
     widgetBorder: readState(helpers.widgetBorder),
+    buttonOnBg: readState(helpers.buttonOnBg),
+    buttonOffBg: readState(helpers.buttonOffBg),
     overlayBg: readState(helpers.overlayBg),
     overlayTitle: readState(helpers.overlayTitle),
     overlayText: readState(helpers.overlayText)
@@ -579,6 +602,9 @@ ${FONT_WEIGHT_OPTIONS.map((option) => `      - ${option}`).join("\n")}
     return `  esp_panel_${id}_visible:
     name: ESP Panel ${id.toUpperCase()} Visible
     initial: ${fallback.visible ? "true" : "false"}
+  esp_panel_${id}_show_border:
+    name: ESP Panel ${id.toUpperCase()} Show Border
+    initial: ${fallback.showBorder ? "true" : "false"}
   esp_panel_${id}_show_icon:
     name: ESP Panel ${id.toUpperCase()} Show Icon
     initial: ${fallback.showIcon ? "true" : "false"}
@@ -602,6 +628,14 @@ ${FONT_WEIGHT_OPTIONS.map((option) => `      - ${option}`).join("\n")}
     `  esp_panel_widget_border_color:
     name: ESP Panel Widget Border Color
     initial: "${defaultTheme.widgetBorder}"
+    max: 7`,
+    `  esp_panel_button_on_bg_color:
+    name: ESP Panel Button On Background Color
+    initial: "${defaultTheme.buttonOnBg}"
+    max: 7`,
+    `  esp_panel_button_off_bg_color:
+    name: ESP Panel Button Off Background Color
+    initial: "${defaultTheme.buttonOffBg}"
     max: 7`,
     `  esp_panel_overlay_bg_color:
     name: ESP Panel Overlay Background Color
@@ -683,21 +717,21 @@ ${FONT_WEIGHT_OPTIONS.map((option) => `      - ${option}`).join("\n")}
     initial: ${fallback.h}`,
       `  esp_panel_${id}_icon_scale:
     name: ESP Panel ${id.toUpperCase()} Icon Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
     initial: ${fallback.iconScale}`,
       `  esp_panel_${id}_label_scale:
     name: ESP Panel ${id.toUpperCase()} Label Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
     initial: ${fallback.labelScale}`,
       `  esp_panel_${id}_value_scale:
     name: ESP Panel ${id.toUpperCase()} Value Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -740,6 +774,7 @@ async function writeWidget(widget) {
   });
 
   for (const [field, entityId] of Object.entries({
+    showBorder: helpers.showBorder,
     showIcon: helpers.showIcon,
     showLabel: helpers.showLabel,
     showValue: helpers.showValue
@@ -826,6 +861,8 @@ async function writeTheme(theme) {
     screenBg: helpers.screenBg,
     widgetBg: helpers.widgetBg,
     widgetBorder: helpers.widgetBorder,
+    buttonOnBg: helpers.buttonOnBg,
+    buttonOffBg: helpers.buttonOffBg,
     overlayBg: helpers.overlayBg,
     overlayTitle: helpers.overlayTitle,
     overlayText: helpers.overlayText

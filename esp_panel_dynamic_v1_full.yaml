@@ -1,4 +1,4 @@
-﻿# ESP32 Smart Display Panel - Dynamic Dashboard V1 Helpers
+# ESP32 Smart Display Panel - Dynamic Dashboard V1 Helpers
 # Save as: /config/packages/esp_panel_dynamic_v1_full.yaml
 # Then make sure packages are enabled in configuration.yaml:
 # homeassistant:
@@ -632,50 +632,194 @@ input_boolean:
   esp_panel_w01_visible:
     name: ESP Panel W01 Visible
     initial: true
+  esp_panel_w01_show_border:
+    name: ESP Panel W01 Show Border
+    initial: true
+  esp_panel_w01_show_icon:
+    name: ESP Panel W01 Show Icon
+    initial: true
+  esp_panel_w01_show_label:
+    name: ESP Panel W01 Show Label
+    initial: true
+  esp_panel_w01_show_value:
+    name: ESP Panel W01 Show Value
+    initial: true
 
   esp_panel_w02_visible:
     name: ESP Panel W02 Visible
+    initial: true
+  esp_panel_w02_show_border:
+    name: ESP Panel W02 Show Border
+    initial: true
+  esp_panel_w02_show_icon:
+    name: ESP Panel W02 Show Icon
+    initial: true
+  esp_panel_w02_show_label:
+    name: ESP Panel W02 Show Label
+    initial: true
+  esp_panel_w02_show_value:
+    name: ESP Panel W02 Show Value
     initial: true
 
   esp_panel_w03_visible:
     name: ESP Panel W03 Visible
     initial: true
+  esp_panel_w03_show_border:
+    name: ESP Panel W03 Show Border
+    initial: true
+  esp_panel_w03_show_icon:
+    name: ESP Panel W03 Show Icon
+    initial: true
+  esp_panel_w03_show_label:
+    name: ESP Panel W03 Show Label
+    initial: true
+  esp_panel_w03_show_value:
+    name: ESP Panel W03 Show Value
+    initial: true
 
   esp_panel_w04_visible:
     name: ESP Panel W04 Visible
+    initial: true
+  esp_panel_w04_show_border:
+    name: ESP Panel W04 Show Border
+    initial: true
+  esp_panel_w04_show_icon:
+    name: ESP Panel W04 Show Icon
+    initial: true
+  esp_panel_w04_show_label:
+    name: ESP Panel W04 Show Label
+    initial: true
+  esp_panel_w04_show_value:
+    name: ESP Panel W04 Show Value
     initial: true
 
   esp_panel_w05_visible:
     name: ESP Panel W05 Visible
     initial: true
+  esp_panel_w05_show_border:
+    name: ESP Panel W05 Show Border
+    initial: true
+  esp_panel_w05_show_icon:
+    name: ESP Panel W05 Show Icon
+    initial: true
+  esp_panel_w05_show_label:
+    name: ESP Panel W05 Show Label
+    initial: true
+  esp_panel_w05_show_value:
+    name: ESP Panel W05 Show Value
+    initial: true
 
   esp_panel_w06_visible:
     name: ESP Panel W06 Visible
+    initial: true
+  esp_panel_w06_show_border:
+    name: ESP Panel W06 Show Border
+    initial: true
+  esp_panel_w06_show_icon:
+    name: ESP Panel W06 Show Icon
+    initial: true
+  esp_panel_w06_show_label:
+    name: ESP Panel W06 Show Label
+    initial: true
+  esp_panel_w06_show_value:
+    name: ESP Panel W06 Show Value
     initial: true
 
   esp_panel_w07_visible:
     name: ESP Panel W07 Visible
     initial: false
+  esp_panel_w07_show_border:
+    name: ESP Panel W07 Show Border
+    initial: true
+  esp_panel_w07_show_icon:
+    name: ESP Panel W07 Show Icon
+    initial: true
+  esp_panel_w07_show_label:
+    name: ESP Panel W07 Show Label
+    initial: true
+  esp_panel_w07_show_value:
+    name: ESP Panel W07 Show Value
+    initial: true
 
   esp_panel_w08_visible:
     name: ESP Panel W08 Visible
     initial: false
+  esp_panel_w08_show_border:
+    name: ESP Panel W08 Show Border
+    initial: true
+  esp_panel_w08_show_icon:
+    name: ESP Panel W08 Show Icon
+    initial: true
+  esp_panel_w08_show_label:
+    name: ESP Panel W08 Show Label
+    initial: true
+  esp_panel_w08_show_value:
+    name: ESP Panel W08 Show Value
+    initial: true
 
   esp_panel_w09_visible:
     name: ESP Panel W09 Visible
     initial: false
+  esp_panel_w09_show_border:
+    name: ESP Panel W09 Show Border
+    initial: true
+  esp_panel_w09_show_icon:
+    name: ESP Panel W09 Show Icon
+    initial: true
+  esp_panel_w09_show_label:
+    name: ESP Panel W09 Show Label
+    initial: true
+  esp_panel_w09_show_value:
+    name: ESP Panel W09 Show Value
+    initial: true
 
   esp_panel_w10_visible:
     name: ESP Panel W10 Visible
     initial: false
+  esp_panel_w10_show_border:
+    name: ESP Panel W10 Show Border
+    initial: true
+  esp_panel_w10_show_icon:
+    name: ESP Panel W10 Show Icon
+    initial: true
+  esp_panel_w10_show_label:
+    name: ESP Panel W10 Show Label
+    initial: true
+  esp_panel_w10_show_value:
+    name: ESP Panel W10 Show Value
+    initial: true
 
   esp_panel_w11_visible:
     name: ESP Panel W11 Visible
     initial: false
+  esp_panel_w11_show_border:
+    name: ESP Panel W11 Show Border
+    initial: true
+  esp_panel_w11_show_icon:
+    name: ESP Panel W11 Show Icon
+    initial: true
+  esp_panel_w11_show_label:
+    name: ESP Panel W11 Show Label
+    initial: true
+  esp_panel_w11_show_value:
+    name: ESP Panel W11 Show Value
+    initial: true
 
   esp_panel_w12_visible:
     name: ESP Panel W12 Visible
     initial: false
+  esp_panel_w12_show_border:
+    name: ESP Panel W12 Show Border
+    initial: true
+  esp_panel_w12_show_icon:
+    name: ESP Panel W12 Show Icon
+    initial: true
+  esp_panel_w12_show_label:
+    name: ESP Panel W12 Show Label
+    initial: true
+  esp_panel_w12_show_value:
+    name: ESP Panel W12 Show Value
+    initial: true
 
 input_text:
   esp_panel_screen_bg_color:
@@ -687,10 +831,19 @@ input_text:
     name: ESP Panel Widget Background Color
     initial: "#0d1b33"
     max: 7
-
   esp_panel_widget_border_color:
     name: ESP Panel Widget Border Color
     initial: "#285ea8"
+    max: 7
+
+  esp_panel_button_on_bg_color:
+    name: ESP Panel Button On Background Color
+    initial: "#14b8a6"
+    max: 7
+
+  esp_panel_button_off_bg_color:
+    name: ESP Panel Button Off Background Color
+    initial: "#1f2937"
     max: 7
 
   esp_panel_overlay_bg_color:
@@ -1223,7 +1376,7 @@ input_number:
 
   esp_panel_w01_icon_scale:
     name: ESP Panel W01 Icon Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1231,7 +1384,7 @@ input_number:
 
   esp_panel_w01_label_scale:
     name: ESP Panel W01 Label Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1239,7 +1392,7 @@ input_number:
 
   esp_panel_w01_value_scale:
     name: ESP Panel W01 Value Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1279,7 +1432,7 @@ input_number:
 
   esp_panel_w02_icon_scale:
     name: ESP Panel W02 Icon Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1287,7 +1440,7 @@ input_number:
 
   esp_panel_w02_label_scale:
     name: ESP Panel W02 Label Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1295,7 +1448,7 @@ input_number:
 
   esp_panel_w02_value_scale:
     name: ESP Panel W02 Value Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1335,7 +1488,7 @@ input_number:
 
   esp_panel_w03_icon_scale:
     name: ESP Panel W03 Icon Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1343,7 +1496,7 @@ input_number:
 
   esp_panel_w03_label_scale:
     name: ESP Panel W03 Label Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1351,7 +1504,7 @@ input_number:
 
   esp_panel_w03_value_scale:
     name: ESP Panel W03 Value Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1391,7 +1544,7 @@ input_number:
 
   esp_panel_w04_icon_scale:
     name: ESP Panel W04 Icon Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1399,7 +1552,7 @@ input_number:
 
   esp_panel_w04_label_scale:
     name: ESP Panel W04 Label Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1407,7 +1560,7 @@ input_number:
 
   esp_panel_w04_value_scale:
     name: ESP Panel W04 Value Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1447,7 +1600,7 @@ input_number:
 
   esp_panel_w05_icon_scale:
     name: ESP Panel W05 Icon Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1455,7 +1608,7 @@ input_number:
 
   esp_panel_w05_label_scale:
     name: ESP Panel W05 Label Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1463,7 +1616,7 @@ input_number:
 
   esp_panel_w05_value_scale:
     name: ESP Panel W05 Value Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1503,7 +1656,7 @@ input_number:
 
   esp_panel_w06_icon_scale:
     name: ESP Panel W06 Icon Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1511,7 +1664,7 @@ input_number:
 
   esp_panel_w06_label_scale:
     name: ESP Panel W06 Label Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1519,7 +1672,7 @@ input_number:
 
   esp_panel_w06_value_scale:
     name: ESP Panel W06 Value Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1559,7 +1712,7 @@ input_number:
 
   esp_panel_w07_icon_scale:
     name: ESP Panel W07 Icon Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1567,7 +1720,7 @@ input_number:
 
   esp_panel_w07_label_scale:
     name: ESP Panel W07 Label Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1575,7 +1728,7 @@ input_number:
 
   esp_panel_w07_value_scale:
     name: ESP Panel W07 Value Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1615,7 +1768,7 @@ input_number:
 
   esp_panel_w08_icon_scale:
     name: ESP Panel W08 Icon Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1623,7 +1776,7 @@ input_number:
 
   esp_panel_w08_label_scale:
     name: ESP Panel W08 Label Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1631,7 +1784,7 @@ input_number:
 
   esp_panel_w08_value_scale:
     name: ESP Panel W08 Value Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1671,7 +1824,7 @@ input_number:
 
   esp_panel_w09_icon_scale:
     name: ESP Panel W09 Icon Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1679,7 +1832,7 @@ input_number:
 
   esp_panel_w09_label_scale:
     name: ESP Panel W09 Label Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1687,7 +1840,7 @@ input_number:
 
   esp_panel_w09_value_scale:
     name: ESP Panel W09 Value Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1727,7 +1880,7 @@ input_number:
 
   esp_panel_w10_icon_scale:
     name: ESP Panel W10 Icon Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1735,7 +1888,7 @@ input_number:
 
   esp_panel_w10_label_scale:
     name: ESP Panel W10 Label Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1743,7 +1896,7 @@ input_number:
 
   esp_panel_w10_value_scale:
     name: ESP Panel W10 Value Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1783,7 +1936,7 @@ input_number:
 
   esp_panel_w11_icon_scale:
     name: ESP Panel W11 Icon Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1791,7 +1944,7 @@ input_number:
 
   esp_panel_w11_label_scale:
     name: ESP Panel W11 Label Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1799,7 +1952,7 @@ input_number:
 
   esp_panel_w11_value_scale:
     name: ESP Panel W11 Value Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1839,7 +1992,7 @@ input_number:
 
   esp_panel_w12_icon_scale:
     name: ESP Panel W12 Icon Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1847,7 +2000,7 @@ input_number:
 
   esp_panel_w12_label_scale:
     name: ESP Panel W12 Label Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1855,7 +2008,7 @@ input_number:
 
   esp_panel_w12_value_scale:
     name: ESP Panel W12 Value Scale
-    min: 60
+    min: 25
     max: 180
     step: 1
     mode: box
@@ -1879,6 +2032,9 @@ automation:
               - action: switch.toggle
                 target:
                   entity_id: switch.office_main_light
+
+
+
 
 
 

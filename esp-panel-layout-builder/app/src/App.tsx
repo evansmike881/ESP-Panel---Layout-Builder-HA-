@@ -1,6 +1,6 @@
 import mdiIcons from "@iconify-json/mdi/icons.json";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
-import { applyWidget, applyWidgets, fetchEntities, fetchValueSources, fetchWidgets, reloadWidgets, type EntityOption } from "./api";
+import { applyWidgets, fetchEntities, fetchValueSources, fetchWidgets, reloadWidgets, type EntityOption } from "./api";
 import {
   DEFAULT_LAYOUT,
   GRID_SIZE,
@@ -191,6 +191,8 @@ function previewThemeStyle(theme: PanelTheme): CSSProperties {
     ["--panel-grid-text" as string]: `${theme.labelColor}88`,
     ["--widget-bg-color" as string]: theme.widgetBg,
     ["--widget-border-color" as string]: theme.widgetBorder,
+    ["--button-on-bg-color" as string]: theme.buttonOnBg,
+    ["--button-off-bg-color" as string]: theme.buttonOffBg,
     ["--widget-selected-color" as string]: theme.accent,
     ["--widget-blank-color" as string]: theme.valueColor
   };
@@ -214,6 +216,9 @@ function widgetStyle(widget: WidgetConfig, theme: PanelTheme): CSSProperties {
     height: `calc(${(widget.h / GRID_SIZE) * 100}% - 4px)`,
     ["--widget-bg-color" as string]: theme.widgetBg,
     ["--widget-border-color" as string]: theme.widgetBorder,
+    ["--widget-border-width" as string]: widget.showBorder ? "2px" : "0px",
+    ["--button-on-bg-color" as string]: theme.buttonOnBg,
+    ["--button-off-bg-color" as string]: theme.buttonOffBg,
     ["--widget-selected-color" as string]: theme.accent,
     ["--widget-tone" as string]: tone,
     ["--widget-icon-color" as string]: widget.iconColor,
@@ -477,7 +482,12 @@ export default function App() {
   const [widgets, setWidgets] = useState<WidgetConfig[]>(DEFAULT_LAYOUT);
   const [defaults, setDefaults] = useState<WidgetConfig[]>(DEFAULT_LAYOUT);
   const [selectedId, setSelectedId] = useState<string>("w01");
-  const [appTheme, setAppTheme] = useState<"light" | "dark">("light");
+  const [appTheme, setAppTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") {
+      return "light";
+    }
+    return window.localStorage.getItem("esp-panel-builder-app-theme") === "dark" ? "dark" : "light";
+  });
   const [status, setStatus] = useState("Loading from Home Assistant...");
   const [statusTone, setStatusTone] = useState<"ok" | "warn" | "error">("warn");
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -595,6 +605,7 @@ export default function App() {
   useEffect(() => {
     document.body.classList.remove("app-theme-light", "app-theme-dark");
     document.body.classList.add(`app-theme-${appTheme}`);
+    window.localStorage.setItem("esp-panel-builder-app-theme", appTheme);
     return () => {
       document.body.classList.remove("app-theme-light", "app-theme-dark");
     };
@@ -727,26 +738,6 @@ export default function App() {
       setStatusTone(result.warnings.length > 0 ? "warn" : "ok");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to apply widgets");
-      setStatusTone("error");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleApplySelected() {
-    if (!selectedWidget) {
-      return;
-    }
-
-    setBusy(true);
-    try {
-      const result = await applyWidget(selectedWidget, theme);
-      updateWidget(result.widget.id, result.widget);
-      setWarnings(result.warnings);
-      setStatus(`Applied ${result.widget.id}`);
-      setStatusTone(result.warnings.length > 0 ? "warn" : "ok");
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Failed to apply selected widget");
       setStatusTone("error");
     } finally {
       setBusy(false);
@@ -1166,6 +1157,14 @@ export default function App() {
 
                   <div className="field-grid">
                     <label className="field checkbox-field">
+                      <span>Show border</span>
+                      <input
+                        type="checkbox"
+                        checked={selectedWidget.showBorder}
+                        onChange={(event) => updateWidget(selectedWidget.id, { showBorder: event.target.checked })}
+                      />
+                    </label>
+                    <label className="field checkbox-field">
                       <span>Show icon</span>
                       <input
                         type="checkbox"
@@ -1348,7 +1347,7 @@ export default function App() {
                         <span>Icon size %</span>
                         <input
                           type="range"
-                          min={60}
+                          min={25}
                           max={180}
                           value={selectedWidget.iconScale}
                           onChange={(event) => updateWidget(selectedWidget.id, { iconScale: Number.parseInt(event.target.value, 10) })}
@@ -1361,7 +1360,7 @@ export default function App() {
                         <span>Label size %</span>
                         <input
                           type="range"
-                          min={60}
+                          min={25}
                           max={180}
                           value={selectedWidget.labelScale}
                           onChange={(event) => updateWidget(selectedWidget.id, { labelScale: Number.parseInt(event.target.value, 10) })}
@@ -1374,7 +1373,7 @@ export default function App() {
                         <span>Value size %</span>
                         <input
                           type="range"
-                          min={60}
+                          min={25}
                           max={180}
                           value={selectedWidget.valueScale}
                           onChange={(event) => updateWidget(selectedWidget.id, { valueScale: Number.parseInt(event.target.value, 10) })}
@@ -1550,9 +1549,6 @@ export default function App() {
               </EditorGroup>
 
               <div className="editor-actions">
-                <button className="primary" onClick={() => void handleApplySelected()} disabled={busy}>
-                  Apply selected widget
-                </button>
                 <button className="primary secondary-primary" onClick={() => void handleApplyAll()} disabled={busy}>
                   Apply all changes
                 </button>
@@ -1635,6 +1631,8 @@ export default function App() {
                 <ColorField label="Screen background" value={theme.screenBg} onChange={(value) => updateTheme({ screenBg: value })} />
                 <ColorField label="Widget background" value={theme.widgetBg} onChange={(value) => updateTheme({ widgetBg: value })} />
                 <ColorField label="Widget border" value={theme.widgetBorder} onChange={(value) => updateTheme({ widgetBorder: value })} />
+                <ColorField label="Button on background" value={theme.buttonOnBg} onChange={(value) => updateTheme({ buttonOnBg: value })} />
+                <ColorField label="Button off background" value={theme.buttonOffBg} onChange={(value) => updateTheme({ buttonOffBg: value })} />
                 <ColorField label="Accent" value={theme.accent} onChange={(value) => updateTheme({ accent: value })} />
                 <ColorField label="Icon color" value={theme.iconColor} onChange={(value) => updateTheme({ iconColor: value })} />
                 <ColorField label="Label color" value={theme.labelColor} onChange={(value) => updateTheme({ labelColor: value })} />
