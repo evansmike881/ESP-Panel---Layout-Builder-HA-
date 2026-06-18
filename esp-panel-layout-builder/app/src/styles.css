@@ -1,11 +1,8 @@
 :root {
   color-scheme: light;
   font-family: "Segoe UI", "Trebuchet MS", sans-serif;
-  color: #14213d;
-  background:
-    radial-gradient(circle at top left, rgba(245, 194, 66, 0.35), transparent 35%),
-    radial-gradient(circle at top right, rgba(58, 134, 255, 0.2), transparent 32%),
-    linear-gradient(180deg, #f8fbff 0%, #e9eef7 100%);
+  color: #1f2a3c;
+  background: #f5f7fb;
 }
 
 * {
@@ -15,6 +12,7 @@
 body {
   margin: 0;
   min-height: 100vh;
+  background: #f5f7fb;
 }
 
 button,
@@ -33,9 +31,9 @@ button {
 }
 
 .app-shell {
-  max-width: 1480px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 20px;
 }
 
 .topbar,
@@ -66,7 +64,7 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.78rem;
-  color: #4f678e;
+  color: #6b7c93;
 }
 
 h1,
@@ -76,17 +74,23 @@ p {
 }
 
 h1 {
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+}
+
+.topbar-subtitle {
+  margin-top: 8px;
+  max-width: 620px;
+  color: #66758c;
 }
 
 .menu-trigger,
 .menu-dropdown button,
 .primary,
 .modal-actions button {
-  border: 0;
-  border-radius: 14px;
-  background: #d7e3f5;
-  color: #14213d;
+  border: 1px solid #d7deea;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1f2a3c;
   padding: 12px 16px;
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
@@ -96,11 +100,12 @@ h1 {
 .primary:hover,
 .modal-actions button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(20, 33, 61, 0.12);
+  box-shadow: 0 6px 18px rgba(31, 42, 60, 0.08);
 }
 
 .primary {
-  background: linear-gradient(135deg, #0f6fff, #1d8fff);
+  border-color: #0f6fff;
+  background: #0f6fff;
   color: #ffffff;
 }
 
@@ -113,15 +118,16 @@ h1 {
 }
 
 .status-pill,
+.screen-tabs,
 .notice-panel,
 .preview-panel,
 .editor-panel,
 .docs-panel,
 .modal {
-  border: 1px solid rgba(20, 33, 61, 0.08);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 18px 44px rgba(20, 33, 61, 0.08);
+  border: 1px solid #dbe2ee;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(31, 42, 60, 0.06);
 }
 
 .status-pill {
@@ -129,6 +135,27 @@ h1 {
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
+}
+
+.screen-tabs {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 10px;
+}
+
+.screen-tab {
+  border: 1px solid #d7deea;
+  border-radius: 999px;
+  background: #f5f8fd;
+  color: #41526b;
+  padding: 10px 14px;
+}
+
+.screen-tab-active {
+  border-color: #0f6fff;
+  background: #eaf2ff;
+  color: #0f4eb8;
 }
 
 .status-dot {
@@ -153,7 +180,7 @@ h1 {
 .notice-panel {
   padding: 16px 18px;
   margin-bottom: 20px;
-  color: #764700;
+  color: #8a5b00;
 }
 
 .workspace {
@@ -164,7 +191,7 @@ h1 {
 .preview-panel,
 .editor-panel,
 .docs-panel {
-  padding: 20px;
+  padding: 18px;
 }
 
 .preview-panel {
@@ -174,13 +201,15 @@ h1 {
 .editor-panel {
   flex: 0.8;
   min-width: 320px;
+  position: sticky;
+  top: 20px;
 }
 
 .grid-key {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  color: #4f678e;
+  color: #6b7c93;
   font-size: 0.92rem;
 }
 
@@ -191,6 +220,7 @@ h1 {
   gap: 10px;
 }
 
+.workspace-tabbar,
 .theme-toggle,
 .scale-toggle {
   display: inline-flex;
@@ -198,18 +228,21 @@ h1 {
   gap: 8px;
   padding: 6px;
   border-radius: 999px;
-  background: #edf3ff;
+  background: #f3f6fb;
+  border: 1px solid #dbe2ee;
 }
 
+.workspace-tabbar button,
 .theme-toggle button,
 .scale-toggle button {
   border: 0;
   border-radius: 999px;
   padding: 8px 12px;
   background: transparent;
-  color: #37517e;
+  color: #52637c;
 }
 
+.workspace-tabbar .workspace-tab-active,
 .theme-toggle .theme-active,
 .scale-toggle .scale-active {
   background: #0f6fff;
@@ -219,10 +252,9 @@ h1 {
 .board-wrap {
   margin-top: 18px;
   padding: 16px;
-  border-radius: 28px;
-  background:
-    linear-gradient(160deg, rgba(20, 33, 61, 0.96), rgba(8, 15, 32, 0.96)),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+  border-radius: 24px;
+  background: #f3f6fb;
+  border: 1px solid #dbe2ee;
 }
 
 .board-stage {
@@ -269,7 +301,7 @@ h1 {
   text-align: left;
   color: #eff7ff;
   background: var(--widget-bg-color, rgba(16, 97, 210, 0.82));
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
   user-select: none;
   touch-action: none;
   overflow: hidden;
@@ -384,9 +416,9 @@ h1 {
 .holding-area {
   margin-top: 18px;
   padding: 16px;
-  border: 1px dashed rgba(55, 81, 126, 0.18);
+  border: 1px dashed #cfd8e6;
   border-radius: 20px;
-  background: rgba(248, 251, 255, 0.72);
+  background: #f8fafd;
 }
 
 .holding-header,
@@ -857,6 +889,7 @@ h1 {
   .editor-panel {
     width: 100%;
     min-width: 0;
+    position: static;
   }
 }
 
@@ -866,6 +899,7 @@ h1 {
   }
 
   .topbar,
+  .screen-tabs,
   .preview-header,
   .modal-header {
     flex-direction: column;
@@ -895,12 +929,14 @@ h1 {
     width: 100%;
   }
 
+  .workspace-tabbar,
   .theme-toggle,
   .scale-toggle {
     width: 100%;
     justify-content: space-between;
   }
 
+  .workspace-tabbar button,
   .theme-toggle button,
   .scale-toggle button {
     flex: 1;

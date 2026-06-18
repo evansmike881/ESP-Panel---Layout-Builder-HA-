@@ -77,6 +77,7 @@ const PREVIEW_SCALE_OPTIONS = [
   { value: 0.5, label: "50%" },
   { value: 0.25, label: "25%" }
 ] as const;
+const SCREEN_TABS = [{ id: "screen-1", label: "Screen 1" }] as const;
 const VALUE_PRESETS: Partial<Record<WidgetConfig["type"], string[]>> = {
   weather: ["Sunny", "Cloudy", "Partly Cloudy", "Rain", "Storm"],
   temperature: ["12.5", "18.0", "21.5", "24.0"],
@@ -183,6 +184,15 @@ function previewThemeStyle(theme: PanelTheme): CSSProperties {
     ["--widget-border-color" as string]: theme.widgetBorder,
     ["--widget-selected-color" as string]: theme.accent,
     ["--widget-blank-color" as string]: theme.valueColor
+  };
+}
+
+function customThemeFrom(theme: PanelTheme, patch: Partial<PanelTheme> = {}): PanelTheme {
+  return {
+    ...theme,
+    ...patch,
+    id: "custom",
+    name: "Custom"
   };
 }
 
@@ -414,6 +424,7 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [previewScale, setPreviewScale] = useState<(typeof PREVIEW_SCALE_OPTIONS)[number]["value"]>(1);
   const [theme, setTheme] = useState<PanelTheme>(PANEL_THEMES.blue);
+  const [workspaceTab, setWorkspaceTab] = useState<"layout" | "theme" | "hidden">("layout");
   const [menuOpen, setMenuOpen] = useState(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
   const interactionRef = useRef<Interaction | null>(null);
@@ -689,7 +700,7 @@ export default function App() {
   }
 
   function handleThemeChange(nextThemeId: PanelThemeId) {
-    const nextTheme = PANEL_THEMES[nextThemeId];
+    const nextTheme = nextThemeId === "custom" ? customThemeFrom(theme) : PANEL_THEMES[nextThemeId];
     setTheme(nextTheme);
     setWidgets((current) => {
       const next = applyThemeToWidgets(current, nextTheme);
@@ -697,6 +708,18 @@ export default function App() {
       return next;
     });
     setStatus(`${nextTheme.name} theme ready. Apply all widgets to sync Home Assistant and the panel.`);
+    setStatusTone("warn");
+  }
+
+  function updateTheme(patch: Partial<PanelTheme>) {
+    const nextTheme = customThemeFrom(theme, patch);
+    setTheme(nextTheme);
+    setWidgets((current) => {
+      const next = applyThemeToWidgets(current, nextTheme);
+      setWarnings(detectWarnings(next));
+      return next;
+    });
+    setStatus("Custom theme updated. Apply all widgets to sync Home Assistant and the panel.");
     setStatusTone("warn");
   }
 
@@ -731,6 +754,7 @@ export default function App() {
         <div>
           <p className="eyebrow">Home Assistant Add-on</p>
           <h1>ESP Panel Layout Builder</h1>
+          <p className="topbar-subtitle">Cleaner panel editing with live preview, theme control, and room for multiple screens.</p>
         </div>
         <div className="topbar-actions">
           <div className={`status-pill status-${statusTone}`}>
@@ -786,6 +810,16 @@ export default function App() {
         </div>
       </header>
 
+      {SCREEN_TABS.length > 1 && (
+        <section className="screen-tabs" aria-label="Screen selection">
+          {SCREEN_TABS.map((screen) => (
+            <button key={screen.id} type="button" className="screen-tab screen-tab-active">
+              {screen.label}
+            </button>
+          ))}
+        </section>
+      )}
+
       {(warnings.length > 0 || missingHelpers.length > 0) && (
         <section className="notice-panel">
           {warnings.map((warning) => (
@@ -799,8 +833,8 @@ export default function App() {
         <section className="preview-panel">
           <div className="preview-header">
             <div>
-              <h2>480x480 Preview</h2>
-              <p>6 columns x 6 rows, 80px slots</p>
+              <h2>Screen Workspace</h2>
+              <p>Choose one area at a time so the page stays focused and easier to use.</p>
             </div>
             <div className="preview-header-tools">
               <div className="theme-toggle" aria-label="Panel theme">
@@ -815,6 +849,29 @@ export default function App() {
                   </button>
                 ))}
               </div>
+              <div className="workspace-tabbar" aria-label="Workspace sections">
+                <button
+                  type="button"
+                  className={workspaceTab === "layout" ? "workspace-tab-active" : ""}
+                  onClick={() => setWorkspaceTab("layout")}
+                >
+                  Layout
+                </button>
+                <button
+                  type="button"
+                  className={workspaceTab === "theme" ? "workspace-tab-active" : ""}
+                  onClick={() => setWorkspaceTab("theme")}
+                >
+                  Theme
+                </button>
+                <button
+                  type="button"
+                  className={workspaceTab === "hidden" ? "workspace-tab-active" : ""}
+                  onClick={() => setWorkspaceTab("hidden")}
+                >
+                  Hidden Widgets
+                </button>
+              </div>
               <div className="scale-toggle" aria-label="Preview scale">
                 {PREVIEW_SCALE_OPTIONS.map((option) => (
                   <button
@@ -828,158 +885,177 @@ export default function App() {
                 ))}
               </div>
               <div className="grid-key">
-                <span>Drag cards to move</span>
-                <span>Use corner handle to resize</span>
+                <span>{visibleWidgets.length} visible widgets</span>
+                <span>{hiddenWidgets.length} hidden widgets</span>
               </div>
             </div>
           </div>
 
-          <div className="board-wrap">
-            <div
-              className="board-stage"
-              style={{ width: `${480 * previewScale}px`, height: `${480 * previewScale}px`, ...previewThemeStyle(theme) }}
-            >
+          {workspaceTab === "layout" && (
+            <div className="board-wrap">
               <div
-                className="board"
-                ref={boardRef}
-                style={{ transform: `scale(${previewScale})` }}
+                className="board-stage"
+                style={{ width: `${480 * previewScale}px`, height: `${480 * previewScale}px`, ...previewThemeStyle(theme) }}
               >
-                <div className="grid-overlay">
-                  {GRID_LABELS.map((cell) => (
-                    <div
-                      key={`${cell.col}-${cell.row}`}
-                      className="grid-cell"
-                      style={{
-                        left: `${(cell.col / GRID_SIZE) * 100}%`,
-                        top: `${(cell.row / GRID_SIZE) * 100}%`,
-                        width: `${100 / GRID_SIZE}%`,
-                        height: `${100 / GRID_SIZE}%`
-                      }}
-                    >
-                      <span>
-                        {cell.col},{cell.row}
-                      </span>
-                    </div>
-                  ))}
+                <div
+                  className="board"
+                  ref={boardRef}
+                  style={{ transform: `scale(${previewScale})` }}
+                >
+                  <div className="grid-overlay">
+                    {GRID_LABELS.map((cell) => (
+                      <div
+                        key={`${cell.col}-${cell.row}`}
+                        className="grid-cell"
+                        style={{
+                          left: `${(cell.col / GRID_SIZE) * 100}%`,
+                          top: `${(cell.row / GRID_SIZE) * 100}%`,
+                          width: `${100 / GRID_SIZE}%`,
+                          height: `${100 / GRID_SIZE}%`
+                        }}
+                      >
+                        <span>
+                          {cell.col},{cell.row}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {visibleWidgets.map((widget) => {
+                    const previewLabel = transformLabel(widget.label || "Untitled", widget.labelTransform);
+                    const previewValue =
+                      widget.type === "blank" ? "" : widget.value || (isAutoValueType(widget.type) ? valuePlaceholder(widget.type) : "No value");
+                    const geometry = previewGeometry(widget);
+
+                    return (
+                      <button
+                        key={widget.id}
+                        type="button"
+                        className={`widget-card ${selectedId === widget.id ? "selected" : ""} ${widget.type === "blank" ? "blank-widget" : ""}`}
+                        style={widgetStyle(widget, theme)}
+                        onClick={() => setSelectedId(widget.id)}
+                        onPointerDown={(event) => handlePointerStart(event, widget, "drag")}
+                      >
+                        {widget.type === "blank" ? (
+                          <div className="widget-blank">Blank spacer</div>
+                        ) : (
+                          <>
+                            <MdiIcon
+                              icon={widget.icon}
+                              className="widget-preview-icon"
+                              style={{
+                                left: `${geometry.icon.x}px`,
+                                top: `${geometry.icon.y}px`,
+                                width: `${geometry.icon.w}px`,
+                                height: `${geometry.icon.h}px`,
+                                fontSize: `${geometry.icon.font}px`
+                              }}
+                            />
+                            <strong
+                              className="widget-preview-label"
+                              style={{
+                                left: `${geometry.label.x}px`,
+                                top: `${geometry.label.y}px`,
+                                width: `${geometry.label.w}px`,
+                                minHeight: `${geometry.label.h}px`,
+                                fontSize: `${geometry.label.font}px`,
+                                textAlign: geometry.textAlign,
+                                fontWeight: widget.labelWeight
+                              }}
+                            >
+                              {previewLabel}
+                            </strong>
+                            <span
+                              className="widget-preview-value"
+                              style={{
+                                left: `${geometry.value.x}px`,
+                                top: `${geometry.value.y}px`,
+                                width: `${geometry.value.w}px`,
+                                minHeight: `${geometry.value.h}px`,
+                                fontSize: `${geometry.value.font}px`,
+                                textAlign: geometry.textAlign,
+                                fontWeight: widget.valueWeight
+                              }}
+                            >
+                              {previewValue}
+                            </span>
+                          </>
+                        )}
+                        <span className="resize-handle" onPointerDown={(event) => handlePointerStart(event, widget, "resize")} />
+                      </button>
+                    );
+                  })}
                 </div>
-
-                {visibleWidgets.map((widget) => {
-                  const previewLabel = transformLabel(widget.label || "Untitled", widget.labelTransform);
-                  const previewValue =
-                    widget.type === "blank" ? "" : widget.value || (isAutoValueType(widget.type) ? valuePlaceholder(widget.type) : "No value");
-                  const geometry = previewGeometry(widget);
-
-                  return (
-                    <button
-                      key={widget.id}
-                      type="button"
-                      className={`widget-card ${selectedId === widget.id ? "selected" : ""} ${widget.type === "blank" ? "blank-widget" : ""}`}
-                      style={widgetStyle(widget, theme)}
-                      onClick={() => setSelectedId(widget.id)}
-                      onPointerDown={(event) => handlePointerStart(event, widget, "drag")}
-                    >
-                      {widget.type === "blank" ? (
-                        <div className="widget-blank">Blank spacer</div>
-                      ) : (
-                        <>
-                          <MdiIcon
-                            icon={widget.icon}
-                            className="widget-preview-icon"
-                            style={{
-                              left: `${geometry.icon.x}px`,
-                              top: `${geometry.icon.y}px`,
-                              width: `${geometry.icon.w}px`,
-                              height: `${geometry.icon.h}px`,
-                              fontSize: `${geometry.icon.font}px`
-                            }}
-                          />
-                          <strong
-                            className="widget-preview-label"
-                            style={{
-                              left: `${geometry.label.x}px`,
-                              top: `${geometry.label.y}px`,
-                              width: `${geometry.label.w}px`,
-                              minHeight: `${geometry.label.h}px`,
-                              fontSize: `${geometry.label.font}px`,
-                              textAlign: geometry.textAlign,
-                              fontWeight: widget.labelWeight
-                            }}
-                          >
-                            {previewLabel}
-                          </strong>
-                          <span
-                            className="widget-preview-value"
-                            style={{
-                              left: `${geometry.value.x}px`,
-                              top: `${geometry.value.y}px`,
-                              width: `${geometry.value.w}px`,
-                              minHeight: `${geometry.value.h}px`,
-                              fontSize: `${geometry.value.font}px`,
-                              textAlign: geometry.textAlign,
-                              fontWeight: widget.valueWeight
-                            }}
-                          >
-                            {previewValue}
-                          </span>
-                        </>
-                      )}
-                      <span className="resize-handle" onPointerDown={(event) => handlePointerStart(event, widget, "resize")} />
-                    </button>
-                  );
-                })}
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="holding-area">
-            <div className="holding-header">
-              <div>
-                <h3>Hidden Widgets</h3>
-                <p>These stay off the screen preview until you mark them visible.</p>
+          {workspaceTab === "theme" && (
+            <EditorGroup title="Theme Colors" subtitle="Screen, card, border, text, and overlay palette" defaultOpen>
+              <ColorField label="Screen background" value={theme.screenBg} onChange={(value) => updateTheme({ screenBg: value })} />
+              <ColorField label="Widget background" value={theme.widgetBg} onChange={(value) => updateTheme({ widgetBg: value })} />
+              <ColorField label="Widget border" value={theme.widgetBorder} onChange={(value) => updateTheme({ widgetBorder: value })} />
+              <ColorField label="Accent" value={theme.accent} onChange={(value) => updateTheme({ accent: value })} />
+              <ColorField label="Icon color" value={theme.iconColor} onChange={(value) => updateTheme({ iconColor: value })} />
+              <ColorField label="Label color" value={theme.labelColor} onChange={(value) => updateTheme({ labelColor: value })} />
+              <ColorField label="Value color" value={theme.valueColor} onChange={(value) => updateTheme({ valueColor: value })} />
+              <ColorField label="Overlay background" value={theme.overlayBg} onChange={(value) => updateTheme({ overlayBg: value })} />
+              <ColorField label="Overlay title" value={theme.overlayTitle} onChange={(value) => updateTheme({ overlayTitle: value })} />
+              <ColorField label="Overlay text" value={theme.overlayText} onChange={(value) => updateTheme({ overlayText: value })} />
+            </EditorGroup>
+          )}
+
+          {workspaceTab === "hidden" && (
+            <div className="holding-area">
+              <div className="holding-header">
+                <div>
+                  <h3>Hidden Widgets</h3>
+                  <p>These stay off the screen preview until you mark them visible.</p>
+                </div>
+                <span>{hiddenWidgets.length} hidden</span>
               </div>
-              <span>{hiddenWidgets.length} hidden</span>
-            </div>
-            {hiddenWidgets.length > 0 ? (
-              <div className="holding-grid">
-                {hiddenWidgets.map((widget) => {
-                  const previewLabel = transformLabel(widget.label || "Untitled", widget.labelTransform);
-                  const previewValue =
-                    widget.type === "blank" ? "Blank spacer" : widget.value || (isAutoValueType(widget.type) ? valuePlaceholder(widget.type) : "No value");
+              {hiddenWidgets.length > 0 ? (
+                <div className="holding-grid">
+                  {hiddenWidgets.map((widget) => {
+                    const previewLabel = transformLabel(widget.label || "Untitled", widget.labelTransform);
+                    const previewValue =
+                      widget.type === "blank" ? "Blank spacer" : widget.value || (isAutoValueType(widget.type) ? valuePlaceholder(widget.type) : "No value");
 
-                  return (
-                    <button
-                      key={widget.id}
-                      type="button"
-                      className={`holding-card ${selectedId === widget.id ? "selected" : ""}`}
-                      onClick={() => setSelectedId(widget.id)}
-                    >
-                      <div className="holding-card-top">
-                        <span>{widget.id}</span>
-                        <small>{widget.type}</small>
-                      </div>
-                      <div className="holding-card-main">
-                        {widget.type !== "blank" && <MdiIcon icon={widget.icon} className="holding-icon" />}
-                        <div className="holding-text">
-                          <strong>{previewLabel}</strong>
-                          <span>{previewValue}</span>
+                    return (
+                      <button
+                        key={widget.id}
+                        type="button"
+                        className={`holding-card ${selectedId === widget.id ? "selected" : ""}`}
+                        onClick={() => setSelectedId(widget.id)}
+                      >
+                        <div className="holding-card-top">
+                          <span>{widget.id}</span>
+                          <small>{widget.type}</small>
                         </div>
-                      </div>
-                      <div className="holding-card-meta">
-                        <span>
-                          {widget.w}x{widget.h}
-                        </span>
-                        <span>
-                          {widget.x},{widget.y}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="holding-empty">All widgets are currently visible on the panel preview.</p>
-            )}
-          </div>
+                        <div className="holding-card-main">
+                          {widget.type !== "blank" && <MdiIcon icon={widget.icon} className="holding-icon" />}
+                          <div className="holding-text">
+                            <strong>{previewLabel}</strong>
+                            <span>{previewValue}</span>
+                          </div>
+                        </div>
+                        <div className="holding-card-meta">
+                          <span>
+                            {widget.w}x{widget.h}
+                          </span>
+                          <span>
+                            {widget.x},{widget.y}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="holding-empty">All widgets are currently visible on the panel preview.</p>
+              )}
+            </div>
+          )}
         </section>
 
         <aside className="editor-panel">

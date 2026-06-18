@@ -10,7 +10,7 @@ const HASS_URL = process.env.HASS_URL || "http://supervisor/core/api";
 const TOKEN = process.env.SUPERVISOR_TOKEN || process.env.HASSIO_TOKEN || "";
 const GRID_SIZE = 6;
 const WIDGET_IDS = ["w01", "w02", "w03", "w04", "w05", "w06", "w07", "w08", "w09", "w10", "w11", "w12"];
-const PANEL_THEME_IDS = ["light", "dark", "blue", "red", "green"];
+const PANEL_THEME_IDS = ["light", "dark", "blue", "red", "green", "custom"];
 const ACTION_ENTITY_DOMAINS = new Set([
   "light",
   "switch",
@@ -119,6 +119,20 @@ const PANEL_THEMES = {
     overlayTitle: "#4ade80",
     overlayText: "#f0fdf4",
     accent: "#22c55e"
+  },
+  custom: {
+    id: "custom",
+    name: "Custom",
+    screenBg: "#08142d",
+    widgetBg: "#0d1b33",
+    widgetBorder: "#285ea8",
+    iconColor: "#ffd166",
+    labelColor: "#a8c3ea",
+    valueColor: "#f1f5f9",
+    overlayBg: "#06101f",
+    overlayTitle: "#ffd166",
+    overlayText: "#f1f5f9",
+    accent: "#3b82f6"
   }
 };
 const DEFAULT_STYLE = {

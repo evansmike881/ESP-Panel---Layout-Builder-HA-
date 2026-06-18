@@ -355,8 +355,71 @@ script:
     mode: restart
     then:
       - lvgl.widget.update:
+          id: main_page
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D));'
+      - lvgl.widget.update:
           id: screen_background
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D));'
+      - lvgl.widget.update:
+          id: w01_card
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
+      - lvgl.widget.update:
+          id: w02_card
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
+      - lvgl.widget.update:
+          id: w03_card
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
+      - lvgl.widget.update:
+          id: w04_card
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
+      - lvgl.widget.update:
+          id: w05_card
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
+      - lvgl.widget.update:
+          id: w06_card
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
+      - lvgl.widget.update:
+          id: w07_card
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
+      - lvgl.widget.update:
+          id: w08_card
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
+      - lvgl.widget.update:
+          id: w09_card
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
+      - lvgl.widget.update:
+          id: w10_card
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
+      - lvgl.widget.update:
+          id: w11_card
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
+      - lvgl.widget.update:
+          id: w12_card
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
       - lvgl.widget.update:
           id: notification_overlay
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F));'
@@ -367,6 +430,7 @@ script:
           id: notification_message_label
           text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_text_color).state, 0xF1F5F9));'
       - script.execute: render_all_widgets
+      - lvgl.widget.redraw:
 
   - id: layout_all_widgets
     mode: restart

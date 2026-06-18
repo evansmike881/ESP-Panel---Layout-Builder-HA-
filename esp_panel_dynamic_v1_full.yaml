@@ -13,6 +13,7 @@ input_select:
       - blue
       - red
       - green
+      - custom
     initial: blue
 
   esp_panel_w01_type:

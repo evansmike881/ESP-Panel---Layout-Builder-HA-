@@ -1,6 +1,6 @@
 export const GRID_SIZE = 6;
 export const WIDGET_IDS = ["w01", "w02", "w03", "w04", "w05", "w06", "w07", "w08", "w09", "w10", "w11", "w12"] as const;
-export const PANEL_THEME_IDS = ["light", "dark", "blue", "red", "green"] as const;
+export const PANEL_THEME_IDS = ["light", "dark", "blue", "red", "green", "custom"] as const;
 export const WIDGET_TYPES = [
   "blank",
   "clock",
@@ -138,6 +138,20 @@ export const PANEL_THEMES: Record<PanelThemeId, PanelTheme> = {
     overlayTitle: "#4ade80",
     overlayText: "#f0fdf4",
     accent: "#22c55e"
+  },
+  custom: {
+    id: "custom",
+    name: "Custom",
+    screenBg: "#08142d",
+    widgetBg: "#0d1b33",
+    widgetBorder: "#285ea8",
+    iconColor: "#ffd166",
+    labelColor: "#a8c3ea",
+    valueColor: "#f1f5f9",
+    overlayBg: "#06101f",
+    overlayTitle: "#ffd166",
+    overlayText: "#f1f5f9",
+    accent: "#3b82f6"
   }
 };
 
