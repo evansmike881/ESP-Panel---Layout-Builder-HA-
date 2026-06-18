@@ -792,6 +792,17 @@ async function writeTheme(theme) {
   }
 }
 
+async function tryWriteTheme(theme) {
+  try {
+    await writeTheme(theme);
+    return [];
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error while updating panel theme helpers.";
+    log("Theme helper update skipped", message);
+    return [`Theme helpers were not updated: ${message}`];
+  }
+}
+
 function formatEntityState(state) {
   const rawState = normalizeText(state?.state);
   const unit = normalizeText(state?.attributes?.unit_of_measurement);
@@ -942,11 +953,11 @@ app.post("/api/widgets/:id", async (request, response) => {
       return;
     }
 
-    await writeTheme(theme);
+    const themeWarnings = await tryWriteTheme(theme);
     await writeWidget(widget);
     const { current, mismatches } = await verifyWrittenWidgets([widget]);
     const storedWidget = current.widgets.find((item) => item.id === widget.id) || widget;
-    const warnings = [...current.warnings, ...mismatches];
+    const warnings = [...current.warnings, ...mismatches, ...themeWarnings];
     response.json({ ok: true, widget: storedWidget, warnings });
   } catch (error) {
     log("Failed to update widget", error);
@@ -977,7 +988,7 @@ app.post("/api/apply", async (request, response) => {
       return;
     }
 
-    await writeTheme(theme);
+    const themeWarnings = await tryWriteTheme(theme);
     for (const widget of widgets) {
       await writeWidget(widget);
     }
@@ -987,7 +998,7 @@ app.post("/api/apply", async (request, response) => {
     response.json({
       ok: true,
       widgets: current.widgets,
-      warnings: [...current.warnings, ...mismatches]
+      warnings: [...current.warnings, ...mismatches, ...themeWarnings]
     });
   } catch (error) {
     log("Failed to apply widget layout", error);
