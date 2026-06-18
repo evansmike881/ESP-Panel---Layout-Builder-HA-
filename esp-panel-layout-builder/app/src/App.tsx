@@ -817,10 +817,6 @@ export default function App() {
                       onClick={() => setSelectedId(widget.id)}
                       onPointerDown={(event) => handlePointerStart(event, widget, "drag")}
                     >
-                      <div className="widget-meta">
-                        <span>{widget.id}</span>
-                        <span>{widget.type}</span>
-                      </div>
                       {widget.type === "blank" ? (
                         <div className="widget-blank">Blank spacer</div>
                       ) : (
@@ -866,9 +862,6 @@ export default function App() {
                           </span>
                         </>
                       )}
-                      <span className="widget-size">
-                        {widget.w}x{widget.h}
-                      </span>
                       <span className="resize-handle" onPointerDown={(event) => handlePointerStart(event, widget, "resize")} />
                     </button>
                   );
