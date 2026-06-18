@@ -72,22 +72,23 @@ const FONT_WEIGHT_OPTIONS = [
   { value: "normal", label: "Regular" },
   { value: "bold", label: "Bold" }
 ] as const;
+const WIDGET_TYPE_LABELS: Record<WidgetConfig["type"], string> = {
+  blank: "Blank spacer",
+  clock: "Clock",
+  date: "Date",
+  button: "Button",
+  status: "Sensor / status"
+};
 const SCREEN_TABS = [{ id: "screen-1", label: "Screen 1" }] as const;
 const VALUE_PRESETS: Partial<Record<WidgetConfig["type"], string[]>> = {
-  weather: ["Sunny", "Cloudy", "Partly Cloudy", "Rain", "Storm"],
-  temperature: ["12.5", "18.0", "21.5", "24.0"],
-  humidity: ["40", "55", "80"],
   button: ["ON", "OFF", "Tap"],
-  status: ["Online", "Offline", "Ready", "Open", "Closed"]
+  status: ["Online", "Offline", "Ready", "Open", "Closed", "Sunny", "Partly Cloudy", "21.5", "55%"]
 };
 const ACTION_PRESETS: Partial<Record<WidgetConfig["type"], string[]>> = {
   clock: ["clock"],
   date: ["date"],
-  weather: ["weather"],
-  temperature: ["temperature"],
-  humidity: ["humidity"],
   button: ["office_light", "main_light", "front_door", "toggle_light"],
-  status: ["wifi_status", "home_scene", "sofa_status", "system_status"]
+  status: ["weather", "temperature", "humidity", "wifi_status", "home_scene", "sofa_status", "system_status"]
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -347,15 +348,19 @@ function previewGeometry(widget: WidgetConfig): PreviewGeometry {
       iconH = showIcon ? iconFont + 6 : 0;
       labelH = showLabel ? labelFont + 6 : 0;
       valueH = showValue ? valueFont + 6 : 0;
+      neededH = iconH + labelH + valueH;
+      if (showIcon && (showLabel || showValue)) neededH += stackGap;
+      if (showLabel && showValue) neededH += stackGap;
     }
 
     const iconW = showIcon ? Math.min(cardW - padding * 2, iconFont + 12) : 0;
     const iconX = showIcon ? (centerAligned ? (cardW - iconW) / 2 : endAligned ? cardW - padding - iconW : padding) : 0;
-    const labelY = padding + (showIcon ? iconH + stackGap : 0);
+    const blockY = padding + Math.max(0, Math.floor((availableH - neededH) / 2));
+    const labelY = blockY + (showIcon ? iconH + stackGap : 0);
     const valueY = labelY + (showLabel ? labelH + stackGap : 0);
 
     return {
-      icon: { x: iconX, y: padding, w: iconW, h: iconH, font: showIcon ? iconFont : 0 },
+      icon: { x: iconX, y: blockY, w: iconW, h: iconH, font: showIcon ? iconFont : 0 },
       label: { x: padding, y: labelY, w: Math.max(8, cardW - padding * 2), h: labelH, font: showLabel ? labelFont : 0 },
       value: {
         x: padding,
@@ -378,12 +383,15 @@ function previewGeometry(widget: WidgetConfig): PreviewGeometry {
   const textGap = gap + 2;
   const textW = Math.max(24, cardW - padding * 2 - (showIcon ? iconW + textGap : 0));
   const labelX = padding + (showIcon ? iconW + textGap : 0);
-  const labelY = padding + (widget.h > 1 ? 10 : 2);
   const labelH = showLabel ? labelFont + 8 : 0;
+  const textBlockH = labelH + (showLabel && showValue ? gap : 0) + (showValue ? valueFont + 8 : 0);
+  const contentH = Math.max(iconH, textBlockH);
+  const contentY = padding + Math.max(0, Math.floor((Math.max(24, cardH - padding * 2) - contentH) / 2));
+  const labelY = contentY + Math.max(0, Math.floor((contentH - textBlockH) / 2));
   const valueY = labelY + (showLabel ? labelH + gap : 0);
 
   return {
-    icon: { x: padding, y: showIcon ? (cardH - iconH) / 2 : 0, w: iconW, h: iconH, font: showIcon ? iconFont : 0 },
+    icon: { x: padding, y: showIcon ? contentY + Math.max(0, Math.floor((contentH - iconH) / 2)) : 0, w: iconW, h: iconH, font: showIcon ? iconFont : 0 },
     label: { x: labelX, y: labelY, w: textW, h: labelH, font: showLabel ? labelFont : 0 },
     value: {
       x: labelX,
@@ -429,16 +437,10 @@ function valuePlaceholder(type: WidgetConfig["type"]) {
       return "Auto-generated from Home Assistant time";
     case "date":
       return "Auto-generated from Home Assistant date";
-    case "weather":
-      return "Example: Partly Cloudy";
-    case "temperature":
-      return "Example: 21.5";
-    case "humidity":
-      return "Example: 55";
     case "button":
       return "Example: ON or OFF";
     case "status":
-      return "Example: Online or Ready";
+      return "Example: Online, 21.5, or Partly Cloudy";
     default:
       return "Widget value";
   }
@@ -457,12 +459,8 @@ function actionPlaceholder(type: WidgetConfig["type"]) {
 
 function valueSourcePlaceholder(type: WidgetConfig["type"]) {
   switch (type) {
-    case "temperature":
-      return "Example: sensor.outdoor_temperature";
-    case "humidity":
-      return "Example: sensor.office_humidity";
     case "status":
-      return "Example: binary_sensor.front_door or sensor.panel_status";
+      return "Example: sensor.outdoor_temperature, sensor.office_humidity, or binary_sensor.front_door";
     case "button":
       return "Optional: show the state of a related entity";
     default:
@@ -1106,7 +1104,7 @@ export default function App() {
                   >
                     {WIDGET_TYPES.map((type) => (
                       <option key={type} value={type}>
-                        {type}
+                        {WIDGET_TYPE_LABELS[type]}
                       </option>
                     ))}
                   </select>

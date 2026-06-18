@@ -1,9 +1,12 @@
 import express from "express";
+import { promises as fs } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const DATA_DIR = path.join(__dirname, "data");
+const LAYOUT_STORE_PATH = path.join(DATA_DIR, "layout-config.json");
 
 const PORT = Number.parseInt(process.env.PORT || "8099", 10);
 const HASS_URL = process.env.HASS_URL || "http://supervisor/core/api";
@@ -44,12 +47,14 @@ const WIDGET_TYPES = [
   "blank",
   "clock",
   "date",
-  "weather",
-  "temperature",
-  "humidity",
   "button",
   "status"
 ];
+const LEGACY_WIDGET_TYPE_MAP = {
+  weather: "status",
+  temperature: "status",
+  humidity: "status"
+};
 const CONTENT_ALIGN_OPTIONS = ["start", "center", "end"];
 const TEXT_TRANSFORM_OPTIONS = ["none", "uppercase"];
 const FONT_WEIGHT_OPTIONS = ["normal", "bold"];
@@ -170,9 +175,9 @@ const DEFAULT_STYLE = {
 const DEFAULT_LAYOUT = [
   { id: "w01", type: "clock", visible: true, label: "Clock", value: "--:--", valueSource: "", icon: "clock", action: "clock", x: 0, y: 0, w: 3, h: 1, ...DEFAULT_STYLE },
   { id: "w02", type: "date", visible: true, label: "Date", value: "--", valueSource: "", icon: "calendar", action: "date", x: 3, y: 0, w: 3, h: 1, ...DEFAULT_STYLE },
-  { id: "w03", type: "weather", visible: true, label: "Weather", value: "Partly Cloudy", valueSource: "", icon: "weather-partly-cloudy", action: "weather", x: 0, y: 1, w: 3, h: 1, ...DEFAULT_STYLE },
-  { id: "w04", type: "temperature", visible: true, label: "Temp", value: "12.5", valueSource: "", icon: "thermometer", action: "temperature", x: 3, y: 1, w: 2, h: 1, ...DEFAULT_STYLE },
-  { id: "w05", type: "humidity", visible: true, label: "Humidity", value: "80", valueSource: "", icon: "water-percent", action: "humidity", x: 5, y: 1, w: 1, h: 1, ...DEFAULT_STYLE },
+  { id: "w03", type: "status", visible: true, label: "Weather", value: "Partly Cloudy", valueSource: "", icon: "weather-partly-cloudy", action: "weather", x: 0, y: 1, w: 3, h: 1, ...DEFAULT_STYLE },
+  { id: "w04", type: "status", visible: true, label: "Temp", value: "12.5", valueSource: "", icon: "thermometer", action: "temperature", x: 3, y: 1, w: 2, h: 1, ...DEFAULT_STYLE },
+  { id: "w05", type: "status", visible: true, label: "Humidity", value: "80", valueSource: "", icon: "water-percent", action: "humidity", x: 5, y: 1, w: 1, h: 1, ...DEFAULT_STYLE },
   { id: "w06", type: "button", visible: true, label: "Main Light", value: "OFF", valueSource: "switch.office_main_light", icon: "ceiling-light", action: "office_light", x: 0, y: 4, w: 2, h: 2, ...DEFAULT_STYLE },
   { id: "w07", type: "status", visible: false, label: "WiFi", value: "Online", valueSource: "", icon: "wifi", action: "wifi_status", x: 2, y: 4, w: 2, h: 1, ...DEFAULT_STYLE },
   { id: "w08", type: "status", visible: false, label: "Scene", value: "Home", valueSource: "", icon: "home", action: "home_scene", x: 2, y: 5, w: 2, h: 1, ...DEFAULT_STYLE },
@@ -255,6 +260,73 @@ function normalizeText(value) {
   return typeof value === "string" ? value : value === undefined || value === null ? "" : String(value);
 }
 
+function encodeRuntimeText(value) {
+  return encodeURIComponent(normalizeText(value));
+}
+
+function runtimeWidgetConfigValue(widget) {
+  return [
+    widget.type,
+    widget.visible ? "1" : "0",
+    widget.showBorder ? "1" : "0",
+    widget.showIcon ? "1" : "0",
+    widget.showLabel ? "1" : "0",
+    widget.showValue ? "1" : "0",
+    widget.widgetBgColor,
+    widget.label,
+    widget.icon,
+    widget.contentAlign,
+    widget.labelTransform,
+    widget.labelWeight,
+    widget.valueWeight,
+    widget.iconColor,
+    widget.labelColor,
+    widget.valueColor,
+    String(widget.iconScale),
+    String(widget.labelScale),
+    String(widget.valueScale),
+    String(widget.x),
+    String(widget.y),
+    String(widget.w),
+    String(widget.h)
+  ].map(encodeRuntimeText).join("|");
+}
+
+function runtimeThemeConfigValue(theme) {
+  return [
+    theme.id,
+    theme.screenBg,
+    theme.widgetBg,
+    theme.widgetBorder,
+    theme.buttonOnBg,
+    theme.buttonOffBg,
+    theme.overlayBg,
+    theme.overlayTitle,
+    theme.overlayText
+  ].map(encodeRuntimeText).join("|");
+}
+
+function runtimeHelperMap(id) {
+  return {
+    config: `input_text.esp_panel_runtime_${id}_config`,
+    value: `input_text.esp_panel_runtime_${id}_value`
+  };
+}
+
+function runtimeThemeHelper() {
+  return "input_text.esp_panel_runtime_theme";
+}
+
+function normalizeWidgetType(value, fallback) {
+  if (WIDGET_TYPES.includes(value)) {
+    return value;
+  }
+  if (value && LEGACY_WIDGET_TYPE_MAP[value]) {
+    return LEGACY_WIDGET_TYPE_MAP[value];
+  }
+  return fallback;
+}
+
 function normalizeNumber(value, fallback) {
   const parsed = Number.parseInt(String(value), 10);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -297,6 +369,27 @@ function sanitizeTheme(input) {
     overlayText: normalizeColor(input?.overlayText, baseTheme.overlayText),
     accent: normalizeColor(input?.accent, baseTheme.accent)
   };
+}
+
+async function ensureDataDir() {
+  await fs.mkdir(DATA_DIR, { recursive: true });
+}
+
+async function readStoredConfigFile() {
+  try {
+    const raw = await fs.readFile(LAYOUT_STORE_PATH, "utf8");
+    return JSON.parse(raw);
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
+}
+
+async function writeStoredConfigFile(config) {
+  await ensureDataDir();
+  await fs.writeFile(LAYOUT_STORE_PATH, JSON.stringify(config, null, 2));
 }
 
 function validateWidget(widget) {
@@ -390,7 +483,7 @@ function findOverlapWarnings(widgets) {
 function sanitizeWidget(input, fallback) {
   const widget = {
     id: input?.id || fallback.id,
-    type: WIDGET_TYPES.includes(input?.type) ? input.type : fallback.type,
+    type: normalizeWidgetType(input?.type, fallback.type),
     visible: typeof input?.visible === "boolean" ? input.visible : fallback.visible,
     showBorder: typeof input?.showBorder === "boolean" ? input.showBorder : fallback.showBorder,
     showIcon: typeof input?.showIcon === "boolean" ? input.showIcon : fallback.showIcon,
@@ -524,7 +617,7 @@ function widgetFromStates(id, statesMap) {
   return {
     widget: {
       id,
-      type: WIDGET_TYPES.includes(type) ? type : fallback.type,
+      type: normalizeWidgetType(type, fallback.type),
       visible: visible === undefined ? fallback.visible : visible === "on",
       showBorder: showBorder === undefined ? fallback.showBorder : showBorder === "on",
       showIcon: showIcon === undefined ? fallback.showIcon : showIcon === "on",
@@ -585,337 +678,144 @@ function themeFromStates(statesMap) {
 
 function helperPackageYaml() {
   const defaultTheme = copyDefaultTheme();
-  const themeSelectLines = `  esp_panel_theme:
-    name: ESP Panel Theme
-    options:
-${PANEL_THEME_IDS.map((id) => `      - ${id}`).join("\n")}
-    initial: ${defaultTheme.id}`;
-  const selectLines = WIDGET_IDS.map((id) => {
-    const fallback = copyDefaultWidget(id);
-    return `  esp_panel_${id}_type:
-    name: ESP Panel ${id.toUpperCase()} Type
-    options:
-${WIDGET_TYPES.map((type) => `      - ${type}`).join("\n")}
-    initial: ${fallback.type}
-  esp_panel_${id}_content_align:
-    name: ESP Panel ${id.toUpperCase()} Content Align
-    options:
-${CONTENT_ALIGN_OPTIONS.map((option) => `      - ${option}`).join("\n")}
-    initial: ${fallback.contentAlign}
-  esp_panel_${id}_label_transform:
-    name: ESP Panel ${id.toUpperCase()} Label Transform
-    options:
-${TEXT_TRANSFORM_OPTIONS.map((option) => `      - ${option}`).join("\n")}
-    initial: ${fallback.labelTransform}
-  esp_panel_${id}_label_weight:
-    name: ESP Panel ${id.toUpperCase()} Label Weight
-    options:
-${FONT_WEIGHT_OPTIONS.map((option) => `      - ${option}`).join("\n")}
-    initial: ${fallback.labelWeight}
-  esp_panel_${id}_value_weight:
-    name: ESP Panel ${id.toUpperCase()} Value Weight
-    options:
-${FONT_WEIGHT_OPTIONS.map((option) => `      - ${option}`).join("\n")}
-    initial: ${fallback.valueWeight}`;
-  }).join("\n");
-
-  const booleanLines = WIDGET_IDS.map((id) => {
-    const fallback = copyDefaultWidget(id);
-    return `  esp_panel_${id}_visible:
-    name: ESP Panel ${id.toUpperCase()} Visible
-    initial: ${fallback.visible ? "true" : "false"}
-  esp_panel_${id}_show_border:
-    name: ESP Panel ${id.toUpperCase()} Show Border
-    initial: ${fallback.showBorder ? "true" : "false"}
-  esp_panel_${id}_show_icon:
-    name: ESP Panel ${id.toUpperCase()} Show Icon
-    initial: ${fallback.showIcon ? "true" : "false"}
-  esp_panel_${id}_show_label:
-    name: ESP Panel ${id.toUpperCase()} Show Label
-    initial: ${fallback.showLabel ? "true" : "false"}
-  esp_panel_${id}_show_value:
-    name: ESP Panel ${id.toUpperCase()} Show Value
-    initial: ${fallback.showValue ? "true" : "false"}`;
-  }).join("\n");
-
-  const themeTextLines = [
-    `  esp_panel_screen_bg_color:
-    name: ESP Panel Screen Background Color
-    initial: "${defaultTheme.screenBg}"
-    max: 7`,
-    `  esp_panel_widget_bg_color:
-    name: ESP Panel Widget Background Color
-    initial: "${defaultTheme.widgetBg}"
-    max: 7`,
-    `  esp_panel_widget_border_color:
-    name: ESP Panel Widget Border Color
-    initial: "${defaultTheme.widgetBorder}"
-    max: 7`,
-    `  esp_panel_button_on_bg_color:
-    name: ESP Panel Button On Background Color
-    initial: "${defaultTheme.buttonOnBg}"
-    max: 7`,
-    `  esp_panel_button_off_bg_color:
-    name: ESP Panel Button Off Background Color
-    initial: "${defaultTheme.buttonOffBg}"
-    max: 7`,
-    `  esp_panel_overlay_bg_color:
-    name: ESP Panel Overlay Background Color
-    initial: "${defaultTheme.overlayBg}"
-    max: 7`,
-    `  esp_panel_overlay_title_color:
-    name: ESP Panel Overlay Title Color
-    initial: "${defaultTheme.overlayTitle}"
-    max: 7`,
-    `  esp_panel_overlay_text_color:
-    name: ESP Panel Overlay Text Color
-    initial: "${defaultTheme.overlayText}"
-    max: 7`
-  ];
+  const themeLine = `  esp_panel_runtime_theme:
+    name: ESP Panel Runtime Theme
+    initial: "${runtimeThemeConfigValue(defaultTheme)}"
+    max: 255`;
   const textLines = WIDGET_IDS.flatMap((id) => {
     const fallback = copyDefaultWidget(id);
     return [
-      `  esp_panel_${id}_label:
-    name: ESP Panel ${id.toUpperCase()} Label
-    initial: "${fallback.label}"`,
-      `  esp_panel_${id}_value:
-    name: ESP Panel ${id.toUpperCase()} Value
-    initial: "${fallback.value}"`,
-      `  esp_panel_${id}_value_source:
-    name: ESP Panel ${id.toUpperCase()} Value Source
-    initial: "${fallback.valueSource}"
-    max: 120`,
-      `  esp_panel_${id}_icon:
-    name: ESP Panel ${id.toUpperCase()} Icon
-    initial: "${fallback.icon}"`,
-      `  esp_panel_${id}_bg_color:
-    name: ESP Panel ${id.toUpperCase()} Background Override
-    initial: "${fallback.widgetBgColor}"
-    max: 20`,
-      `  esp_panel_${id}_action:
-    name: ESP Panel ${id.toUpperCase()} Action
-    initial: "${fallback.action}"`,
-      `  esp_panel_${id}_icon_color:
-    name: ESP Panel ${id.toUpperCase()} Icon Color
-    initial: "${fallback.iconColor}"
-    max: 7`,
-      `  esp_panel_${id}_label_color:
-    name: ESP Panel ${id.toUpperCase()} Label Color
-    initial: "${fallback.labelColor}"
-    max: 7`,
-      `  esp_panel_${id}_value_color:
-    name: ESP Panel ${id.toUpperCase()} Value Color
-    initial: "${fallback.valueColor}"
-    max: 7`
+      `  esp_panel_runtime_${id}_config:
+    name: ESP Panel Runtime ${id.toUpperCase()} Config
+    initial: "${runtimeWidgetConfigValue(fallback)}"
+    max: 255`,
+      `  esp_panel_runtime_${id}_value:
+    name: ESP Panel Runtime ${id.toUpperCase()} Value
+    initial: "${fallback.value}"`
     ];
   }).join("\n");
-
-  const numberLines = WIDGET_IDS.flatMap((id) => {
-    const fallback = copyDefaultWidget(id);
-    return [
-      `  esp_panel_${id}_x:
-    name: ESP Panel ${id.toUpperCase()} X
-    min: 0
-    max: 5
-    step: 1
-    mode: box
-    initial: ${fallback.x}`,
-      `  esp_panel_${id}_y:
-    name: ESP Panel ${id.toUpperCase()} Y
-    min: 0
-    max: 5
-    step: 1
-    mode: box
-    initial: ${fallback.y}`,
-      `  esp_panel_${id}_w:
-    name: ESP Panel ${id.toUpperCase()} Width
-    min: 1
-    max: 6
-    step: 1
-    mode: box
-    initial: ${fallback.w}`,
-      `  esp_panel_${id}_h:
-    name: ESP Panel ${id.toUpperCase()} Height
-    min: 1
-    max: 6
-    step: 1
-    mode: box
-    initial: ${fallback.h}`,
-      `  esp_panel_${id}_icon_scale:
-    name: ESP Panel ${id.toUpperCase()} Icon Scale
-    min: 25
-    max: 180
-    step: 1
-    mode: box
-    initial: ${fallback.iconScale}`,
-      `  esp_panel_${id}_label_scale:
-    name: ESP Panel ${id.toUpperCase()} Label Scale
-    min: 25
-    max: 180
-    step: 1
-    mode: box
-    initial: ${fallback.labelScale}`,
-      `  esp_panel_${id}_value_scale:
-    name: ESP Panel ${id.toUpperCase()} Value Scale
-    min: 25
-    max: 180
-    step: 1
-    mode: box
-    initial: ${fallback.valueScale}`
-    ];
-  }).join("\n");
-
-  return `input_select:
-${themeSelectLines}
-${selectLines}
-
-input_boolean:
-${booleanLines}
-
-input_text:
-${themeTextLines.join("\n")}
+  return `input_text:
+${themeLine}
 ${textLines}
-
-input_number:
-${numberLines}
 `;
 }
 
-async function writeWidget(widget) {
-  const helpers = helperMap(widget.id);
+async function importLegacyStoredConfig() {
+  const statesMap = await getStatesMap();
+  const themeResult = themeFromStates(statesMap);
+  const widgets = WIDGET_IDS.map((id) => widgetFromStates(id, statesMap).widget);
+  const config = {
+    widgets,
+    theme: themeResult.theme
+  };
+  await writeStoredConfigFile(config);
+  return config;
+}
 
-  await hassFetch("/services/input_select/select_option", {
-    method: "POST",
-    body: JSON.stringify({
-      entity_id: helpers.type,
-      option: widget.type
-    })
-  });
-
-  await hassFetch(`/services/input_boolean/${widget.visible ? "turn_on" : "turn_off"}`, {
-    method: "POST",
-    body: JSON.stringify({
-      entity_id: helpers.visible
-    })
-  });
-
-  for (const [field, entityId] of Object.entries({
-    showBorder: helpers.showBorder,
-    showIcon: helpers.showIcon,
-    showLabel: helpers.showLabel,
-    showValue: helpers.showValue
-  })) {
-    await hassFetch(`/services/input_boolean/${widget[field] ? "turn_on" : "turn_off"}`, {
-      method: "POST",
-      body: JSON.stringify({
-        entity_id: entityId
-      })
+async function loadStoredConfig() {
+  const fileConfig = await readStoredConfigFile();
+  if (fileConfig) {
+    const theme = sanitizeTheme(fileConfig.theme);
+    const widgets = WIDGET_IDS.map((id) => {
+      const fallback = copyDefaultWidget(id);
+      const rawWidget = Array.isArray(fileConfig.widgets) ? fileConfig.widgets.find((widget) => widget?.id === id) || { id } : { id };
+      return sanitizeWidget(rawWidget, fallback);
     });
+    return { widgets, theme };
   }
 
-  for (const [field, entityId] of Object.entries({
-    widgetBgColor: helpers.widgetBgColor,
-    label: helpers.label,
-    value: helpers.value,
-    valueSource: helpers.valueSource,
-    icon: helpers.icon,
-    action: helpers.action,
-    iconColor: helpers.iconColor,
-    labelColor: helpers.labelColor,
-    valueColor: helpers.valueColor
-  })) {
+  try {
+    return await importLegacyStoredConfig();
+  } catch (error) {
+    log("Falling back to built-in defaults for layout store", error instanceof Error ? error.message : error);
+    const config = {
+      widgets: DEFAULT_LAYOUT.map((widget) => ({ ...widget })),
+      theme: copyDefaultTheme()
+    };
+    await writeStoredConfigFile(config);
+    return config;
+  }
+}
+
+async function saveStoredConfig(widgets, theme) {
+  const config = {
+    widgets: WIDGET_IDS.map((id) => {
+      const fallback = copyDefaultWidget(id);
+      const widget = widgets.find((item) => item.id === id) || fallback;
+      return sanitizeWidget(widget, fallback);
+    }),
+    theme: sanitizeTheme(theme)
+  };
+  await writeStoredConfigFile(config);
+  return config;
+}
+
+async function writeRuntimeText(entityId, value, warnings, warningLabel) {
+  try {
     await hassFetch("/services/input_text/set_value", {
       method: "POST",
       body: JSON.stringify({
         entity_id: entityId,
-        value: widget[field]
-      })
-    });
-  }
-
-  for (const [field, entityId] of Object.entries({
-    contentAlign: helpers.contentAlign,
-    labelTransform: helpers.labelTransform,
-    labelWeight: helpers.labelWeight,
-    valueWeight: helpers.valueWeight
-  })) {
-    await hassFetch("/services/input_select/select_option", {
-      method: "POST",
-      body: JSON.stringify({
-        entity_id: entityId,
-        option: widget[field]
-      })
-    });
-  }
-
-  for (const [field, entityId] of Object.entries({
-    iconScale: helpers.iconScale,
-    labelScale: helpers.labelScale,
-    valueScale: helpers.valueScale,
-    x: helpers.x,
-    y: helpers.y,
-    w: helpers.w,
-    h: helpers.h
-  })) {
-    await hassFetch("/services/input_number/set_value", {
-      method: "POST",
-      body: JSON.stringify({
-        entity_id: entityId,
-        value: widget[field]
-      })
-    });
-  }
-}
-
-async function writeTheme(theme) {
-  const helpers = themeHelperMap();
-  const warnings = [];
-
-  try {
-    await hassFetch("/services/input_select/select_option", {
-      method: "POST",
-      body: JSON.stringify({
-        entity_id: helpers.theme,
-        option: theme.id
+        value
       })
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error while updating theme selector.";
-    warnings.push(`Theme selector was not updated: ${message}`);
+    const message = error instanceof Error ? error.message : `Unknown error while updating ${warningLabel}.`;
+    warnings.push(`${warningLabel} was not updated: ${message}`);
   }
+}
 
-  for (const [field, entityId] of Object.entries({
-    screenBg: helpers.screenBg,
-    widgetBg: helpers.widgetBg,
-    widgetBorder: helpers.widgetBorder,
-    buttonOnBg: helpers.buttonOnBg,
-    buttonOffBg: helpers.buttonOffBg,
-    overlayBg: helpers.overlayBg,
-    overlayTitle: helpers.overlayTitle,
-    overlayText: helpers.overlayText
-  })) {
-    try {
-      await hassFetch("/services/input_text/set_value", {
-        method: "POST",
-        body: JSON.stringify({
-          entity_id: entityId,
-          value: theme[field]
-        })
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : `Unknown error while updating ${field}.`;
-      warnings.push(`Theme field ${field} was not updated: ${message}`);
-    }
-  }
-
+async function syncRuntimeTheme(theme) {
+  const warnings = [];
+  await writeRuntimeText(runtimeThemeHelper(), runtimeThemeConfigValue(theme), warnings, "Theme runtime helper");
   return warnings;
+}
+
+async function syncRuntimeWidget(widget) {
+  const warnings = [];
+  const helpers = runtimeHelperMap(widget.id);
+  await writeRuntimeText(helpers.config, runtimeWidgetConfigValue(widget), warnings, `${widget.id} config helper`);
+  await writeRuntimeText(helpers.value, widget.value, warnings, `${widget.id} value helper`);
+  return warnings;
+}
+
+async function syncRuntimeConfig(widgets, theme) {
+  const warnings = [...await syncRuntimeTheme(theme)];
+  for (const widget of widgets) {
+    warnings.push(...await syncRuntimeWidget(widget));
+  }
+  return warnings;
+}
+
+async function findMissingRuntimeHelpers() {
+  try {
+    const statesMap = await getStatesMap();
+    const required = [
+      runtimeThemeHelper(),
+      ...WIDGET_IDS.flatMap((id) => {
+        const helpers = runtimeHelperMap(id);
+        return [helpers.config, helpers.value];
+      })
+    ];
+    return required.filter((entityId) => !statesMap.has(entityId));
+  } catch {
+    return [];
+  }
+}
+
+async function writeWidget(widget) {
+  return syncRuntimeWidget(widget);
+}
+
+async function writeTheme(theme) {
+  return syncRuntimeTheme(theme);
 }
 
 async function tryWriteTheme(theme) {
   try {
     return await writeTheme(theme);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error while updating panel theme helpers.";
+    const message = error instanceof Error ? error.message : "Unknown error while updating panel runtime theme helper.";
     log("Theme helper update skipped", message);
     return [`Theme helpers were not updated: ${message}`];
   }
@@ -939,9 +839,10 @@ function formatEntityState(state) {
 async function syncValueSources() {
   const states = await hassFetch("/states");
   const statesMap = new Map(states.map((state) => [state.entity_id, state]));
-  const widgets = WIDGET_IDS.map((id) => widgetFromStates(id, statesMap).widget);
+  const stored = await loadStoredConfig();
+  let changed = false;
 
-  for (const widget of widgets) {
+  for (const widget of stored.widgets) {
     if (!widget.valueSource) {
       continue;
     }
@@ -953,32 +854,27 @@ async function syncValueSources() {
 
     const nextValue = formatEntityState(sourceState);
     if (nextValue && nextValue !== widget.value) {
-      await hassFetch("/services/input_text/set_value", {
-        method: "POST",
-        body: JSON.stringify({
-          entity_id: helperMap(widget.id).value,
-          value: nextValue
-        })
-      });
+      widget.value = nextValue;
+      changed = true;
+      const warnings = [];
+      await writeRuntimeText(runtimeHelperMap(widget.id).value, nextValue, warnings, `${widget.id} value helper`);
+      warnings.forEach((warning) => log(warning));
     }
+  }
+
+  if (changed) {
+    await saveStoredConfig(stored.widgets, stored.theme);
   }
 }
 
 async function buildWidgetResponse() {
-  const statesMap = await getStatesMap();
-  const missingHelpers = [];
-  const themeResult = themeFromStates(statesMap);
-  missingHelpers.push(...themeResult.missing);
-  const widgets = WIDGET_IDS.map((id) => {
-    const result = widgetFromStates(id, statesMap);
-    missingHelpers.push(...result.missing);
-    return result.widget;
-  });
+  const stored = await loadStoredConfig();
+  const missingHelpers = await findMissingRuntimeHelpers();
 
   return {
-    widgets,
+    widgets: stored.widgets,
     warnings: [
-      ...findOverlapWarnings(widgets),
+      ...findOverlapWarnings(stored.widgets),
       ...(missingHelpers.length > 0
         ? [`Missing ${missingHelpers.length} helper entities. Open Helper YAML to create them.`]
         : [])
@@ -986,7 +882,7 @@ async function buildWidgetResponse() {
     missingHelpers,
     helperYaml: helperPackageYaml(),
     defaults: DEFAULT_LAYOUT,
-    theme: themeResult.theme
+    theme: stored.theme
   };
 }
 
@@ -1071,11 +967,13 @@ app.post("/api/widgets/:id", async (request, response) => {
       return;
     }
 
-    const themeWarnings = await tryWriteTheme(theme);
-    await writeWidget(widget);
+    const stored = await loadStoredConfig();
+    const nextWidgets = stored.widgets.map((item) => (item.id === widget.id ? widget : item));
+    await saveStoredConfig(nextWidgets, theme);
+    const runtimeWarnings = [...await tryWriteTheme(theme), ...await writeWidget(widget)];
     const { current, mismatches } = await verifyWrittenWidgets([widget]);
     const storedWidget = current.widgets.find((item) => item.id === widget.id) || widget;
-    const warnings = [...current.warnings, ...mismatches, ...themeWarnings];
+    const warnings = [...current.warnings, ...mismatches, ...runtimeWarnings];
     response.json({ ok: true, widget: storedWidget, warnings });
   } catch (error) {
     log("Failed to update widget", error);
@@ -1106,17 +1004,15 @@ app.post("/api/apply", async (request, response) => {
       return;
     }
 
-    const themeWarnings = await tryWriteTheme(theme);
-    for (const widget of widgets) {
-      await writeWidget(widget);
-    }
+    await saveStoredConfig(widgets, theme);
+    const runtimeWarnings = await syncRuntimeConfig(widgets, theme);
 
     const { current, mismatches } = await verifyWrittenWidgets(widgets);
 
     response.json({
       ok: true,
       widgets: current.widgets,
-      warnings: [...current.warnings, ...mismatches, ...themeWarnings]
+      warnings: [...current.warnings, ...mismatches, ...runtimeWarnings]
     });
   } catch (error) {
     log("Failed to apply widget layout", error);
@@ -1147,7 +1043,13 @@ app.listen(PORT, "0.0.0.0", () => {
   log(`Server listening on 0.0.0.0:${PORT}`);
   if (!TOKEN) {
     log("Warning: no Home Assistant supervisor token found. API calls will fail until the add-on runs inside Home Assistant.");
+    return;
   }
+
+  void loadStoredConfig()
+    .then((config) => syncRuntimeConfig(config.widgets, config.theme))
+    .then((warnings) => warnings.forEach((warning) => log(warning)))
+    .catch((error) => log("Initial runtime sync failed", error));
 });
 
 setInterval(() => {

@@ -2503,1590 +2503,2038 @@ script:
             return id(mdi_icons_64);
 
 binary_sensor:
-  - platform: homeassistant
+  - platform: template
     id: w01_visible
-    entity_id: input_boolean.esp_panel_w01_visible
-    on_state:
-      - script.execute: render_w01
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w01_show_border
-    entity_id: input_boolean.esp_panel_w01_show_border
-    on_state:
-      - script.execute: render_w01
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w01_show_icon
-    entity_id: input_boolean.esp_panel_w01_show_icon
-    on_state:
-      - script.execute: render_w01
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w01_show_label
-    entity_id: input_boolean.esp_panel_w01_show_label
-    on_state:
-      - script.execute: render_w01
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w01_show_value
-    entity_id: input_boolean.esp_panel_w01_show_value
-    on_state:
-      - script.execute: render_w01
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w02_visible
-    entity_id: input_boolean.esp_panel_w02_visible
-    on_state:
-      - script.execute: render_w02
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w02_show_border
-    entity_id: input_boolean.esp_panel_w02_show_border
-    on_state:
-      - script.execute: render_w02
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w02_show_icon
-    entity_id: input_boolean.esp_panel_w02_show_icon
-    on_state:
-      - script.execute: render_w02
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w02_show_label
-    entity_id: input_boolean.esp_panel_w02_show_label
-    on_state:
-      - script.execute: render_w02
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w02_show_value
-    entity_id: input_boolean.esp_panel_w02_show_value
-    on_state:
-      - script.execute: render_w02
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w03_visible
-    entity_id: input_boolean.esp_panel_w03_visible
-    on_state:
-      - script.execute: render_w03
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w03_show_border
-    entity_id: input_boolean.esp_panel_w03_show_border
-    on_state:
-      - script.execute: render_w03
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w03_show_icon
-    entity_id: input_boolean.esp_panel_w03_show_icon
-    on_state:
-      - script.execute: render_w03
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w03_show_label
-    entity_id: input_boolean.esp_panel_w03_show_label
-    on_state:
-      - script.execute: render_w03
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w03_show_value
-    entity_id: input_boolean.esp_panel_w03_show_value
-    on_state:
-      - script.execute: render_w03
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w04_visible
-    entity_id: input_boolean.esp_panel_w04_visible
-    on_state:
-      - script.execute: render_w04
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w04_show_border
-    entity_id: input_boolean.esp_panel_w04_show_border
-    on_state:
-      - script.execute: render_w04
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w04_show_icon
-    entity_id: input_boolean.esp_panel_w04_show_icon
-    on_state:
-      - script.execute: render_w04
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w04_show_label
-    entity_id: input_boolean.esp_panel_w04_show_label
-    on_state:
-      - script.execute: render_w04
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w04_show_value
-    entity_id: input_boolean.esp_panel_w04_show_value
-    on_state:
-      - script.execute: render_w04
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w05_visible
-    entity_id: input_boolean.esp_panel_w05_visible
-    on_state:
-      - script.execute: render_w05
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w05_show_border
-    entity_id: input_boolean.esp_panel_w05_show_border
-    on_state:
-      - script.execute: render_w05
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w05_show_icon
-    entity_id: input_boolean.esp_panel_w05_show_icon
-    on_state:
-      - script.execute: render_w05
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w05_show_label
-    entity_id: input_boolean.esp_panel_w05_show_label
-    on_state:
-      - script.execute: render_w05
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w05_show_value
-    entity_id: input_boolean.esp_panel_w05_show_value
-    on_state:
-      - script.execute: render_w05
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w06_visible
-    entity_id: input_boolean.esp_panel_w06_visible
-    on_state:
-      - script.execute: render_w06
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w06_show_border
-    entity_id: input_boolean.esp_panel_w06_show_border
-    on_state:
-      - script.execute: render_w06
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w06_show_icon
-    entity_id: input_boolean.esp_panel_w06_show_icon
-    on_state:
-      - script.execute: render_w06
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w06_show_label
-    entity_id: input_boolean.esp_panel_w06_show_label
-    on_state:
-      - script.execute: render_w06
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w06_show_value
-    entity_id: input_boolean.esp_panel_w06_show_value
-    on_state:
-      - script.execute: render_w06
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w07_visible
-    entity_id: input_boolean.esp_panel_w07_visible
-    on_state:
-      - script.execute: render_w07
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w07_show_border
-    entity_id: input_boolean.esp_panel_w07_show_border
-    on_state:
-      - script.execute: render_w07
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w07_show_icon
-    entity_id: input_boolean.esp_panel_w07_show_icon
-    on_state:
-      - script.execute: render_w07
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w07_show_label
-    entity_id: input_boolean.esp_panel_w07_show_label
-    on_state:
-      - script.execute: render_w07
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w07_show_value
-    entity_id: input_boolean.esp_panel_w07_show_value
-    on_state:
-      - script.execute: render_w07
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w08_visible
-    entity_id: input_boolean.esp_panel_w08_visible
-    on_state:
-      - script.execute: render_w08
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w08_show_border
-    entity_id: input_boolean.esp_panel_w08_show_border
-    on_state:
-      - script.execute: render_w08
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w08_show_icon
-    entity_id: input_boolean.esp_panel_w08_show_icon
-    on_state:
-      - script.execute: render_w08
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w08_show_label
-    entity_id: input_boolean.esp_panel_w08_show_label
-    on_state:
-      - script.execute: render_w08
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w08_show_value
-    entity_id: input_boolean.esp_panel_w08_show_value
-    on_state:
-      - script.execute: render_w08
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w09_visible
-    entity_id: input_boolean.esp_panel_w09_visible
-    on_state:
-      - script.execute: render_w09
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w09_show_border
-    entity_id: input_boolean.esp_panel_w09_show_border
-    on_state:
-      - script.execute: render_w09
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w09_show_icon
-    entity_id: input_boolean.esp_panel_w09_show_icon
-    on_state:
-      - script.execute: render_w09
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w09_show_label
-    entity_id: input_boolean.esp_panel_w09_show_label
-    on_state:
-      - script.execute: render_w09
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w09_show_value
-    entity_id: input_boolean.esp_panel_w09_show_value
-    on_state:
-      - script.execute: render_w09
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w10_visible
-    entity_id: input_boolean.esp_panel_w10_visible
-    on_state:
-      - script.execute: render_w10
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w10_show_border
-    entity_id: input_boolean.esp_panel_w10_show_border
-    on_state:
-      - script.execute: render_w10
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w10_show_icon
-    entity_id: input_boolean.esp_panel_w10_show_icon
-    on_state:
-      - script.execute: render_w10
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w10_show_label
-    entity_id: input_boolean.esp_panel_w10_show_label
-    on_state:
-      - script.execute: render_w10
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w10_show_value
-    entity_id: input_boolean.esp_panel_w10_show_value
-    on_state:
-      - script.execute: render_w10
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w11_visible
-    entity_id: input_boolean.esp_panel_w11_visible
-    on_state:
-      - script.execute: render_w11
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w11_show_border
-    entity_id: input_boolean.esp_panel_w11_show_border
-    on_state:
-      - script.execute: render_w11
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w11_show_icon
-    entity_id: input_boolean.esp_panel_w11_show_icon
-    on_state:
-      - script.execute: render_w11
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w11_show_label
-    entity_id: input_boolean.esp_panel_w11_show_label
-    on_state:
-      - script.execute: render_w11
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w11_show_value
-    entity_id: input_boolean.esp_panel_w11_show_value
-    on_state:
-      - script.execute: render_w11
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w12_visible
-    entity_id: input_boolean.esp_panel_w12_visible
-    on_state:
-      - script.execute: render_w12
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w12_show_border
-    entity_id: input_boolean.esp_panel_w12_show_border
-    on_state:
-      - script.execute: render_w12
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w12_show_icon
-    entity_id: input_boolean.esp_panel_w12_show_icon
-    on_state:
-      - script.execute: render_w12
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w12_show_label
-    entity_id: input_boolean.esp_panel_w12_show_label
-    on_state:
-      - script.execute: render_w12
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: w12_show_value
-    entity_id: input_boolean.esp_panel_w12_show_value
-    on_state:
-      - script.execute: render_w12
+    lambda: |-
+      return {};
+    update_interval: never
 
 sensor:
-  - platform: homeassistant
+  - platform: template
     id: w01_x
-    entity_id: input_number.esp_panel_w01_x
-    on_value:
-      - script.execute: layout_w01
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w01_y
-    entity_id: input_number.esp_panel_w01_y
-    on_value:
-      - script.execute: layout_w01
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w01_w
-    entity_id: input_number.esp_panel_w01_w
-    on_value:
-      - script.execute: layout_w01
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w01_h
-    entity_id: input_number.esp_panel_w01_h
-    on_value:
-      - script.execute: layout_w01
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w01_icon_scale
-    entity_id: input_number.esp_panel_w01_icon_scale
-    on_value:
-      - script.execute: render_w01
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w01_label_scale
-    entity_id: input_number.esp_panel_w01_label_scale
-    on_value:
-      - script.execute: render_w01
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w01_value_scale
-    entity_id: input_number.esp_panel_w01_value_scale
-    on_value:
-      - script.execute: render_w01
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w02_x
-    entity_id: input_number.esp_panel_w02_x
-    on_value:
-      - script.execute: layout_w02
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w02_y
-    entity_id: input_number.esp_panel_w02_y
-    on_value:
-      - script.execute: layout_w02
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w02_w
-    entity_id: input_number.esp_panel_w02_w
-    on_value:
-      - script.execute: layout_w02
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w02_h
-    entity_id: input_number.esp_panel_w02_h
-    on_value:
-      - script.execute: layout_w02
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w02_icon_scale
-    entity_id: input_number.esp_panel_w02_icon_scale
-    on_value:
-      - script.execute: render_w02
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w02_label_scale
-    entity_id: input_number.esp_panel_w02_label_scale
-    on_value:
-      - script.execute: render_w02
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w02_value_scale
-    entity_id: input_number.esp_panel_w02_value_scale
-    on_value:
-      - script.execute: render_w02
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w03_x
-    entity_id: input_number.esp_panel_w03_x
-    on_value:
-      - script.execute: layout_w03
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w03_y
-    entity_id: input_number.esp_panel_w03_y
-    on_value:
-      - script.execute: layout_w03
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w03_w
-    entity_id: input_number.esp_panel_w03_w
-    on_value:
-      - script.execute: layout_w03
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w03_h
-    entity_id: input_number.esp_panel_w03_h
-    on_value:
-      - script.execute: layout_w03
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w03_icon_scale
-    entity_id: input_number.esp_panel_w03_icon_scale
-    on_value:
-      - script.execute: render_w03
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w03_label_scale
-    entity_id: input_number.esp_panel_w03_label_scale
-    on_value:
-      - script.execute: render_w03
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w03_value_scale
-    entity_id: input_number.esp_panel_w03_value_scale
-    on_value:
-      - script.execute: render_w03
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w04_x
-    entity_id: input_number.esp_panel_w04_x
-    on_value:
-      - script.execute: layout_w04
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w04_y
-    entity_id: input_number.esp_panel_w04_y
-    on_value:
-      - script.execute: layout_w04
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w04_w
-    entity_id: input_number.esp_panel_w04_w
-    on_value:
-      - script.execute: layout_w04
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w04_h
-    entity_id: input_number.esp_panel_w04_h
-    on_value:
-      - script.execute: layout_w04
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w04_icon_scale
-    entity_id: input_number.esp_panel_w04_icon_scale
-    on_value:
-      - script.execute: render_w04
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w04_label_scale
-    entity_id: input_number.esp_panel_w04_label_scale
-    on_value:
-      - script.execute: render_w04
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w04_value_scale
-    entity_id: input_number.esp_panel_w04_value_scale
-    on_value:
-      - script.execute: render_w04
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w05_x
-    entity_id: input_number.esp_panel_w05_x
-    on_value:
-      - script.execute: layout_w05
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w05_y
-    entity_id: input_number.esp_panel_w05_y
-    on_value:
-      - script.execute: layout_w05
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w05_w
-    entity_id: input_number.esp_panel_w05_w
-    on_value:
-      - script.execute: layout_w05
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w05_h
-    entity_id: input_number.esp_panel_w05_h
-    on_value:
-      - script.execute: layout_w05
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w05_icon_scale
-    entity_id: input_number.esp_panel_w05_icon_scale
-    on_value:
-      - script.execute: render_w05
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w05_label_scale
-    entity_id: input_number.esp_panel_w05_label_scale
-    on_value:
-      - script.execute: render_w05
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w05_value_scale
-    entity_id: input_number.esp_panel_w05_value_scale
-    on_value:
-      - script.execute: render_w05
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w06_x
-    entity_id: input_number.esp_panel_w06_x
-    on_value:
-      - script.execute: layout_w06
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w06_y
-    entity_id: input_number.esp_panel_w06_y
-    on_value:
-      - script.execute: layout_w06
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w06_w
-    entity_id: input_number.esp_panel_w06_w
-    on_value:
-      - script.execute: layout_w06
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w06_h
-    entity_id: input_number.esp_panel_w06_h
-    on_value:
-      - script.execute: layout_w06
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w06_icon_scale
-    entity_id: input_number.esp_panel_w06_icon_scale
-    on_value:
-      - script.execute: render_w06
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w06_label_scale
-    entity_id: input_number.esp_panel_w06_label_scale
-    on_value:
-      - script.execute: render_w06
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w06_value_scale
-    entity_id: input_number.esp_panel_w06_value_scale
-    on_value:
-      - script.execute: render_w06
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w07_x
-    entity_id: input_number.esp_panel_w07_x
-    on_value:
-      - script.execute: layout_w07
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w07_y
-    entity_id: input_number.esp_panel_w07_y
-    on_value:
-      - script.execute: layout_w07
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w07_w
-    entity_id: input_number.esp_panel_w07_w
-    on_value:
-      - script.execute: layout_w07
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w07_h
-    entity_id: input_number.esp_panel_w07_h
-    on_value:
-      - script.execute: layout_w07
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w07_icon_scale
-    entity_id: input_number.esp_panel_w07_icon_scale
-    on_value:
-      - script.execute: render_w07
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w07_label_scale
-    entity_id: input_number.esp_panel_w07_label_scale
-    on_value:
-      - script.execute: render_w07
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w07_value_scale
-    entity_id: input_number.esp_panel_w07_value_scale
-    on_value:
-      - script.execute: render_w07
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w08_x
-    entity_id: input_number.esp_panel_w08_x
-    on_value:
-      - script.execute: layout_w08
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w08_y
-    entity_id: input_number.esp_panel_w08_y
-    on_value:
-      - script.execute: layout_w08
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w08_w
-    entity_id: input_number.esp_panel_w08_w
-    on_value:
-      - script.execute: layout_w08
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w08_h
-    entity_id: input_number.esp_panel_w08_h
-    on_value:
-      - script.execute: layout_w08
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w08_icon_scale
-    entity_id: input_number.esp_panel_w08_icon_scale
-    on_value:
-      - script.execute: render_w08
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w08_label_scale
-    entity_id: input_number.esp_panel_w08_label_scale
-    on_value:
-      - script.execute: render_w08
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w08_value_scale
-    entity_id: input_number.esp_panel_w08_value_scale
-    on_value:
-      - script.execute: render_w08
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w09_x
-    entity_id: input_number.esp_panel_w09_x
-    on_value:
-      - script.execute: layout_w09
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w09_y
-    entity_id: input_number.esp_panel_w09_y
-    on_value:
-      - script.execute: layout_w09
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w09_w
-    entity_id: input_number.esp_panel_w09_w
-    on_value:
-      - script.execute: layout_w09
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w09_h
-    entity_id: input_number.esp_panel_w09_h
-    on_value:
-      - script.execute: layout_w09
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w09_icon_scale
-    entity_id: input_number.esp_panel_w09_icon_scale
-    on_value:
-      - script.execute: render_w09
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w09_label_scale
-    entity_id: input_number.esp_panel_w09_label_scale
-    on_value:
-      - script.execute: render_w09
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w09_value_scale
-    entity_id: input_number.esp_panel_w09_value_scale
-    on_value:
-      - script.execute: render_w09
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w10_x
-    entity_id: input_number.esp_panel_w10_x
-    on_value:
-      - script.execute: layout_w10
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w10_y
-    entity_id: input_number.esp_panel_w10_y
-    on_value:
-      - script.execute: layout_w10
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w10_w
-    entity_id: input_number.esp_panel_w10_w
-    on_value:
-      - script.execute: layout_w10
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w10_h
-    entity_id: input_number.esp_panel_w10_h
-    on_value:
-      - script.execute: layout_w10
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w10_icon_scale
-    entity_id: input_number.esp_panel_w10_icon_scale
-    on_value:
-      - script.execute: render_w10
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w10_label_scale
-    entity_id: input_number.esp_panel_w10_label_scale
-    on_value:
-      - script.execute: render_w10
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w10_value_scale
-    entity_id: input_number.esp_panel_w10_value_scale
-    on_value:
-      - script.execute: render_w10
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w11_x
-    entity_id: input_number.esp_panel_w11_x
-    on_value:
-      - script.execute: layout_w11
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w11_y
-    entity_id: input_number.esp_panel_w11_y
-    on_value:
-      - script.execute: layout_w11
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w11_w
-    entity_id: input_number.esp_panel_w11_w
-    on_value:
-      - script.execute: layout_w11
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w11_h
-    entity_id: input_number.esp_panel_w11_h
-    on_value:
-      - script.execute: layout_w11
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w11_icon_scale
-    entity_id: input_number.esp_panel_w11_icon_scale
-    on_value:
-      - script.execute: render_w11
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w11_label_scale
-    entity_id: input_number.esp_panel_w11_label_scale
-    on_value:
-      - script.execute: render_w11
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w11_value_scale
-    entity_id: input_number.esp_panel_w11_value_scale
-    on_value:
-      - script.execute: render_w11
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w12_x
-    entity_id: input_number.esp_panel_w12_x
-    on_value:
-      - script.execute: layout_w12
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w12_y
-    entity_id: input_number.esp_panel_w12_y
-    on_value:
-      - script.execute: layout_w12
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w12_w
-    entity_id: input_number.esp_panel_w12_w
-    on_value:
-      - script.execute: layout_w12
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w12_h
-    entity_id: input_number.esp_panel_w12_h
-    on_value:
-      - script.execute: layout_w12
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w12_icon_scale
-    entity_id: input_number.esp_panel_w12_icon_scale
-    on_value:
-      - script.execute: render_w12
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w12_label_scale
-    entity_id: input_number.esp_panel_w12_label_scale
-    on_value:
-      - script.execute: render_w12
-  - platform: homeassistant
+    lambda: |-
+      return NAN;
+    update_interval: never
+  - platform: template
     id: w12_value_scale
-    entity_id: input_number.esp_panel_w12_value_scale
-    on_value:
-      - script.execute: render_w12
+    lambda: |-
+      return NAN;
+    update_interval: never
 
 text_sensor:
-  - platform: homeassistant
+  - platform: template
     id: panel_theme
-    entity_id: input_select.esp_panel_theme
-    on_value:
-      - script.execute: apply_theme
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: panel_screen_bg_color
-    entity_id: input_text.esp_panel_screen_bg_color
-    on_value:
-      - script.execute: apply_theme
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: panel_widget_bg_color
-    entity_id: input_text.esp_panel_widget_bg_color
-    on_value:
-      - script.execute: apply_theme
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: panel_widget_border_color
-    entity_id: input_text.esp_panel_widget_border_color
-    on_value:
-      - script.execute: apply_theme
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: panel_button_on_bg_color
-    entity_id: input_text.esp_panel_button_on_bg_color
-    on_value:
-      - script.execute: apply_theme
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: panel_button_off_bg_color
-    entity_id: input_text.esp_panel_button_off_bg_color
-    on_value:
-      - script.execute: apply_theme
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: panel_overlay_bg_color
-    entity_id: input_text.esp_panel_overlay_bg_color
-    on_value:
-      - script.execute: apply_theme
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: panel_overlay_title_color
-    entity_id: input_text.esp_panel_overlay_title_color
-    on_value:
-      - script.execute: apply_theme
-  - platform: homeassistant
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
     id: panel_overlay_text_color
-    entity_id: input_text.esp_panel_overlay_text_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w01_type
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w01_label
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w01_value
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w01_icon
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w01_bg_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w01_content_align
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w01_layout_mode
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w01_label_transform
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w01_label_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w01_value_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w01_icon_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w01_label_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w01_value_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w02_type
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w02_label
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w02_value
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w02_icon
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w02_bg_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w02_content_align
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w02_layout_mode
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w02_label_transform
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w02_label_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w02_value_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w02_icon_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w02_label_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w02_value_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w03_type
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w03_label
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w03_value
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w03_icon
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w03_bg_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w03_content_align
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w03_layout_mode
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w03_label_transform
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w03_label_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w03_value_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w03_icon_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w03_label_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w03_value_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w04_type
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w04_label
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w04_value
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w04_icon
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w04_bg_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w04_content_align
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w04_layout_mode
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w04_label_transform
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w04_label_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w04_value_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w04_icon_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w04_label_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w04_value_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w05_type
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w05_label
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w05_value
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w05_icon
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w05_bg_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w05_content_align
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w05_layout_mode
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w05_label_transform
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w05_label_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w05_value_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w05_icon_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w05_label_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w05_value_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w06_type
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w06_label
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w06_value
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w06_icon
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w06_bg_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w06_content_align
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w06_layout_mode
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w06_label_transform
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w06_label_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w06_value_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w06_icon_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w06_label_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w06_value_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w07_type
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w07_label
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w07_value
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w07_icon
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w07_bg_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w07_content_align
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w07_layout_mode
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w07_label_transform
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w07_label_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w07_value_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w07_icon_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w07_label_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w07_value_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w08_type
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w08_label
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w08_value
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w08_icon
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w08_bg_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w08_content_align
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w08_layout_mode
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w08_label_transform
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w08_label_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w08_value_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w08_icon_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w08_label_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w08_value_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w09_type
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w09_label
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w09_value
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w09_icon
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w09_bg_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w09_content_align
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w09_layout_mode
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w09_label_transform
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w09_label_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w09_value_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w09_icon_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w09_label_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w09_value_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w10_type
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w10_label
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w10_value
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w10_icon
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w10_bg_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w10_content_align
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w10_layout_mode
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w10_label_transform
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w10_label_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w10_value_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w10_icon_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w10_label_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w10_value_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w11_type
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w11_label
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w11_value
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w11_icon
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w11_bg_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w11_content_align
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w11_layout_mode
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w11_label_transform
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w11_label_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w11_value_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w11_icon_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w11_label_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w11_value_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w12_type
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w12_label
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w12_value
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w12_icon
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w12_bg_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w12_content_align
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w12_layout_mode
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w12_label_transform
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w12_label_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w12_value_weight
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w12_icon_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w12_label_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: template
+    id: w12_value_color
+    lambda: |-
+      return {};
+    update_interval: never
+  - platform: homeassistant
+    id: panel_runtime_theme_source
+    entity_id: input_text.esp_panel_runtime_theme
     on_value:
+      - lambda: |-
+          auto config = esp_panel_parse_theme_runtime(x);
+          id(panel_theme).publish_state(config.theme_id);
+          id(panel_screen_bg_color).publish_state(config.screen_bg);
+          id(panel_widget_bg_color).publish_state(config.widget_bg);
+          id(panel_widget_border_color).publish_state(config.widget_border);
+          id(panel_button_on_bg_color).publish_state(config.button_on_bg);
+          id(panel_button_off_bg_color).publish_state(config.button_off_bg);
+          id(panel_overlay_bg_color).publish_state(config.overlay_bg);
+          id(panel_overlay_title_color).publish_state(config.overlay_title);
+          id(panel_overlay_text_color).publish_state(config.overlay_text);
       - script.execute: apply_theme
   - platform: homeassistant
-    id: w01_type
-    entity_id: input_select.esp_panel_w01_type
+    id: w01_runtime_config_source
+    entity_id: input_text.esp_panel_runtime_w01_config
     on_value:
+      - lambda: |-
+          auto config = esp_panel_parse_widget_runtime(x);
+          id(w01_type).publish_state(config.type);
+          id(w01_visible).publish_state(config.visible);
+          id(w01_show_border).publish_state(config.show_border);
+          id(w01_show_icon).publish_state(config.show_icon);
+          id(w01_show_label).publish_state(config.show_label);
+          id(w01_show_value).publish_state(config.show_value);
+          id(w01_bg_color).publish_state(config.bg_color);
+          id(w01_label).publish_state(config.label);
+          id(w01_icon).publish_state(config.icon);
+          id(w01_content_align).publish_state(config.content_align);
+          id(w01_layout_mode).publish_state(config.layout_mode);
+          id(w01_label_transform).publish_state(config.label_transform);
+          id(w01_label_weight).publish_state(config.label_weight);
+          id(w01_value_weight).publish_state(config.value_weight);
+          id(w01_icon_color).publish_state(config.icon_color);
+          id(w01_label_color).publish_state(config.label_color);
+          id(w01_value_color).publish_state(config.value_color);
+          id(w01_x).publish_state(config.x);
+          id(w01_y).publish_state(config.y);
+          id(w01_w).publish_state(config.w);
+          id(w01_h).publish_state(config.h);
+          id(w01_icon_scale).publish_state(config.icon_scale);
+          id(w01_label_scale).publish_state(config.label_scale);
+          id(w01_value_scale).publish_state(config.value_scale);
+      - script.execute: layout_w01
       - script.execute: render_w01
   - platform: homeassistant
-    id: w01_label
-    entity_id: input_text.esp_panel_w01_label
+    id: w01_runtime_value_source
+    entity_id: input_text.esp_panel_runtime_w01_value
     on_value:
+      - lambda: |-
+          id(w01_value).publish_state(x);
       - script.execute: render_w01
   - platform: homeassistant
-    id: w01_value
-    entity_id: input_text.esp_panel_w01_value
+    id: w02_runtime_config_source
+    entity_id: input_text.esp_panel_runtime_w02_config
     on_value:
-      - script.execute: render_w01
-  - platform: homeassistant
-    id: w01_icon
-    entity_id: input_text.esp_panel_w01_icon
-    on_value:
-      - script.execute: render_w01
-  - platform: homeassistant
-    id: w01_bg_color
-    entity_id: input_text.esp_panel_w01_bg_color
-    on_value:
-      - script.execute: render_w01
-  - platform: homeassistant
-    id: w01_action
-    entity_id: input_text.esp_panel_w01_action
-  - platform: homeassistant
-    id: w01_content_align
-    entity_id: input_select.esp_panel_w01_content_align
-    on_value:
-      - script.execute: render_w01
-  - platform: homeassistant
-    id: w01_layout_mode
-    entity_id: input_select.esp_panel_w01_layout_mode
-    on_value:
-      - script.execute: render_w01
-  - platform: homeassistant
-    id: w01_label_transform
-    entity_id: input_select.esp_panel_w01_label_transform
-    on_value:
-      - script.execute: render_w01
-  - platform: homeassistant
-    id: w01_label_weight
-    entity_id: input_select.esp_panel_w01_label_weight
-    on_value:
-      - script.execute: render_w01
-  - platform: homeassistant
-    id: w01_value_weight
-    entity_id: input_select.esp_panel_w01_value_weight
-    on_value:
-      - script.execute: render_w01
-  - platform: homeassistant
-    id: w01_icon_color
-    entity_id: input_text.esp_panel_w01_icon_color
-    on_value:
-      - script.execute: render_w01
-  - platform: homeassistant
-    id: w01_label_color
-    entity_id: input_text.esp_panel_w01_label_color
-    on_value:
-      - script.execute: render_w01
-  - platform: homeassistant
-    id: w01_value_color
-    entity_id: input_text.esp_panel_w01_value_color
-    on_value:
-      - script.execute: render_w01
-  - platform: homeassistant
-    id: w02_type
-    entity_id: input_select.esp_panel_w02_type
-    on_value:
+      - lambda: |-
+          auto config = esp_panel_parse_widget_runtime(x);
+          id(w02_type).publish_state(config.type);
+          id(w02_visible).publish_state(config.visible);
+          id(w02_show_border).publish_state(config.show_border);
+          id(w02_show_icon).publish_state(config.show_icon);
+          id(w02_show_label).publish_state(config.show_label);
+          id(w02_show_value).publish_state(config.show_value);
+          id(w02_bg_color).publish_state(config.bg_color);
+          id(w02_label).publish_state(config.label);
+          id(w02_icon).publish_state(config.icon);
+          id(w02_content_align).publish_state(config.content_align);
+          id(w02_layout_mode).publish_state(config.layout_mode);
+          id(w02_label_transform).publish_state(config.label_transform);
+          id(w02_label_weight).publish_state(config.label_weight);
+          id(w02_value_weight).publish_state(config.value_weight);
+          id(w02_icon_color).publish_state(config.icon_color);
+          id(w02_label_color).publish_state(config.label_color);
+          id(w02_value_color).publish_state(config.value_color);
+          id(w02_x).publish_state(config.x);
+          id(w02_y).publish_state(config.y);
+          id(w02_w).publish_state(config.w);
+          id(w02_h).publish_state(config.h);
+          id(w02_icon_scale).publish_state(config.icon_scale);
+          id(w02_label_scale).publish_state(config.label_scale);
+          id(w02_value_scale).publish_state(config.value_scale);
+      - script.execute: layout_w02
       - script.execute: render_w02
   - platform: homeassistant
-    id: w02_label
-    entity_id: input_text.esp_panel_w02_label
+    id: w02_runtime_value_source
+    entity_id: input_text.esp_panel_runtime_w02_value
     on_value:
+      - lambda: |-
+          id(w02_value).publish_state(x);
       - script.execute: render_w02
   - platform: homeassistant
-    id: w02_value
-    entity_id: input_text.esp_panel_w02_value
+    id: w03_runtime_config_source
+    entity_id: input_text.esp_panel_runtime_w03_config
     on_value:
-      - script.execute: render_w02
-  - platform: homeassistant
-    id: w02_icon
-    entity_id: input_text.esp_panel_w02_icon
-    on_value:
-      - script.execute: render_w02
-  - platform: homeassistant
-    id: w02_bg_color
-    entity_id: input_text.esp_panel_w02_bg_color
-    on_value:
-      - script.execute: render_w02
-  - platform: homeassistant
-    id: w02_action
-    entity_id: input_text.esp_panel_w02_action
-  - platform: homeassistant
-    id: w02_content_align
-    entity_id: input_select.esp_panel_w02_content_align
-    on_value:
-      - script.execute: render_w02
-  - platform: homeassistant
-    id: w02_layout_mode
-    entity_id: input_select.esp_panel_w02_layout_mode
-    on_value:
-      - script.execute: render_w02
-  - platform: homeassistant
-    id: w02_label_transform
-    entity_id: input_select.esp_panel_w02_label_transform
-    on_value:
-      - script.execute: render_w02
-  - platform: homeassistant
-    id: w02_label_weight
-    entity_id: input_select.esp_panel_w02_label_weight
-    on_value:
-      - script.execute: render_w02
-  - platform: homeassistant
-    id: w02_value_weight
-    entity_id: input_select.esp_panel_w02_value_weight
-    on_value:
-      - script.execute: render_w02
-  - platform: homeassistant
-    id: w02_icon_color
-    entity_id: input_text.esp_panel_w02_icon_color
-    on_value:
-      - script.execute: render_w02
-  - platform: homeassistant
-    id: w02_label_color
-    entity_id: input_text.esp_panel_w02_label_color
-    on_value:
-      - script.execute: render_w02
-  - platform: homeassistant
-    id: w02_value_color
-    entity_id: input_text.esp_panel_w02_value_color
-    on_value:
-      - script.execute: render_w02
-  - platform: homeassistant
-    id: w03_type
-    entity_id: input_select.esp_panel_w03_type
-    on_value:
+      - lambda: |-
+          auto config = esp_panel_parse_widget_runtime(x);
+          id(w03_type).publish_state(config.type);
+          id(w03_visible).publish_state(config.visible);
+          id(w03_show_border).publish_state(config.show_border);
+          id(w03_show_icon).publish_state(config.show_icon);
+          id(w03_show_label).publish_state(config.show_label);
+          id(w03_show_value).publish_state(config.show_value);
+          id(w03_bg_color).publish_state(config.bg_color);
+          id(w03_label).publish_state(config.label);
+          id(w03_icon).publish_state(config.icon);
+          id(w03_content_align).publish_state(config.content_align);
+          id(w03_layout_mode).publish_state(config.layout_mode);
+          id(w03_label_transform).publish_state(config.label_transform);
+          id(w03_label_weight).publish_state(config.label_weight);
+          id(w03_value_weight).publish_state(config.value_weight);
+          id(w03_icon_color).publish_state(config.icon_color);
+          id(w03_label_color).publish_state(config.label_color);
+          id(w03_value_color).publish_state(config.value_color);
+          id(w03_x).publish_state(config.x);
+          id(w03_y).publish_state(config.y);
+          id(w03_w).publish_state(config.w);
+          id(w03_h).publish_state(config.h);
+          id(w03_icon_scale).publish_state(config.icon_scale);
+          id(w03_label_scale).publish_state(config.label_scale);
+          id(w03_value_scale).publish_state(config.value_scale);
+      - script.execute: layout_w03
       - script.execute: render_w03
   - platform: homeassistant
-    id: w03_label
-    entity_id: input_text.esp_panel_w03_label
+    id: w03_runtime_value_source
+    entity_id: input_text.esp_panel_runtime_w03_value
     on_value:
+      - lambda: |-
+          id(w03_value).publish_state(x);
       - script.execute: render_w03
   - platform: homeassistant
-    id: w03_value
-    entity_id: input_text.esp_panel_w03_value
+    id: w04_runtime_config_source
+    entity_id: input_text.esp_panel_runtime_w04_config
     on_value:
-      - script.execute: render_w03
-  - platform: homeassistant
-    id: w03_icon
-    entity_id: input_text.esp_panel_w03_icon
-    on_value:
-      - script.execute: render_w03
-  - platform: homeassistant
-    id: w03_bg_color
-    entity_id: input_text.esp_panel_w03_bg_color
-    on_value:
-      - script.execute: render_w03
-  - platform: homeassistant
-    id: w03_action
-    entity_id: input_text.esp_panel_w03_action
-  - platform: homeassistant
-    id: w03_content_align
-    entity_id: input_select.esp_panel_w03_content_align
-    on_value:
-      - script.execute: render_w03
-  - platform: homeassistant
-    id: w03_layout_mode
-    entity_id: input_select.esp_panel_w03_layout_mode
-    on_value:
-      - script.execute: render_w03
-  - platform: homeassistant
-    id: w03_label_transform
-    entity_id: input_select.esp_panel_w03_label_transform
-    on_value:
-      - script.execute: render_w03
-  - platform: homeassistant
-    id: w03_label_weight
-    entity_id: input_select.esp_panel_w03_label_weight
-    on_value:
-      - script.execute: render_w03
-  - platform: homeassistant
-    id: w03_value_weight
-    entity_id: input_select.esp_panel_w03_value_weight
-    on_value:
-      - script.execute: render_w03
-  - platform: homeassistant
-    id: w03_icon_color
-    entity_id: input_text.esp_panel_w03_icon_color
-    on_value:
-      - script.execute: render_w03
-  - platform: homeassistant
-    id: w03_label_color
-    entity_id: input_text.esp_panel_w03_label_color
-    on_value:
-      - script.execute: render_w03
-  - platform: homeassistant
-    id: w03_value_color
-    entity_id: input_text.esp_panel_w03_value_color
-    on_value:
-      - script.execute: render_w03
-  - platform: homeassistant
-    id: w04_type
-    entity_id: input_select.esp_panel_w04_type
-    on_value:
+      - lambda: |-
+          auto config = esp_panel_parse_widget_runtime(x);
+          id(w04_type).publish_state(config.type);
+          id(w04_visible).publish_state(config.visible);
+          id(w04_show_border).publish_state(config.show_border);
+          id(w04_show_icon).publish_state(config.show_icon);
+          id(w04_show_label).publish_state(config.show_label);
+          id(w04_show_value).publish_state(config.show_value);
+          id(w04_bg_color).publish_state(config.bg_color);
+          id(w04_label).publish_state(config.label);
+          id(w04_icon).publish_state(config.icon);
+          id(w04_content_align).publish_state(config.content_align);
+          id(w04_layout_mode).publish_state(config.layout_mode);
+          id(w04_label_transform).publish_state(config.label_transform);
+          id(w04_label_weight).publish_state(config.label_weight);
+          id(w04_value_weight).publish_state(config.value_weight);
+          id(w04_icon_color).publish_state(config.icon_color);
+          id(w04_label_color).publish_state(config.label_color);
+          id(w04_value_color).publish_state(config.value_color);
+          id(w04_x).publish_state(config.x);
+          id(w04_y).publish_state(config.y);
+          id(w04_w).publish_state(config.w);
+          id(w04_h).publish_state(config.h);
+          id(w04_icon_scale).publish_state(config.icon_scale);
+          id(w04_label_scale).publish_state(config.label_scale);
+          id(w04_value_scale).publish_state(config.value_scale);
+      - script.execute: layout_w04
       - script.execute: render_w04
   - platform: homeassistant
-    id: w04_label
-    entity_id: input_text.esp_panel_w04_label
+    id: w04_runtime_value_source
+    entity_id: input_text.esp_panel_runtime_w04_value
     on_value:
+      - lambda: |-
+          id(w04_value).publish_state(x);
       - script.execute: render_w04
   - platform: homeassistant
-    id: w04_value
-    entity_id: input_text.esp_panel_w04_value
+    id: w05_runtime_config_source
+    entity_id: input_text.esp_panel_runtime_w05_config
     on_value:
-      - script.execute: render_w04
-  - platform: homeassistant
-    id: w04_icon
-    entity_id: input_text.esp_panel_w04_icon
-    on_value:
-      - script.execute: render_w04
-  - platform: homeassistant
-    id: w04_bg_color
-    entity_id: input_text.esp_panel_w04_bg_color
-    on_value:
-      - script.execute: render_w04
-  - platform: homeassistant
-    id: w04_action
-    entity_id: input_text.esp_panel_w04_action
-  - platform: homeassistant
-    id: w04_content_align
-    entity_id: input_select.esp_panel_w04_content_align
-    on_value:
-      - script.execute: render_w04
-  - platform: homeassistant
-    id: w04_layout_mode
-    entity_id: input_select.esp_panel_w04_layout_mode
-    on_value:
-      - script.execute: render_w04
-  - platform: homeassistant
-    id: w04_label_transform
-    entity_id: input_select.esp_panel_w04_label_transform
-    on_value:
-      - script.execute: render_w04
-  - platform: homeassistant
-    id: w04_label_weight
-    entity_id: input_select.esp_panel_w04_label_weight
-    on_value:
-      - script.execute: render_w04
-  - platform: homeassistant
-    id: w04_value_weight
-    entity_id: input_select.esp_panel_w04_value_weight
-    on_value:
-      - script.execute: render_w04
-  - platform: homeassistant
-    id: w04_icon_color
-    entity_id: input_text.esp_panel_w04_icon_color
-    on_value:
-      - script.execute: render_w04
-  - platform: homeassistant
-    id: w04_label_color
-    entity_id: input_text.esp_panel_w04_label_color
-    on_value:
-      - script.execute: render_w04
-  - platform: homeassistant
-    id: w04_value_color
-    entity_id: input_text.esp_panel_w04_value_color
-    on_value:
-      - script.execute: render_w04
-  - platform: homeassistant
-    id: w05_type
-    entity_id: input_select.esp_panel_w05_type
-    on_value:
+      - lambda: |-
+          auto config = esp_panel_parse_widget_runtime(x);
+          id(w05_type).publish_state(config.type);
+          id(w05_visible).publish_state(config.visible);
+          id(w05_show_border).publish_state(config.show_border);
+          id(w05_show_icon).publish_state(config.show_icon);
+          id(w05_show_label).publish_state(config.show_label);
+          id(w05_show_value).publish_state(config.show_value);
+          id(w05_bg_color).publish_state(config.bg_color);
+          id(w05_label).publish_state(config.label);
+          id(w05_icon).publish_state(config.icon);
+          id(w05_content_align).publish_state(config.content_align);
+          id(w05_layout_mode).publish_state(config.layout_mode);
+          id(w05_label_transform).publish_state(config.label_transform);
+          id(w05_label_weight).publish_state(config.label_weight);
+          id(w05_value_weight).publish_state(config.value_weight);
+          id(w05_icon_color).publish_state(config.icon_color);
+          id(w05_label_color).publish_state(config.label_color);
+          id(w05_value_color).publish_state(config.value_color);
+          id(w05_x).publish_state(config.x);
+          id(w05_y).publish_state(config.y);
+          id(w05_w).publish_state(config.w);
+          id(w05_h).publish_state(config.h);
+          id(w05_icon_scale).publish_state(config.icon_scale);
+          id(w05_label_scale).publish_state(config.label_scale);
+          id(w05_value_scale).publish_state(config.value_scale);
+      - script.execute: layout_w05
       - script.execute: render_w05
   - platform: homeassistant
-    id: w05_label
-    entity_id: input_text.esp_panel_w05_label
+    id: w05_runtime_value_source
+    entity_id: input_text.esp_panel_runtime_w05_value
     on_value:
+      - lambda: |-
+          id(w05_value).publish_state(x);
       - script.execute: render_w05
   - platform: homeassistant
-    id: w05_value
-    entity_id: input_text.esp_panel_w05_value
+    id: w06_runtime_config_source
+    entity_id: input_text.esp_panel_runtime_w06_config
     on_value:
-      - script.execute: render_w05
-  - platform: homeassistant
-    id: w05_icon
-    entity_id: input_text.esp_panel_w05_icon
-    on_value:
-      - script.execute: render_w05
-  - platform: homeassistant
-    id: w05_bg_color
-    entity_id: input_text.esp_panel_w05_bg_color
-    on_value:
-      - script.execute: render_w05
-  - platform: homeassistant
-    id: w05_action
-    entity_id: input_text.esp_panel_w05_action
-  - platform: homeassistant
-    id: w05_content_align
-    entity_id: input_select.esp_panel_w05_content_align
-    on_value:
-      - script.execute: render_w05
-  - platform: homeassistant
-    id: w05_layout_mode
-    entity_id: input_select.esp_panel_w05_layout_mode
-    on_value:
-      - script.execute: render_w05
-  - platform: homeassistant
-    id: w05_label_transform
-    entity_id: input_select.esp_panel_w05_label_transform
-    on_value:
-      - script.execute: render_w05
-  - platform: homeassistant
-    id: w05_label_weight
-    entity_id: input_select.esp_panel_w05_label_weight
-    on_value:
-      - script.execute: render_w05
-  - platform: homeassistant
-    id: w05_value_weight
-    entity_id: input_select.esp_panel_w05_value_weight
-    on_value:
-      - script.execute: render_w05
-  - platform: homeassistant
-    id: w05_icon_color
-    entity_id: input_text.esp_panel_w05_icon_color
-    on_value:
-      - script.execute: render_w05
-  - platform: homeassistant
-    id: w05_label_color
-    entity_id: input_text.esp_panel_w05_label_color
-    on_value:
-      - script.execute: render_w05
-  - platform: homeassistant
-    id: w05_value_color
-    entity_id: input_text.esp_panel_w05_value_color
-    on_value:
-      - script.execute: render_w05
-  - platform: homeassistant
-    id: w06_type
-    entity_id: input_select.esp_panel_w06_type
-    on_value:
+      - lambda: |-
+          auto config = esp_panel_parse_widget_runtime(x);
+          id(w06_type).publish_state(config.type);
+          id(w06_visible).publish_state(config.visible);
+          id(w06_show_border).publish_state(config.show_border);
+          id(w06_show_icon).publish_state(config.show_icon);
+          id(w06_show_label).publish_state(config.show_label);
+          id(w06_show_value).publish_state(config.show_value);
+          id(w06_bg_color).publish_state(config.bg_color);
+          id(w06_label).publish_state(config.label);
+          id(w06_icon).publish_state(config.icon);
+          id(w06_content_align).publish_state(config.content_align);
+          id(w06_layout_mode).publish_state(config.layout_mode);
+          id(w06_label_transform).publish_state(config.label_transform);
+          id(w06_label_weight).publish_state(config.label_weight);
+          id(w06_value_weight).publish_state(config.value_weight);
+          id(w06_icon_color).publish_state(config.icon_color);
+          id(w06_label_color).publish_state(config.label_color);
+          id(w06_value_color).publish_state(config.value_color);
+          id(w06_x).publish_state(config.x);
+          id(w06_y).publish_state(config.y);
+          id(w06_w).publish_state(config.w);
+          id(w06_h).publish_state(config.h);
+          id(w06_icon_scale).publish_state(config.icon_scale);
+          id(w06_label_scale).publish_state(config.label_scale);
+          id(w06_value_scale).publish_state(config.value_scale);
+      - script.execute: layout_w06
       - script.execute: render_w06
   - platform: homeassistant
-    id: w06_label
-    entity_id: input_text.esp_panel_w06_label
+    id: w06_runtime_value_source
+    entity_id: input_text.esp_panel_runtime_w06_value
     on_value:
+      - lambda: |-
+          id(w06_value).publish_state(x);
       - script.execute: render_w06
   - platform: homeassistant
-    id: w06_value
-    entity_id: input_text.esp_panel_w06_value
+    id: w07_runtime_config_source
+    entity_id: input_text.esp_panel_runtime_w07_config
     on_value:
-      - script.execute: render_w06
-  - platform: homeassistant
-    id: w06_icon
-    entity_id: input_text.esp_panel_w06_icon
-    on_value:
-      - script.execute: render_w06
-  - platform: homeassistant
-    id: w06_bg_color
-    entity_id: input_text.esp_panel_w06_bg_color
-    on_value:
-      - script.execute: render_w06
-  - platform: homeassistant
-    id: w06_action
-    entity_id: input_text.esp_panel_w06_action
-  - platform: homeassistant
-    id: w06_content_align
-    entity_id: input_select.esp_panel_w06_content_align
-    on_value:
-      - script.execute: render_w06
-  - platform: homeassistant
-    id: w06_layout_mode
-    entity_id: input_select.esp_panel_w06_layout_mode
-    on_value:
-      - script.execute: render_w06
-  - platform: homeassistant
-    id: w06_label_transform
-    entity_id: input_select.esp_panel_w06_label_transform
-    on_value:
-      - script.execute: render_w06
-  - platform: homeassistant
-    id: w06_label_weight
-    entity_id: input_select.esp_panel_w06_label_weight
-    on_value:
-      - script.execute: render_w06
-  - platform: homeassistant
-    id: w06_value_weight
-    entity_id: input_select.esp_panel_w06_value_weight
-    on_value:
-      - script.execute: render_w06
-  - platform: homeassistant
-    id: w06_icon_color
-    entity_id: input_text.esp_panel_w06_icon_color
-    on_value:
-      - script.execute: render_w06
-  - platform: homeassistant
-    id: w06_label_color
-    entity_id: input_text.esp_panel_w06_label_color
-    on_value:
-      - script.execute: render_w06
-  - platform: homeassistant
-    id: w06_value_color
-    entity_id: input_text.esp_panel_w06_value_color
-    on_value:
-      - script.execute: render_w06
-  - platform: homeassistant
-    id: w07_type
-    entity_id: input_select.esp_panel_w07_type
-    on_value:
+      - lambda: |-
+          auto config = esp_panel_parse_widget_runtime(x);
+          id(w07_type).publish_state(config.type);
+          id(w07_visible).publish_state(config.visible);
+          id(w07_show_border).publish_state(config.show_border);
+          id(w07_show_icon).publish_state(config.show_icon);
+          id(w07_show_label).publish_state(config.show_label);
+          id(w07_show_value).publish_state(config.show_value);
+          id(w07_bg_color).publish_state(config.bg_color);
+          id(w07_label).publish_state(config.label);
+          id(w07_icon).publish_state(config.icon);
+          id(w07_content_align).publish_state(config.content_align);
+          id(w07_layout_mode).publish_state(config.layout_mode);
+          id(w07_label_transform).publish_state(config.label_transform);
+          id(w07_label_weight).publish_state(config.label_weight);
+          id(w07_value_weight).publish_state(config.value_weight);
+          id(w07_icon_color).publish_state(config.icon_color);
+          id(w07_label_color).publish_state(config.label_color);
+          id(w07_value_color).publish_state(config.value_color);
+          id(w07_x).publish_state(config.x);
+          id(w07_y).publish_state(config.y);
+          id(w07_w).publish_state(config.w);
+          id(w07_h).publish_state(config.h);
+          id(w07_icon_scale).publish_state(config.icon_scale);
+          id(w07_label_scale).publish_state(config.label_scale);
+          id(w07_value_scale).publish_state(config.value_scale);
+      - script.execute: layout_w07
       - script.execute: render_w07
   - platform: homeassistant
-    id: w07_label
-    entity_id: input_text.esp_panel_w07_label
+    id: w07_runtime_value_source
+    entity_id: input_text.esp_panel_runtime_w07_value
     on_value:
+      - lambda: |-
+          id(w07_value).publish_state(x);
       - script.execute: render_w07
   - platform: homeassistant
-    id: w07_value
-    entity_id: input_text.esp_panel_w07_value
+    id: w08_runtime_config_source
+    entity_id: input_text.esp_panel_runtime_w08_config
     on_value:
-      - script.execute: render_w07
-  - platform: homeassistant
-    id: w07_icon
-    entity_id: input_text.esp_panel_w07_icon
-    on_value:
-      - script.execute: render_w07
-  - platform: homeassistant
-    id: w07_bg_color
-    entity_id: input_text.esp_panel_w07_bg_color
-    on_value:
-      - script.execute: render_w07
-  - platform: homeassistant
-    id: w07_action
-    entity_id: input_text.esp_panel_w07_action
-  - platform: homeassistant
-    id: w07_content_align
-    entity_id: input_select.esp_panel_w07_content_align
-    on_value:
-      - script.execute: render_w07
-  - platform: homeassistant
-    id: w07_layout_mode
-    entity_id: input_select.esp_panel_w07_layout_mode
-    on_value:
-      - script.execute: render_w07
-  - platform: homeassistant
-    id: w07_label_transform
-    entity_id: input_select.esp_panel_w07_label_transform
-    on_value:
-      - script.execute: render_w07
-  - platform: homeassistant
-    id: w07_label_weight
-    entity_id: input_select.esp_panel_w07_label_weight
-    on_value:
-      - script.execute: render_w07
-  - platform: homeassistant
-    id: w07_value_weight
-    entity_id: input_select.esp_panel_w07_value_weight
-    on_value:
-      - script.execute: render_w07
-  - platform: homeassistant
-    id: w07_icon_color
-    entity_id: input_text.esp_panel_w07_icon_color
-    on_value:
-      - script.execute: render_w07
-  - platform: homeassistant
-    id: w07_label_color
-    entity_id: input_text.esp_panel_w07_label_color
-    on_value:
-      - script.execute: render_w07
-  - platform: homeassistant
-    id: w07_value_color
-    entity_id: input_text.esp_panel_w07_value_color
-    on_value:
-      - script.execute: render_w07
-  - platform: homeassistant
-    id: w08_type
-    entity_id: input_select.esp_panel_w08_type
-    on_value:
+      - lambda: |-
+          auto config = esp_panel_parse_widget_runtime(x);
+          id(w08_type).publish_state(config.type);
+          id(w08_visible).publish_state(config.visible);
+          id(w08_show_border).publish_state(config.show_border);
+          id(w08_show_icon).publish_state(config.show_icon);
+          id(w08_show_label).publish_state(config.show_label);
+          id(w08_show_value).publish_state(config.show_value);
+          id(w08_bg_color).publish_state(config.bg_color);
+          id(w08_label).publish_state(config.label);
+          id(w08_icon).publish_state(config.icon);
+          id(w08_content_align).publish_state(config.content_align);
+          id(w08_layout_mode).publish_state(config.layout_mode);
+          id(w08_label_transform).publish_state(config.label_transform);
+          id(w08_label_weight).publish_state(config.label_weight);
+          id(w08_value_weight).publish_state(config.value_weight);
+          id(w08_icon_color).publish_state(config.icon_color);
+          id(w08_label_color).publish_state(config.label_color);
+          id(w08_value_color).publish_state(config.value_color);
+          id(w08_x).publish_state(config.x);
+          id(w08_y).publish_state(config.y);
+          id(w08_w).publish_state(config.w);
+          id(w08_h).publish_state(config.h);
+          id(w08_icon_scale).publish_state(config.icon_scale);
+          id(w08_label_scale).publish_state(config.label_scale);
+          id(w08_value_scale).publish_state(config.value_scale);
+      - script.execute: layout_w08
       - script.execute: render_w08
   - platform: homeassistant
-    id: w08_label
-    entity_id: input_text.esp_panel_w08_label
+    id: w08_runtime_value_source
+    entity_id: input_text.esp_panel_runtime_w08_value
     on_value:
+      - lambda: |-
+          id(w08_value).publish_state(x);
       - script.execute: render_w08
   - platform: homeassistant
-    id: w08_value
-    entity_id: input_text.esp_panel_w08_value
+    id: w09_runtime_config_source
+    entity_id: input_text.esp_panel_runtime_w09_config
     on_value:
-      - script.execute: render_w08
-  - platform: homeassistant
-    id: w08_icon
-    entity_id: input_text.esp_panel_w08_icon
-    on_value:
-      - script.execute: render_w08
-  - platform: homeassistant
-    id: w08_bg_color
-    entity_id: input_text.esp_panel_w08_bg_color
-    on_value:
-      - script.execute: render_w08
-  - platform: homeassistant
-    id: w08_action
-    entity_id: input_text.esp_panel_w08_action
-  - platform: homeassistant
-    id: w08_content_align
-    entity_id: input_select.esp_panel_w08_content_align
-    on_value:
-      - script.execute: render_w08
-  - platform: homeassistant
-    id: w08_layout_mode
-    entity_id: input_select.esp_panel_w08_layout_mode
-    on_value:
-      - script.execute: render_w08
-  - platform: homeassistant
-    id: w08_label_transform
-    entity_id: input_select.esp_panel_w08_label_transform
-    on_value:
-      - script.execute: render_w08
-  - platform: homeassistant
-    id: w08_label_weight
-    entity_id: input_select.esp_panel_w08_label_weight
-    on_value:
-      - script.execute: render_w08
-  - platform: homeassistant
-    id: w08_value_weight
-    entity_id: input_select.esp_panel_w08_value_weight
-    on_value:
-      - script.execute: render_w08
-  - platform: homeassistant
-    id: w08_icon_color
-    entity_id: input_text.esp_panel_w08_icon_color
-    on_value:
-      - script.execute: render_w08
-  - platform: homeassistant
-    id: w08_label_color
-    entity_id: input_text.esp_panel_w08_label_color
-    on_value:
-      - script.execute: render_w08
-  - platform: homeassistant
-    id: w08_value_color
-    entity_id: input_text.esp_panel_w08_value_color
-    on_value:
-      - script.execute: render_w08
-  - platform: homeassistant
-    id: w09_type
-    entity_id: input_select.esp_panel_w09_type
-    on_value:
+      - lambda: |-
+          auto config = esp_panel_parse_widget_runtime(x);
+          id(w09_type).publish_state(config.type);
+          id(w09_visible).publish_state(config.visible);
+          id(w09_show_border).publish_state(config.show_border);
+          id(w09_show_icon).publish_state(config.show_icon);
+          id(w09_show_label).publish_state(config.show_label);
+          id(w09_show_value).publish_state(config.show_value);
+          id(w09_bg_color).publish_state(config.bg_color);
+          id(w09_label).publish_state(config.label);
+          id(w09_icon).publish_state(config.icon);
+          id(w09_content_align).publish_state(config.content_align);
+          id(w09_layout_mode).publish_state(config.layout_mode);
+          id(w09_label_transform).publish_state(config.label_transform);
+          id(w09_label_weight).publish_state(config.label_weight);
+          id(w09_value_weight).publish_state(config.value_weight);
+          id(w09_icon_color).publish_state(config.icon_color);
+          id(w09_label_color).publish_state(config.label_color);
+          id(w09_value_color).publish_state(config.value_color);
+          id(w09_x).publish_state(config.x);
+          id(w09_y).publish_state(config.y);
+          id(w09_w).publish_state(config.w);
+          id(w09_h).publish_state(config.h);
+          id(w09_icon_scale).publish_state(config.icon_scale);
+          id(w09_label_scale).publish_state(config.label_scale);
+          id(w09_value_scale).publish_state(config.value_scale);
+      - script.execute: layout_w09
       - script.execute: render_w09
   - platform: homeassistant
-    id: w09_label
-    entity_id: input_text.esp_panel_w09_label
+    id: w09_runtime_value_source
+    entity_id: input_text.esp_panel_runtime_w09_value
     on_value:
+      - lambda: |-
+          id(w09_value).publish_state(x);
       - script.execute: render_w09
   - platform: homeassistant
-    id: w09_value
-    entity_id: input_text.esp_panel_w09_value
+    id: w10_runtime_config_source
+    entity_id: input_text.esp_panel_runtime_w10_config
     on_value:
-      - script.execute: render_w09
-  - platform: homeassistant
-    id: w09_icon
-    entity_id: input_text.esp_panel_w09_icon
-    on_value:
-      - script.execute: render_w09
-  - platform: homeassistant
-    id: w09_bg_color
-    entity_id: input_text.esp_panel_w09_bg_color
-    on_value:
-      - script.execute: render_w09
-  - platform: homeassistant
-    id: w09_action
-    entity_id: input_text.esp_panel_w09_action
-  - platform: homeassistant
-    id: w09_content_align
-    entity_id: input_select.esp_panel_w09_content_align
-    on_value:
-      - script.execute: render_w09
-  - platform: homeassistant
-    id: w09_layout_mode
-    entity_id: input_select.esp_panel_w09_layout_mode
-    on_value:
-      - script.execute: render_w09
-  - platform: homeassistant
-    id: w09_label_transform
-    entity_id: input_select.esp_panel_w09_label_transform
-    on_value:
-      - script.execute: render_w09
-  - platform: homeassistant
-    id: w09_label_weight
-    entity_id: input_select.esp_panel_w09_label_weight
-    on_value:
-      - script.execute: render_w09
-  - platform: homeassistant
-    id: w09_value_weight
-    entity_id: input_select.esp_panel_w09_value_weight
-    on_value:
-      - script.execute: render_w09
-  - platform: homeassistant
-    id: w09_icon_color
-    entity_id: input_text.esp_panel_w09_icon_color
-    on_value:
-      - script.execute: render_w09
-  - platform: homeassistant
-    id: w09_label_color
-    entity_id: input_text.esp_panel_w09_label_color
-    on_value:
-      - script.execute: render_w09
-  - platform: homeassistant
-    id: w09_value_color
-    entity_id: input_text.esp_panel_w09_value_color
-    on_value:
-      - script.execute: render_w09
-  - platform: homeassistant
-    id: w10_type
-    entity_id: input_select.esp_panel_w10_type
-    on_value:
+      - lambda: |-
+          auto config = esp_panel_parse_widget_runtime(x);
+          id(w10_type).publish_state(config.type);
+          id(w10_visible).publish_state(config.visible);
+          id(w10_show_border).publish_state(config.show_border);
+          id(w10_show_icon).publish_state(config.show_icon);
+          id(w10_show_label).publish_state(config.show_label);
+          id(w10_show_value).publish_state(config.show_value);
+          id(w10_bg_color).publish_state(config.bg_color);
+          id(w10_label).publish_state(config.label);
+          id(w10_icon).publish_state(config.icon);
+          id(w10_content_align).publish_state(config.content_align);
+          id(w10_layout_mode).publish_state(config.layout_mode);
+          id(w10_label_transform).publish_state(config.label_transform);
+          id(w10_label_weight).publish_state(config.label_weight);
+          id(w10_value_weight).publish_state(config.value_weight);
+          id(w10_icon_color).publish_state(config.icon_color);
+          id(w10_label_color).publish_state(config.label_color);
+          id(w10_value_color).publish_state(config.value_color);
+          id(w10_x).publish_state(config.x);
+          id(w10_y).publish_state(config.y);
+          id(w10_w).publish_state(config.w);
+          id(w10_h).publish_state(config.h);
+          id(w10_icon_scale).publish_state(config.icon_scale);
+          id(w10_label_scale).publish_state(config.label_scale);
+          id(w10_value_scale).publish_state(config.value_scale);
+      - script.execute: layout_w10
       - script.execute: render_w10
   - platform: homeassistant
-    id: w10_label
-    entity_id: input_text.esp_panel_w10_label
+    id: w10_runtime_value_source
+    entity_id: input_text.esp_panel_runtime_w10_value
     on_value:
+      - lambda: |-
+          id(w10_value).publish_state(x);
       - script.execute: render_w10
   - platform: homeassistant
-    id: w10_value
-    entity_id: input_text.esp_panel_w10_value
+    id: w11_runtime_config_source
+    entity_id: input_text.esp_panel_runtime_w11_config
     on_value:
-      - script.execute: render_w10
-  - platform: homeassistant
-    id: w10_icon
-    entity_id: input_text.esp_panel_w10_icon
-    on_value:
-      - script.execute: render_w10
-  - platform: homeassistant
-    id: w10_bg_color
-    entity_id: input_text.esp_panel_w10_bg_color
-    on_value:
-      - script.execute: render_w10
-  - platform: homeassistant
-    id: w10_action
-    entity_id: input_text.esp_panel_w10_action
-  - platform: homeassistant
-    id: w10_content_align
-    entity_id: input_select.esp_panel_w10_content_align
-    on_value:
-      - script.execute: render_w10
-  - platform: homeassistant
-    id: w10_layout_mode
-    entity_id: input_select.esp_panel_w10_layout_mode
-    on_value:
-      - script.execute: render_w10
-  - platform: homeassistant
-    id: w10_label_transform
-    entity_id: input_select.esp_panel_w10_label_transform
-    on_value:
-      - script.execute: render_w10
-  - platform: homeassistant
-    id: w10_label_weight
-    entity_id: input_select.esp_panel_w10_label_weight
-    on_value:
-      - script.execute: render_w10
-  - platform: homeassistant
-    id: w10_value_weight
-    entity_id: input_select.esp_panel_w10_value_weight
-    on_value:
-      - script.execute: render_w10
-  - platform: homeassistant
-    id: w10_icon_color
-    entity_id: input_text.esp_panel_w10_icon_color
-    on_value:
-      - script.execute: render_w10
-  - platform: homeassistant
-    id: w10_label_color
-    entity_id: input_text.esp_panel_w10_label_color
-    on_value:
-      - script.execute: render_w10
-  - platform: homeassistant
-    id: w10_value_color
-    entity_id: input_text.esp_panel_w10_value_color
-    on_value:
-      - script.execute: render_w10
-  - platform: homeassistant
-    id: w11_type
-    entity_id: input_select.esp_panel_w11_type
-    on_value:
+      - lambda: |-
+          auto config = esp_panel_parse_widget_runtime(x);
+          id(w11_type).publish_state(config.type);
+          id(w11_visible).publish_state(config.visible);
+          id(w11_show_border).publish_state(config.show_border);
+          id(w11_show_icon).publish_state(config.show_icon);
+          id(w11_show_label).publish_state(config.show_label);
+          id(w11_show_value).publish_state(config.show_value);
+          id(w11_bg_color).publish_state(config.bg_color);
+          id(w11_label).publish_state(config.label);
+          id(w11_icon).publish_state(config.icon);
+          id(w11_content_align).publish_state(config.content_align);
+          id(w11_layout_mode).publish_state(config.layout_mode);
+          id(w11_label_transform).publish_state(config.label_transform);
+          id(w11_label_weight).publish_state(config.label_weight);
+          id(w11_value_weight).publish_state(config.value_weight);
+          id(w11_icon_color).publish_state(config.icon_color);
+          id(w11_label_color).publish_state(config.label_color);
+          id(w11_value_color).publish_state(config.value_color);
+          id(w11_x).publish_state(config.x);
+          id(w11_y).publish_state(config.y);
+          id(w11_w).publish_state(config.w);
+          id(w11_h).publish_state(config.h);
+          id(w11_icon_scale).publish_state(config.icon_scale);
+          id(w11_label_scale).publish_state(config.label_scale);
+          id(w11_value_scale).publish_state(config.value_scale);
+      - script.execute: layout_w11
       - script.execute: render_w11
   - platform: homeassistant
-    id: w11_label
-    entity_id: input_text.esp_panel_w11_label
+    id: w11_runtime_value_source
+    entity_id: input_text.esp_panel_runtime_w11_value
     on_value:
+      - lambda: |-
+          id(w11_value).publish_state(x);
       - script.execute: render_w11
   - platform: homeassistant
-    id: w11_value
-    entity_id: input_text.esp_panel_w11_value
+    id: w12_runtime_config_source
+    entity_id: input_text.esp_panel_runtime_w12_config
     on_value:
-      - script.execute: render_w11
-  - platform: homeassistant
-    id: w11_icon
-    entity_id: input_text.esp_panel_w11_icon
-    on_value:
-      - script.execute: render_w11
-  - platform: homeassistant
-    id: w11_bg_color
-    entity_id: input_text.esp_panel_w11_bg_color
-    on_value:
-      - script.execute: render_w11
-  - platform: homeassistant
-    id: w11_action
-    entity_id: input_text.esp_panel_w11_action
-  - platform: homeassistant
-    id: w11_content_align
-    entity_id: input_select.esp_panel_w11_content_align
-    on_value:
-      - script.execute: render_w11
-  - platform: homeassistant
-    id: w11_layout_mode
-    entity_id: input_select.esp_panel_w11_layout_mode
-    on_value:
-      - script.execute: render_w11
-  - platform: homeassistant
-    id: w11_label_transform
-    entity_id: input_select.esp_panel_w11_label_transform
-    on_value:
-      - script.execute: render_w11
-  - platform: homeassistant
-    id: w11_label_weight
-    entity_id: input_select.esp_panel_w11_label_weight
-    on_value:
-      - script.execute: render_w11
-  - platform: homeassistant
-    id: w11_value_weight
-    entity_id: input_select.esp_panel_w11_value_weight
-    on_value:
-      - script.execute: render_w11
-  - platform: homeassistant
-    id: w11_icon_color
-    entity_id: input_text.esp_panel_w11_icon_color
-    on_value:
-      - script.execute: render_w11
-  - platform: homeassistant
-    id: w11_label_color
-    entity_id: input_text.esp_panel_w11_label_color
-    on_value:
-      - script.execute: render_w11
-  - platform: homeassistant
-    id: w11_value_color
-    entity_id: input_text.esp_panel_w11_value_color
-    on_value:
-      - script.execute: render_w11
-  - platform: homeassistant
-    id: w12_type
-    entity_id: input_select.esp_panel_w12_type
-    on_value:
+      - lambda: |-
+          auto config = esp_panel_parse_widget_runtime(x);
+          id(w12_type).publish_state(config.type);
+          id(w12_visible).publish_state(config.visible);
+          id(w12_show_border).publish_state(config.show_border);
+          id(w12_show_icon).publish_state(config.show_icon);
+          id(w12_show_label).publish_state(config.show_label);
+          id(w12_show_value).publish_state(config.show_value);
+          id(w12_bg_color).publish_state(config.bg_color);
+          id(w12_label).publish_state(config.label);
+          id(w12_icon).publish_state(config.icon);
+          id(w12_content_align).publish_state(config.content_align);
+          id(w12_layout_mode).publish_state(config.layout_mode);
+          id(w12_label_transform).publish_state(config.label_transform);
+          id(w12_label_weight).publish_state(config.label_weight);
+          id(w12_value_weight).publish_state(config.value_weight);
+          id(w12_icon_color).publish_state(config.icon_color);
+          id(w12_label_color).publish_state(config.label_color);
+          id(w12_value_color).publish_state(config.value_color);
+          id(w12_x).publish_state(config.x);
+          id(w12_y).publish_state(config.y);
+          id(w12_w).publish_state(config.w);
+          id(w12_h).publish_state(config.h);
+          id(w12_icon_scale).publish_state(config.icon_scale);
+          id(w12_label_scale).publish_state(config.label_scale);
+          id(w12_value_scale).publish_state(config.value_scale);
+      - script.execute: layout_w12
       - script.execute: render_w12
   - platform: homeassistant
-    id: w12_label
-    entity_id: input_text.esp_panel_w12_label
+    id: w12_runtime_value_source
+    entity_id: input_text.esp_panel_runtime_w12_value
     on_value:
-      - script.execute: render_w12
-  - platform: homeassistant
-    id: w12_value
-    entity_id: input_text.esp_panel_w12_value
-    on_value:
-      - script.execute: render_w12
-  - platform: homeassistant
-    id: w12_icon
-    entity_id: input_text.esp_panel_w12_icon
-    on_value:
-      - script.execute: render_w12
-  - platform: homeassistant
-    id: w12_bg_color
-    entity_id: input_text.esp_panel_w12_bg_color
-    on_value:
-      - script.execute: render_w12
-  - platform: homeassistant
-    id: w12_action
-    entity_id: input_text.esp_panel_w12_action
-  - platform: homeassistant
-    id: w12_content_align
-    entity_id: input_select.esp_panel_w12_content_align
-    on_value:
-      - script.execute: render_w12
-  - platform: homeassistant
-    id: w12_layout_mode
-    entity_id: input_select.esp_panel_w12_layout_mode
-    on_value:
-      - script.execute: render_w12
-  - platform: homeassistant
-    id: w12_label_transform
-    entity_id: input_select.esp_panel_w12_label_transform
-    on_value:
-      - script.execute: render_w12
-  - platform: homeassistant
-    id: w12_label_weight
-    entity_id: input_select.esp_panel_w12_label_weight
-    on_value:
-      - script.execute: render_w12
-  - platform: homeassistant
-    id: w12_value_weight
-    entity_id: input_select.esp_panel_w12_value_weight
-    on_value:
-      - script.execute: render_w12
-  - platform: homeassistant
-    id: w12_icon_color
-    entity_id: input_text.esp_panel_w12_icon_color
-    on_value:
-      - script.execute: render_w12
-  - platform: homeassistant
-    id: w12_label_color
-    entity_id: input_text.esp_panel_w12_label_color
-    on_value:
-      - script.execute: render_w12
-  - platform: homeassistant
-    id: w12_value_color
-    entity_id: input_text.esp_panel_w12_value_color
-    on_value:
+      - lambda: |-
+          id(w12_value).publish_state(x);
       - script.execute: render_w12
 
 interval:
