@@ -114,6 +114,9 @@ function widgetCapabilities(type: WidgetConfig["type"]) {
 }
 
 function widgetStateTone(widget: WidgetConfig) {
+  if (widget.widgetBgColor.trim()) {
+    return "neutral";
+  }
   const value = widget.value.trim().toLowerCase();
   if (widget.type !== "button") {
     return "neutral";
@@ -125,6 +128,17 @@ function widgetStateTone(widget: WidgetConfig) {
     return "off";
   }
   return "neutral";
+}
+
+function effectiveWidgetBg(widget: WidgetConfig, theme: PanelTheme) {
+  const override = widget.widgetBgColor.trim().toLowerCase();
+  if (!override) {
+    return theme.widgetBg;
+  }
+  if (override === "transparent") {
+    return theme.screenBg;
+  }
+  return override;
 }
 
 function detectWarnings(widgets: WidgetConfig[]) {
@@ -214,7 +228,7 @@ function widgetStyle(widget: WidgetConfig, theme: PanelTheme): CSSProperties {
     top: `calc(${(widget.y / GRID_SIZE) * 100}% + 2px)`,
     width: `calc(${(widget.w / GRID_SIZE) * 100}% - 4px)`,
     height: `calc(${(widget.h / GRID_SIZE) * 100}% - 4px)`,
-    ["--widget-bg-color" as string]: theme.widgetBg,
+    ["--widget-bg-color" as string]: effectiveWidgetBg(widget, theme),
     ["--widget-border-color" as string]: theme.widgetBorder,
     ["--widget-border-width" as string]: widget.showBorder ? "2px" : "0px",
     ["--button-on-bg-color" as string]: theme.buttonOnBg,
@@ -1265,6 +1279,28 @@ export default function App() {
 
                   {capabilities.showIcon && (
                     <>
+                      <ColorField
+                        label="Widget background override"
+                        value={selectedWidget.widgetBgColor}
+                        onChange={(value) => updateWidget(selectedWidget.id, { widgetBgColor: value })}
+                      />
+                      <div className="scope-toggle">
+                        <button
+                          type="button"
+                          className={selectedWidget.widgetBgColor.trim() === "" ? "scope-active" : ""}
+                          onClick={() => updateWidget(selectedWidget.id, { widgetBgColor: "" })}
+                        >
+                          Use theme
+                        </button>
+                        <button
+                          type="button"
+                          className={selectedWidget.widgetBgColor.trim().toLowerCase() === "transparent" ? "scope-active" : ""}
+                          onClick={() => updateWidget(selectedWidget.id, { widgetBgColor: "transparent" })}
+                        >
+                          Transparent
+                        </button>
+                      </div>
+                      <p className="field-hint">Leave blank to follow the theme, or use `transparent` to match the screen background.</p>
                       <ColorField
                         label="Icon colour"
                         value={selectedWidget.iconColor}

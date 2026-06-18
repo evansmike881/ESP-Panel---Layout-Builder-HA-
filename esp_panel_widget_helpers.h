@@ -137,6 +137,29 @@ static inline uint32_t esp_panel_widget_bg_for_state(
   return fallback;
 }
 
+static inline uint32_t esp_panel_widget_effective_bg(
+    const std::string &type_name,
+    const std::string &value,
+    const std::string &override_value,
+    uint32_t screen_bg,
+    uint32_t widget_bg,
+    uint32_t button_on,
+    uint32_t button_off) {
+  std::string normalized = esp_panel_trim(override_value);
+  std::transform(normalized.begin(), normalized.end(), normalized.begin(), [](unsigned char character) {
+    return static_cast<char>(std::tolower(character));
+  });
+
+  if (normalized == "transparent") {
+    return screen_bg;
+  }
+  if (normalized.size() == 7 && normalized[0] == '#') {
+    return esp_panel_parse_color(normalized, widget_bg);
+  }
+
+  return esp_panel_widget_bg_for_state(type_name, value, widget_bg, button_on, button_off);
+}
+
 static inline std::string esp_panel_icon_glyph(std::string icon_name, std::string type_name) {
   std::transform(icon_name.begin(), icon_name.end(), icon_name.begin(), [](unsigned char character) {
     return static_cast<char>(std::tolower(character));

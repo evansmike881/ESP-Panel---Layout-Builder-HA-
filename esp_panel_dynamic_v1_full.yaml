@@ -880,6 +880,11 @@ input_text:
     name: ESP Panel W01 Icon
     initial: "clock"
     max: 80
+  esp_panel_w01_bg_color:
+    name: ESP Panel W01 Background Override
+    initial: ""
+    max: 20
+
 
   esp_panel_w01_action:
     name: ESP Panel W01 Action
@@ -920,6 +925,11 @@ input_text:
     name: ESP Panel W02 Icon
     initial: "calendar"
     max: 80
+  esp_panel_w02_bg_color:
+    name: ESP Panel W02 Background Override
+    initial: ""
+    max: 20
+
 
   esp_panel_w02_action:
     name: ESP Panel W02 Action
@@ -960,6 +970,11 @@ input_text:
     name: ESP Panel W03 Icon
     initial: "weather-partly-cloudy"
     max: 80
+  esp_panel_w03_bg_color:
+    name: ESP Panel W03 Background Override
+    initial: ""
+    max: 20
+
 
   esp_panel_w03_action:
     name: ESP Panel W03 Action
@@ -1000,6 +1015,11 @@ input_text:
     name: ESP Panel W04 Icon
     initial: "thermometer"
     max: 80
+  esp_panel_w04_bg_color:
+    name: ESP Panel W04 Background Override
+    initial: ""
+    max: 20
+
 
   esp_panel_w04_action:
     name: ESP Panel W04 Action
@@ -1040,6 +1060,11 @@ input_text:
     name: ESP Panel W05 Icon
     initial: "water-percent"
     max: 80
+  esp_panel_w05_bg_color:
+    name: ESP Panel W05 Background Override
+    initial: ""
+    max: 20
+
 
   esp_panel_w05_action:
     name: ESP Panel W05 Action
@@ -1080,6 +1105,11 @@ input_text:
     name: ESP Panel W06 Icon
     initial: "ceiling-light"
     max: 80
+  esp_panel_w06_bg_color:
+    name: ESP Panel W06 Background Override
+    initial: ""
+    max: 20
+
 
   esp_panel_w06_action:
     name: ESP Panel W06 Action
@@ -1120,6 +1150,11 @@ input_text:
     name: ESP Panel W07 Icon
     initial: "wifi"
     max: 80
+  esp_panel_w07_bg_color:
+    name: ESP Panel W07 Background Override
+    initial: ""
+    max: 20
+
 
   esp_panel_w07_action:
     name: ESP Panel W07 Action
@@ -1160,6 +1195,11 @@ input_text:
     name: ESP Panel W08 Icon
     initial: "home"
     max: 80
+  esp_panel_w08_bg_color:
+    name: ESP Panel W08 Background Override
+    initial: ""
+    max: 20
+
 
   esp_panel_w08_action:
     name: ESP Panel W08 Action
@@ -1200,6 +1240,11 @@ input_text:
     name: ESP Panel W09 Icon
     initial: "door"
     max: 80
+  esp_panel_w09_bg_color:
+    name: ESP Panel W09 Background Override
+    initial: ""
+    max: 20
+
 
   esp_panel_w09_action:
     name: ESP Panel W09 Action
@@ -1240,6 +1285,11 @@ input_text:
     name: ESP Panel W10 Icon
     initial: "sofa"
     max: 80
+  esp_panel_w10_bg_color:
+    name: ESP Panel W10 Background Override
+    initial: ""
+    max: 20
+
 
   esp_panel_w10_action:
     name: ESP Panel W10 Action
@@ -1280,6 +1330,11 @@ input_text:
     name: ESP Panel W11 Icon
     initial: "shape"
     max: 80
+  esp_panel_w11_bg_color:
+    name: ESP Panel W11 Background Override
+    initial: ""
+    max: 20
+
 
   esp_panel_w11_action:
     name: ESP Panel W11 Action
@@ -1320,6 +1375,11 @@ input_text:
     name: ESP Panel W12 Icon
     initial: "shape"
     max: 80
+  esp_panel_w12_bg_color:
+    name: ESP Panel W12 Background Override
+    initial: ""
+    max: 20
+
 
   esp_panel_w12_action:
     name: ESP Panel W12 Action
@@ -2032,6 +2092,8 @@ automation:
               - action: switch.toggle
                 target:
                   entity_id: switch.office_main_light
+
+
 
 
 

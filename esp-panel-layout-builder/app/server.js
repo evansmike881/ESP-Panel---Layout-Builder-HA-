@@ -8,6 +8,10 @@ const __dirname = path.dirname(__filename);
 const PORT = Number.parseInt(process.env.PORT || "8099", 10);
 const HASS_URL = process.env.HASS_URL || "http://supervisor/core/api";
 const TOKEN = process.env.SUPERVISOR_TOKEN || process.env.HASSIO_TOKEN || "";
+const VALUE_SOURCE_SYNC_INTERVAL_MS = Math.max(
+  1000,
+  Number.parseInt(process.env.VALUE_SOURCE_SYNC_INTERVAL_MS || "2000", 10) || 2000
+);
 const GRID_SIZE = 6;
 const WIDGET_IDS = ["w01", "w02", "w03", "w04", "w05", "w06", "w07", "w08", "w09", "w10", "w11", "w12"];
 const PANEL_THEME_IDS = ["light", "dark", "blue", "red", "green", "custom"];
@@ -197,6 +201,7 @@ function helperMap(id) {
     showIcon: `input_boolean.esp_panel_${id}_show_icon`,
     showLabel: `input_boolean.esp_panel_${id}_show_label`,
     showValue: `input_boolean.esp_panel_${id}_show_value`,
+    widgetBgColor: `input_text.esp_panel_${id}_bg_color`,
     label: `input_text.esp_panel_${id}_label`,
     value: `input_text.esp_panel_${id}_value`,
     valueSource: `input_text.esp_panel_${id}_value_source`,
@@ -264,6 +269,17 @@ function normalizeColor(value, fallback) {
   return /^#[0-9a-fA-F]{6}$/.test(normalized) ? normalized.toLowerCase() : fallback;
 }
 
+function normalizeWidgetBgColor(value, fallback = "") {
+  const normalized = normalizeText(value).trim().toLowerCase();
+  if (!normalized) {
+    return fallback;
+  }
+  if (normalized === "transparent") {
+    return "transparent";
+  }
+  return /^#[0-9a-f]{6}$/i.test(normalized) ? normalized : fallback;
+}
+
 function sanitizeTheme(input) {
   const baseTheme = copyDefaultTheme(input?.id);
   return {
@@ -319,6 +335,9 @@ function validateWidget(widget) {
       errors.push(`${widget.id} ${field} must be a hex color like #ffffff`);
     }
   });
+  if (widget.widgetBgColor && widget.widgetBgColor !== "transparent" && !/^#[0-9a-f]{6}$/i.test(widget.widgetBgColor)) {
+    errors.push(`${widget.id} widgetBgColor must be blank, transparent, or a hex color like #ffffff`);
+  }
   ["iconScale", "labelScale", "valueScale"].forEach((field) => {
     if (widget[field] < 25 || widget[field] > 180) {
       errors.push(`${widget.id} ${field} must be between 25 and 180`);
@@ -377,6 +396,7 @@ function sanitizeWidget(input, fallback) {
     showIcon: typeof input?.showIcon === "boolean" ? input.showIcon : fallback.showIcon,
     showLabel: typeof input?.showLabel === "boolean" ? input.showLabel : fallback.showLabel,
     showValue: typeof input?.showValue === "boolean" ? input.showValue : fallback.showValue,
+    widgetBgColor: normalizeWidgetBgColor(input?.widgetBgColor, fallback.widgetBgColor),
     label: normalizeText(input?.label ?? fallback.label),
     value: normalizeText(input?.value ?? fallback.value),
     valueSource: normalizeText(input?.valueSource ?? fallback.valueSource),
@@ -404,7 +424,7 @@ function sanitizeWidget(input, fallback) {
 function compareWidgetValues(expected, actual) {
   const mismatches = [];
 
-  for (const field of ["type", "visible", "showBorder", "showIcon", "showLabel", "showValue", "label", "value", "valueSource", "icon", "action", "contentAlign", "labelTransform", "labelWeight", "valueWeight", "iconColor", "labelColor", "valueColor", "iconScale", "labelScale", "valueScale", "x", "y", "w", "h"]) {
+  for (const field of ["type", "visible", "showBorder", "showIcon", "showLabel", "showValue", "widgetBgColor", "label", "value", "valueSource", "icon", "action", "contentAlign", "labelTransform", "labelWeight", "valueWeight", "iconColor", "labelColor", "valueColor", "iconScale", "labelScale", "valueScale", "x", "y", "w", "h"]) {
     if (expected[field] !== actual[field]) {
       mismatches.push(
         `${expected.id} ${field} expected "${expected[field]}" but Home Assistant has "${actual[field]}"`
@@ -480,6 +500,7 @@ function widgetFromStates(id, statesMap) {
   const showIcon = readState(helpers.showIcon);
   const showLabel = readState(helpers.showLabel);
   const showValue = readState(helpers.showValue);
+  const widgetBgColor = readState(helpers.widgetBgColor);
   const label = readState(helpers.label);
   const value = readState(helpers.value);
   const valueSource = readState(helpers.valueSource);
@@ -509,6 +530,7 @@ function widgetFromStates(id, statesMap) {
       showIcon: showIcon === undefined ? fallback.showIcon : showIcon === "on",
       showLabel: showLabel === undefined ? fallback.showLabel : showLabel === "on",
       showValue: showValue === undefined ? fallback.showValue : showValue === "on",
+      widgetBgColor: normalizeWidgetBgColor(widgetBgColor, fallback.widgetBgColor),
       label: normalizeText(label ?? fallback.label),
       value: normalizeText(value ?? fallback.value),
       valueSource: normalizeText(valueSource ?? fallback.valueSource),
@@ -666,6 +688,10 @@ ${FONT_WEIGHT_OPTIONS.map((option) => `      - ${option}`).join("\n")}
       `  esp_panel_${id}_icon:
     name: ESP Panel ${id.toUpperCase()} Icon
     initial: "${fallback.icon}"`,
+      `  esp_panel_${id}_bg_color:
+    name: ESP Panel ${id.toUpperCase()} Background Override
+    initial: "${fallback.widgetBgColor}"
+    max: 20`,
       `  esp_panel_${id}_action:
     name: ESP Panel ${id.toUpperCase()} Action
     initial: "${fallback.action}"`,
@@ -788,6 +814,7 @@ async function writeWidget(widget) {
   }
 
   for (const [field, entityId] of Object.entries({
+    widgetBgColor: helpers.widgetBgColor,
     label: helpers.label,
     value: helpers.value,
     valueSource: helpers.valueSource,
@@ -1125,4 +1152,4 @@ app.listen(PORT, "0.0.0.0", () => {
 
 setInterval(() => {
   void syncValueSources().catch((error) => log("Value source sync failed", error));
-}, 15000);
+}, VALUE_SOURCE_SYNC_INTERVAL_MS);

@@ -719,7 +719,7 @@ script:
       - lvgl.widget.update:
           id: w01_card
           hidden: !lambda 'return !id(w01_visible).state || id(w01_type).state == "blank";'
-          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_bg_for_state(id(w01_type).state, id(w01_value).state, esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w01_type).state, id(w01_value).state, id(w01_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w01_show_border).state ? 1 : 0;'
       - lvgl.widget.update:
@@ -868,7 +868,7 @@ script:
       - lvgl.widget.update:
           id: w02_card
           hidden: !lambda 'return !id(w02_visible).state || id(w02_type).state == "blank";'
-          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_bg_for_state(id(w02_type).state, id(w02_value).state, esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w02_type).state, id(w02_value).state, id(w02_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w02_show_border).state ? 1 : 0;'
       - lvgl.widget.update:
@@ -1017,7 +1017,7 @@ script:
       - lvgl.widget.update:
           id: w03_card
           hidden: !lambda 'return !id(w03_visible).state || id(w03_type).state == "blank";'
-          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_bg_for_state(id(w03_type).state, id(w03_value).state, esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w03_type).state, id(w03_value).state, id(w03_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w03_show_border).state ? 1 : 0;'
       - lvgl.widget.update:
@@ -1166,7 +1166,7 @@ script:
       - lvgl.widget.update:
           id: w04_card
           hidden: !lambda 'return !id(w04_visible).state || id(w04_type).state == "blank";'
-          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_bg_for_state(id(w04_type).state, id(w04_value).state, esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w04_type).state, id(w04_value).state, id(w04_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w04_show_border).state ? 1 : 0;'
       - lvgl.widget.update:
@@ -1315,7 +1315,7 @@ script:
       - lvgl.widget.update:
           id: w05_card
           hidden: !lambda 'return !id(w05_visible).state || id(w05_type).state == "blank";'
-          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_bg_for_state(id(w05_type).state, id(w05_value).state, esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w05_type).state, id(w05_value).state, id(w05_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w05_show_border).state ? 1 : 0;'
       - lvgl.widget.update:
@@ -1464,7 +1464,7 @@ script:
       - lvgl.widget.update:
           id: w06_card
           hidden: !lambda 'return !id(w06_visible).state || id(w06_type).state == "blank";'
-          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_bg_for_state(id(w06_type).state, id(w06_value).state, esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w06_type).state, id(w06_value).state, id(w06_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w06_show_border).state ? 1 : 0;'
       - lvgl.widget.update:
@@ -1613,7 +1613,7 @@ script:
       - lvgl.widget.update:
           id: w07_card
           hidden: !lambda 'return !id(w07_visible).state || id(w07_type).state == "blank";'
-          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_bg_for_state(id(w07_type).state, id(w07_value).state, esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w07_type).state, id(w07_value).state, id(w07_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w07_show_border).state ? 1 : 0;'
       - lvgl.widget.update:
@@ -1762,7 +1762,7 @@ script:
       - lvgl.widget.update:
           id: w08_card
           hidden: !lambda 'return !id(w08_visible).state || id(w08_type).state == "blank";'
-          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_bg_for_state(id(w08_type).state, id(w08_value).state, esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w08_type).state, id(w08_value).state, id(w08_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w08_show_border).state ? 1 : 0;'
       - lvgl.widget.update:
@@ -1911,7 +1911,7 @@ script:
       - lvgl.widget.update:
           id: w09_card
           hidden: !lambda 'return !id(w09_visible).state || id(w09_type).state == "blank";'
-          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_bg_for_state(id(w09_type).state, id(w09_value).state, esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w09_type).state, id(w09_value).state, id(w09_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w09_show_border).state ? 1 : 0;'
       - lvgl.widget.update:
@@ -2060,7 +2060,7 @@ script:
       - lvgl.widget.update:
           id: w10_card
           hidden: !lambda 'return !id(w10_visible).state || id(w10_type).state == "blank";'
-          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_bg_for_state(id(w10_type).state, id(w10_value).state, esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w10_type).state, id(w10_value).state, id(w10_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w10_show_border).state ? 1 : 0;'
       - lvgl.widget.update:
@@ -2209,7 +2209,7 @@ script:
       - lvgl.widget.update:
           id: w11_card
           hidden: !lambda 'return !id(w11_visible).state || id(w11_type).state == "blank";'
-          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_bg_for_state(id(w11_type).state, id(w11_value).state, esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w11_type).state, id(w11_value).state, id(w11_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w11_show_border).state ? 1 : 0;'
       - lvgl.widget.update:
@@ -2358,7 +2358,7 @@ script:
       - lvgl.widget.update:
           id: w12_card
           hidden: !lambda 'return !id(w12_visible).state || id(w12_type).state == "blank";'
-          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_bg_for_state(id(w12_type).state, id(w12_value).state, esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w12_type).state, id(w12_value).state, id(w12_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w12_show_border).state ? 1 : 0;'
       - lvgl.widget.update:
@@ -3293,6 +3293,11 @@ text_sensor:
     on_value:
       - script.execute: render_w01
   - platform: homeassistant
+    id: w01_bg_color
+    entity_id: input_text.esp_panel_w01_bg_color
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
     id: w01_action
     entity_id: input_text.esp_panel_w01_action
   - platform: homeassistant
@@ -3353,6 +3358,11 @@ text_sensor:
   - platform: homeassistant
     id: w02_icon
     entity_id: input_text.esp_panel_w02_icon
+    on_value:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w02_bg_color
+    entity_id: input_text.esp_panel_w02_bg_color
     on_value:
       - script.execute: render_w02
   - platform: homeassistant
@@ -3419,6 +3429,11 @@ text_sensor:
     on_value:
       - script.execute: render_w03
   - platform: homeassistant
+    id: w03_bg_color
+    entity_id: input_text.esp_panel_w03_bg_color
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
     id: w03_action
     entity_id: input_text.esp_panel_w03_action
   - platform: homeassistant
@@ -3479,6 +3494,11 @@ text_sensor:
   - platform: homeassistant
     id: w04_icon
     entity_id: input_text.esp_panel_w04_icon
+    on_value:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w04_bg_color
+    entity_id: input_text.esp_panel_w04_bg_color
     on_value:
       - script.execute: render_w04
   - platform: homeassistant
@@ -3545,6 +3565,11 @@ text_sensor:
     on_value:
       - script.execute: render_w05
   - platform: homeassistant
+    id: w05_bg_color
+    entity_id: input_text.esp_panel_w05_bg_color
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
     id: w05_action
     entity_id: input_text.esp_panel_w05_action
   - platform: homeassistant
@@ -3605,6 +3630,11 @@ text_sensor:
   - platform: homeassistant
     id: w06_icon
     entity_id: input_text.esp_panel_w06_icon
+    on_value:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w06_bg_color
+    entity_id: input_text.esp_panel_w06_bg_color
     on_value:
       - script.execute: render_w06
   - platform: homeassistant
@@ -3671,6 +3701,11 @@ text_sensor:
     on_value:
       - script.execute: render_w07
   - platform: homeassistant
+    id: w07_bg_color
+    entity_id: input_text.esp_panel_w07_bg_color
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
     id: w07_action
     entity_id: input_text.esp_panel_w07_action
   - platform: homeassistant
@@ -3731,6 +3766,11 @@ text_sensor:
   - platform: homeassistant
     id: w08_icon
     entity_id: input_text.esp_panel_w08_icon
+    on_value:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w08_bg_color
+    entity_id: input_text.esp_panel_w08_bg_color
     on_value:
       - script.execute: render_w08
   - platform: homeassistant
@@ -3797,6 +3837,11 @@ text_sensor:
     on_value:
       - script.execute: render_w09
   - platform: homeassistant
+    id: w09_bg_color
+    entity_id: input_text.esp_panel_w09_bg_color
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
     id: w09_action
     entity_id: input_text.esp_panel_w09_action
   - platform: homeassistant
@@ -3857,6 +3902,11 @@ text_sensor:
   - platform: homeassistant
     id: w10_icon
     entity_id: input_text.esp_panel_w10_icon
+    on_value:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w10_bg_color
+    entity_id: input_text.esp_panel_w10_bg_color
     on_value:
       - script.execute: render_w10
   - platform: homeassistant
@@ -3923,6 +3973,11 @@ text_sensor:
     on_value:
       - script.execute: render_w11
   - platform: homeassistant
+    id: w11_bg_color
+    entity_id: input_text.esp_panel_w11_bg_color
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
     id: w11_action
     entity_id: input_text.esp_panel_w11_action
   - platform: homeassistant
@@ -3983,6 +4038,11 @@ text_sensor:
   - platform: homeassistant
     id: w12_icon
     entity_id: input_text.esp_panel_w12_icon
+    on_value:
+      - script.execute: render_w12
+  - platform: homeassistant
+    id: w12_bg_color
+    entity_id: input_text.esp_panel_w12_bg_color
     on_value:
       - script.execute: render_w12
   - platform: homeassistant
@@ -4705,6 +4765,7 @@ lvgl:
                         width: 420
                         long_mode: WRAP
                         text_align: CENTER
+
 
 
 

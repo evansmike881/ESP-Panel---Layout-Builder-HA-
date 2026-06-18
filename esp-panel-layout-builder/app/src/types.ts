@@ -44,6 +44,7 @@ export interface WidgetConfig {
   showIcon: boolean;
   showLabel: boolean;
   showValue: boolean;
+  widgetBgColor: string;
   label: string;
   value: string;
   valueSource: string;
@@ -178,6 +179,7 @@ const DEFAULT_STYLE = {
   showIcon: true,
   showLabel: true,
   showValue: true,
+  widgetBgColor: "",
   contentAlign: "start" as const,
   labelTransform: "none" as const,
   labelWeight: "bold" as const,
