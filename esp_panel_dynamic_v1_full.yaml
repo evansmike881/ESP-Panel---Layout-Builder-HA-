@@ -1,0 +1,1883 @@
+﻿# ESP32 Smart Display Panel - Dynamic Dashboard V1 Helpers
+# Save as: /config/packages/esp_panel_dynamic_v1_full.yaml
+# Then make sure packages are enabled in configuration.yaml:
+# homeassistant:
+#   packages: !include_dir_named packages
+
+input_select:
+  esp_panel_theme:
+    name: ESP Panel Theme
+    options:
+      - light
+      - dark
+      - blue
+      - red
+      - green
+    initial: blue
+
+  esp_panel_w01_type:
+    name: ESP Panel W01 Type
+    options:
+      - blank
+      - clock
+      - date
+      - weather
+      - temperature
+      - humidity
+      - button
+      - status
+    initial: clock
+
+  esp_panel_w01_content_align:
+    name: ESP Panel W01 Content Align
+    options:
+      - start
+      - center
+      - end
+    initial: start
+
+  esp_panel_w01_layout_mode:
+    name: ESP Panel W01 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
+  esp_panel_w01_label_transform:
+    name: ESP Panel W01 Label Transform
+    options:
+      - none
+      - uppercase
+    initial: none
+
+  esp_panel_w01_label_weight:
+    name: ESP Panel W01 Label Weight
+    options:
+      - normal
+      - bold
+    initial: bold
+
+  esp_panel_w01_value_weight:
+    name: ESP Panel W01 Value Weight
+    options:
+      - normal
+      - bold
+    initial: normal
+
+  esp_panel_w02_type:
+    name: ESP Panel W02 Type
+    options:
+      - blank
+      - clock
+      - date
+      - weather
+      - temperature
+      - humidity
+      - button
+      - status
+    initial: date
+
+  esp_panel_w02_content_align:
+    name: ESP Panel W02 Content Align
+    options:
+      - start
+      - center
+      - end
+    initial: start
+
+  esp_panel_w02_layout_mode:
+    name: ESP Panel W02 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
+  esp_panel_w02_label_transform:
+    name: ESP Panel W02 Label Transform
+    options:
+      - none
+      - uppercase
+    initial: none
+
+  esp_panel_w02_label_weight:
+    name: ESP Panel W02 Label Weight
+    options:
+      - normal
+      - bold
+    initial: bold
+
+  esp_panel_w02_value_weight:
+    name: ESP Panel W02 Value Weight
+    options:
+      - normal
+      - bold
+    initial: normal
+
+  esp_panel_w03_type:
+    name: ESP Panel W03 Type
+    options:
+      - blank
+      - clock
+      - date
+      - weather
+      - temperature
+      - humidity
+      - button
+      - status
+    initial: weather
+
+  esp_panel_w03_content_align:
+    name: ESP Panel W03 Content Align
+    options:
+      - start
+      - center
+      - end
+    initial: start
+
+  esp_panel_w03_layout_mode:
+    name: ESP Panel W03 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
+  esp_panel_w03_label_transform:
+    name: ESP Panel W03 Label Transform
+    options:
+      - none
+      - uppercase
+    initial: none
+
+  esp_panel_w03_label_weight:
+    name: ESP Panel W03 Label Weight
+    options:
+      - normal
+      - bold
+    initial: bold
+
+  esp_panel_w03_value_weight:
+    name: ESP Panel W03 Value Weight
+    options:
+      - normal
+      - bold
+    initial: normal
+
+  esp_panel_w04_type:
+    name: ESP Panel W04 Type
+    options:
+      - blank
+      - clock
+      - date
+      - weather
+      - temperature
+      - humidity
+      - button
+      - status
+    initial: temperature
+
+  esp_panel_w04_content_align:
+    name: ESP Panel W04 Content Align
+    options:
+      - start
+      - center
+      - end
+    initial: start
+
+  esp_panel_w04_layout_mode:
+    name: ESP Panel W04 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
+  esp_panel_w04_label_transform:
+    name: ESP Panel W04 Label Transform
+    options:
+      - none
+      - uppercase
+    initial: none
+
+  esp_panel_w04_label_weight:
+    name: ESP Panel W04 Label Weight
+    options:
+      - normal
+      - bold
+    initial: bold
+
+  esp_panel_w04_value_weight:
+    name: ESP Panel W04 Value Weight
+    options:
+      - normal
+      - bold
+    initial: normal
+
+  esp_panel_w05_type:
+    name: ESP Panel W05 Type
+    options:
+      - blank
+      - clock
+      - date
+      - weather
+      - temperature
+      - humidity
+      - button
+      - status
+    initial: humidity
+
+  esp_panel_w05_content_align:
+    name: ESP Panel W05 Content Align
+    options:
+      - start
+      - center
+      - end
+    initial: center
+
+  esp_panel_w05_layout_mode:
+    name: ESP Panel W05 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
+  esp_panel_w05_label_transform:
+    name: ESP Panel W05 Label Transform
+    options:
+      - none
+      - uppercase
+    initial: none
+
+  esp_panel_w05_label_weight:
+    name: ESP Panel W05 Label Weight
+    options:
+      - normal
+      - bold
+    initial: bold
+
+  esp_panel_w05_value_weight:
+    name: ESP Panel W05 Value Weight
+    options:
+      - normal
+      - bold
+    initial: normal
+
+  esp_panel_w06_type:
+    name: ESP Panel W06 Type
+    options:
+      - blank
+      - clock
+      - date
+      - weather
+      - temperature
+      - humidity
+      - button
+      - status
+    initial: button
+
+  esp_panel_w06_content_align:
+    name: ESP Panel W06 Content Align
+    options:
+      - start
+      - center
+      - end
+    initial: center
+
+  esp_panel_w06_layout_mode:
+    name: ESP Panel W06 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
+  esp_panel_w06_label_transform:
+    name: ESP Panel W06 Label Transform
+    options:
+      - none
+      - uppercase
+    initial: none
+
+  esp_panel_w06_label_weight:
+    name: ESP Panel W06 Label Weight
+    options:
+      - normal
+      - bold
+    initial: bold
+
+  esp_panel_w06_value_weight:
+    name: ESP Panel W06 Value Weight
+    options:
+      - normal
+      - bold
+    initial: normal
+
+  esp_panel_w07_type:
+    name: ESP Panel W07 Type
+    options:
+      - blank
+      - clock
+      - date
+      - weather
+      - temperature
+      - humidity
+      - button
+      - status
+    initial: status
+
+  esp_panel_w07_content_align:
+    name: ESP Panel W07 Content Align
+    options:
+      - start
+      - center
+      - end
+    initial: start
+
+  esp_panel_w07_layout_mode:
+    name: ESP Panel W07 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
+  esp_panel_w07_label_transform:
+    name: ESP Panel W07 Label Transform
+    options:
+      - none
+      - uppercase
+    initial: none
+
+  esp_panel_w07_label_weight:
+    name: ESP Panel W07 Label Weight
+    options:
+      - normal
+      - bold
+    initial: bold
+
+  esp_panel_w07_value_weight:
+    name: ESP Panel W07 Value Weight
+    options:
+      - normal
+      - bold
+    initial: normal
+
+  esp_panel_w08_type:
+    name: ESP Panel W08 Type
+    options:
+      - blank
+      - clock
+      - date
+      - weather
+      - temperature
+      - humidity
+      - button
+      - status
+    initial: status
+
+  esp_panel_w08_content_align:
+    name: ESP Panel W08 Content Align
+    options:
+      - start
+      - center
+      - end
+    initial: start
+
+  esp_panel_w08_layout_mode:
+    name: ESP Panel W08 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
+  esp_panel_w08_label_transform:
+    name: ESP Panel W08 Label Transform
+    options:
+      - none
+      - uppercase
+    initial: none
+
+  esp_panel_w08_label_weight:
+    name: ESP Panel W08 Label Weight
+    options:
+      - normal
+      - bold
+    initial: bold
+
+  esp_panel_w08_value_weight:
+    name: ESP Panel W08 Value Weight
+    options:
+      - normal
+      - bold
+    initial: normal
+
+  esp_panel_w09_type:
+    name: ESP Panel W09 Type
+    options:
+      - blank
+      - clock
+      - date
+      - weather
+      - temperature
+      - humidity
+      - button
+      - status
+    initial: status
+
+  esp_panel_w09_content_align:
+    name: ESP Panel W09 Content Align
+    options:
+      - start
+      - center
+      - end
+    initial: start
+
+  esp_panel_w09_layout_mode:
+    name: ESP Panel W09 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
+  esp_panel_w09_label_transform:
+    name: ESP Panel W09 Label Transform
+    options:
+      - none
+      - uppercase
+    initial: none
+
+  esp_panel_w09_label_weight:
+    name: ESP Panel W09 Label Weight
+    options:
+      - normal
+      - bold
+    initial: bold
+
+  esp_panel_w09_value_weight:
+    name: ESP Panel W09 Value Weight
+    options:
+      - normal
+      - bold
+    initial: normal
+
+  esp_panel_w10_type:
+    name: ESP Panel W10 Type
+    options:
+      - blank
+      - clock
+      - date
+      - weather
+      - temperature
+      - humidity
+      - button
+      - status
+    initial: status
+
+  esp_panel_w10_content_align:
+    name: ESP Panel W10 Content Align
+    options:
+      - start
+      - center
+      - end
+    initial: start
+
+  esp_panel_w10_layout_mode:
+    name: ESP Panel W10 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
+  esp_panel_w10_label_transform:
+    name: ESP Panel W10 Label Transform
+    options:
+      - none
+      - uppercase
+    initial: none
+
+  esp_panel_w10_label_weight:
+    name: ESP Panel W10 Label Weight
+    options:
+      - normal
+      - bold
+    initial: bold
+
+  esp_panel_w10_value_weight:
+    name: ESP Panel W10 Value Weight
+    options:
+      - normal
+      - bold
+    initial: normal
+
+  esp_panel_w11_type:
+    name: ESP Panel W11 Type
+    options:
+      - blank
+      - clock
+      - date
+      - weather
+      - temperature
+      - humidity
+      - button
+      - status
+    initial: blank
+
+  esp_panel_w11_content_align:
+    name: ESP Panel W11 Content Align
+    options:
+      - start
+      - center
+      - end
+    initial: start
+
+  esp_panel_w11_layout_mode:
+    name: ESP Panel W11 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
+  esp_panel_w11_label_transform:
+    name: ESP Panel W11 Label Transform
+    options:
+      - none
+      - uppercase
+    initial: none
+
+  esp_panel_w11_label_weight:
+    name: ESP Panel W11 Label Weight
+    options:
+      - normal
+      - bold
+    initial: bold
+
+  esp_panel_w11_value_weight:
+    name: ESP Panel W11 Value Weight
+    options:
+      - normal
+      - bold
+    initial: normal
+
+  esp_panel_w12_type:
+    name: ESP Panel W12 Type
+    options:
+      - blank
+      - clock
+      - date
+      - weather
+      - temperature
+      - humidity
+      - button
+      - status
+    initial: blank
+
+  esp_panel_w12_content_align:
+    name: ESP Panel W12 Content Align
+    options:
+      - start
+      - center
+      - end
+    initial: start
+
+  esp_panel_w12_layout_mode:
+    name: ESP Panel W12 Layout Mode
+    options:
+      - auto
+      - stacked
+      - icon_left
+      - icon_right
+    initial: auto
+
+  esp_panel_w12_label_transform:
+    name: ESP Panel W12 Label Transform
+    options:
+      - none
+      - uppercase
+    initial: none
+
+  esp_panel_w12_label_weight:
+    name: ESP Panel W12 Label Weight
+    options:
+      - normal
+      - bold
+    initial: bold
+
+  esp_panel_w12_value_weight:
+    name: ESP Panel W12 Value Weight
+    options:
+      - normal
+      - bold
+    initial: normal
+
+input_boolean:
+  esp_panel_w01_visible:
+    name: ESP Panel W01 Visible
+    initial: true
+
+  esp_panel_w02_visible:
+    name: ESP Panel W02 Visible
+    initial: true
+
+  esp_panel_w03_visible:
+    name: ESP Panel W03 Visible
+    initial: true
+
+  esp_panel_w04_visible:
+    name: ESP Panel W04 Visible
+    initial: true
+
+  esp_panel_w05_visible:
+    name: ESP Panel W05 Visible
+    initial: true
+
+  esp_panel_w06_visible:
+    name: ESP Panel W06 Visible
+    initial: true
+
+  esp_panel_w07_visible:
+    name: ESP Panel W07 Visible
+    initial: false
+
+  esp_panel_w08_visible:
+    name: ESP Panel W08 Visible
+    initial: false
+
+  esp_panel_w09_visible:
+    name: ESP Panel W09 Visible
+    initial: false
+
+  esp_panel_w10_visible:
+    name: ESP Panel W10 Visible
+    initial: false
+
+  esp_panel_w11_visible:
+    name: ESP Panel W11 Visible
+    initial: false
+
+  esp_panel_w12_visible:
+    name: ESP Panel W12 Visible
+    initial: false
+
+input_text:
+  esp_panel_screen_bg_color:
+    name: ESP Panel Screen Background Color
+    initial: "#08142d"
+    max: 7
+
+  esp_panel_widget_bg_color:
+    name: ESP Panel Widget Background Color
+    initial: "#0d1b33"
+    max: 7
+
+  esp_panel_widget_border_color:
+    name: ESP Panel Widget Border Color
+    initial: "#285ea8"
+    max: 7
+
+  esp_panel_overlay_bg_color:
+    name: ESP Panel Overlay Background Color
+    initial: "#06101f"
+    max: 7
+
+  esp_panel_overlay_title_color:
+    name: ESP Panel Overlay Title Color
+    initial: "#ffd166"
+    max: 7
+
+  esp_panel_overlay_text_color:
+    name: ESP Panel Overlay Text Color
+    initial: "#f1f5f9"
+    max: 7
+
+  esp_panel_w01_label:
+    name: ESP Panel W01 Label
+    initial: "Clock"
+    max: 40
+
+  esp_panel_w01_value:
+    name: ESP Panel W01 Value
+    initial: "--:--"
+    max: 40
+
+  esp_panel_w01_value_source:
+    name: ESP Panel W01 Value Source
+    initial: ""
+    max: 120
+
+  esp_panel_w01_icon:
+    name: ESP Panel W01 Icon
+    initial: "clock"
+    max: 80
+
+  esp_panel_w01_action:
+    name: ESP Panel W01 Action
+    initial: "clock"
+    max: 80
+
+  esp_panel_w01_icon_color:
+    name: ESP Panel W01 Icon Color
+    initial: "#f59e0b"
+    max: 7
+
+  esp_panel_w01_label_color:
+    name: ESP Panel W01 Label Color
+    initial: "#8e9fb8"
+    max: 7
+
+  esp_panel_w01_value_color:
+    name: ESP Panel W01 Value Color
+    initial: "#f1f5f9"
+    max: 7
+
+  esp_panel_w02_label:
+    name: ESP Panel W02 Label
+    initial: "Date"
+    max: 40
+
+  esp_panel_w02_value:
+    name: ESP Panel W02 Value
+    initial: "--"
+    max: 40
+
+  esp_panel_w02_value_source:
+    name: ESP Panel W02 Value Source
+    initial: ""
+    max: 120
+
+  esp_panel_w02_icon:
+    name: ESP Panel W02 Icon
+    initial: "calendar"
+    max: 80
+
+  esp_panel_w02_action:
+    name: ESP Panel W02 Action
+    initial: "date"
+    max: 80
+
+  esp_panel_w02_icon_color:
+    name: ESP Panel W02 Icon Color
+    initial: "#f59e0b"
+    max: 7
+
+  esp_panel_w02_label_color:
+    name: ESP Panel W02 Label Color
+    initial: "#8e9fb8"
+    max: 7
+
+  esp_panel_w02_value_color:
+    name: ESP Panel W02 Value Color
+    initial: "#f1f5f9"
+    max: 7
+
+  esp_panel_w03_label:
+    name: ESP Panel W03 Label
+    initial: "Weather"
+    max: 40
+
+  esp_panel_w03_value:
+    name: ESP Panel W03 Value
+    initial: "--"
+    max: 40
+
+  esp_panel_w03_value_source:
+    name: ESP Panel W03 Value Source
+    initial: ""
+    max: 120
+
+  esp_panel_w03_icon:
+    name: ESP Panel W03 Icon
+    initial: "weather-partly-cloudy"
+    max: 80
+
+  esp_panel_w03_action:
+    name: ESP Panel W03 Action
+    initial: "weather"
+    max: 80
+
+  esp_panel_w03_icon_color:
+    name: ESP Panel W03 Icon Color
+    initial: "#f59e0b"
+    max: 7
+
+  esp_panel_w03_label_color:
+    name: ESP Panel W03 Label Color
+    initial: "#8e9fb8"
+    max: 7
+
+  esp_panel_w03_value_color:
+    name: ESP Panel W03 Value Color
+    initial: "#f1f5f9"
+    max: 7
+
+  esp_panel_w04_label:
+    name: ESP Panel W04 Label
+    initial: "Temp"
+    max: 40
+
+  esp_panel_w04_value:
+    name: ESP Panel W04 Value
+    initial: "--"
+    max: 40
+
+  esp_panel_w04_value_source:
+    name: ESP Panel W04 Value Source
+    initial: ""
+    max: 120
+
+  esp_panel_w04_icon:
+    name: ESP Panel W04 Icon
+    initial: "thermometer"
+    max: 80
+
+  esp_panel_w04_action:
+    name: ESP Panel W04 Action
+    initial: "temperature"
+    max: 80
+
+  esp_panel_w04_icon_color:
+    name: ESP Panel W04 Icon Color
+    initial: "#f59e0b"
+    max: 7
+
+  esp_panel_w04_label_color:
+    name: ESP Panel W04 Label Color
+    initial: "#8e9fb8"
+    max: 7
+
+  esp_panel_w04_value_color:
+    name: ESP Panel W04 Value Color
+    initial: "#f1f5f9"
+    max: 7
+
+  esp_panel_w05_label:
+    name: ESP Panel W05 Label
+    initial: "Humidity"
+    max: 40
+
+  esp_panel_w05_value:
+    name: ESP Panel W05 Value
+    initial: "--"
+    max: 40
+
+  esp_panel_w05_value_source:
+    name: ESP Panel W05 Value Source
+    initial: ""
+    max: 120
+
+  esp_panel_w05_icon:
+    name: ESP Panel W05 Icon
+    initial: "water-percent"
+    max: 80
+
+  esp_panel_w05_action:
+    name: ESP Panel W05 Action
+    initial: "humidity"
+    max: 80
+
+  esp_panel_w05_icon_color:
+    name: ESP Panel W05 Icon Color
+    initial: "#f59e0b"
+    max: 7
+
+  esp_panel_w05_label_color:
+    name: ESP Panel W05 Label Color
+    initial: "#8e9fb8"
+    max: 7
+
+  esp_panel_w05_value_color:
+    name: ESP Panel W05 Value Color
+    initial: "#f1f5f9"
+    max: 7
+
+  esp_panel_w06_label:
+    name: ESP Panel W06 Label
+    initial: "Main Light"
+    max: 40
+
+  esp_panel_w06_value:
+    name: ESP Panel W06 Value
+    initial: "--"
+    max: 40
+
+  esp_panel_w06_value_source:
+    name: ESP Panel W06 Value Source
+    initial: "switch.office_main_light"
+    max: 120
+
+  esp_panel_w06_icon:
+    name: ESP Panel W06 Icon
+    initial: "ceiling-light"
+    max: 80
+
+  esp_panel_w06_action:
+    name: ESP Panel W06 Action
+    initial: "office_light"
+    max: 80
+
+  esp_panel_w06_icon_color:
+    name: ESP Panel W06 Icon Color
+    initial: "#f59e0b"
+    max: 7
+
+  esp_panel_w06_label_color:
+    name: ESP Panel W06 Label Color
+    initial: "#8e9fb8"
+    max: 7
+
+  esp_panel_w06_value_color:
+    name: ESP Panel W06 Value Color
+    initial: "#f1f5f9"
+    max: 7
+
+  esp_panel_w07_label:
+    name: ESP Panel W07 Label
+    initial: "WiFi"
+    max: 40
+
+  esp_panel_w07_value:
+    name: ESP Panel W07 Value
+    initial: "Online"
+    max: 40
+
+  esp_panel_w07_value_source:
+    name: ESP Panel W07 Value Source
+    initial: ""
+    max: 120
+
+  esp_panel_w07_icon:
+    name: ESP Panel W07 Icon
+    initial: "wifi"
+    max: 80
+
+  esp_panel_w07_action:
+    name: ESP Panel W07 Action
+    initial: "wifi_status"
+    max: 80
+
+  esp_panel_w07_icon_color:
+    name: ESP Panel W07 Icon Color
+    initial: "#f59e0b"
+    max: 7
+
+  esp_panel_w07_label_color:
+    name: ESP Panel W07 Label Color
+    initial: "#8e9fb8"
+    max: 7
+
+  esp_panel_w07_value_color:
+    name: ESP Panel W07 Value Color
+    initial: "#f1f5f9"
+    max: 7
+
+  esp_panel_w08_label:
+    name: ESP Panel W08 Label
+    initial: "Scene"
+    max: 40
+
+  esp_panel_w08_value:
+    name: ESP Panel W08 Value
+    initial: "Home"
+    max: 40
+
+  esp_panel_w08_value_source:
+    name: ESP Panel W08 Value Source
+    initial: ""
+    max: 120
+
+  esp_panel_w08_icon:
+    name: ESP Panel W08 Icon
+    initial: "home"
+    max: 80
+
+  esp_panel_w08_action:
+    name: ESP Panel W08 Action
+    initial: "home_scene"
+    max: 80
+
+  esp_panel_w08_icon_color:
+    name: ESP Panel W08 Icon Color
+    initial: "#f59e0b"
+    max: 7
+
+  esp_panel_w08_label_color:
+    name: ESP Panel W08 Label Color
+    initial: "#8e9fb8"
+    max: 7
+
+  esp_panel_w08_value_color:
+    name: ESP Panel W08 Value Color
+    initial: "#f1f5f9"
+    max: 7
+
+  esp_panel_w09_label:
+    name: ESP Panel W09 Label
+    initial: "Door"
+    max: 40
+
+  esp_panel_w09_value:
+    name: ESP Panel W09 Value
+    initial: "Closed"
+    max: 40
+
+  esp_panel_w09_value_source:
+    name: ESP Panel W09 Value Source
+    initial: ""
+    max: 120
+
+  esp_panel_w09_icon:
+    name: ESP Panel W09 Icon
+    initial: "door"
+    max: 80
+
+  esp_panel_w09_action:
+    name: ESP Panel W09 Action
+    initial: "front_door"
+    max: 80
+
+  esp_panel_w09_icon_color:
+    name: ESP Panel W09 Icon Color
+    initial: "#f59e0b"
+    max: 7
+
+  esp_panel_w09_label_color:
+    name: ESP Panel W09 Label Color
+    initial: "#8e9fb8"
+    max: 7
+
+  esp_panel_w09_value_color:
+    name: ESP Panel W09 Value Color
+    initial: "#f1f5f9"
+    max: 7
+
+  esp_panel_w10_label:
+    name: ESP Panel W10 Label
+    initial: "Sofa"
+    max: 40
+
+  esp_panel_w10_value:
+    name: ESP Panel W10 Value
+    initial: "Ready"
+    max: 40
+
+  esp_panel_w10_value_source:
+    name: ESP Panel W10 Value Source
+    initial: ""
+    max: 120
+
+  esp_panel_w10_icon:
+    name: ESP Panel W10 Icon
+    initial: "sofa"
+    max: 80
+
+  esp_panel_w10_action:
+    name: ESP Panel W10 Action
+    initial: "sofa_status"
+    max: 80
+
+  esp_panel_w10_icon_color:
+    name: ESP Panel W10 Icon Color
+    initial: "#f59e0b"
+    max: 7
+
+  esp_panel_w10_label_color:
+    name: ESP Panel W10 Label Color
+    initial: "#8e9fb8"
+    max: 7
+
+  esp_panel_w10_value_color:
+    name: ESP Panel W10 Value Color
+    initial: "#f1f5f9"
+    max: 7
+
+  esp_panel_w11_label:
+    name: ESP Panel W11 Label
+    initial: "Blank"
+    max: 40
+
+  esp_panel_w11_value:
+    name: ESP Panel W11 Value
+    initial: ""
+    max: 40
+
+  esp_panel_w11_value_source:
+    name: ESP Panel W11 Value Source
+    initial: ""
+    max: 120
+
+  esp_panel_w11_icon:
+    name: ESP Panel W11 Icon
+    initial: "shape"
+    max: 80
+
+  esp_panel_w11_action:
+    name: ESP Panel W11 Action
+    initial: ""
+    max: 80
+
+  esp_panel_w11_icon_color:
+    name: ESP Panel W11 Icon Color
+    initial: "#f59e0b"
+    max: 7
+
+  esp_panel_w11_label_color:
+    name: ESP Panel W11 Label Color
+    initial: "#8e9fb8"
+    max: 7
+
+  esp_panel_w11_value_color:
+    name: ESP Panel W11 Value Color
+    initial: "#f1f5f9"
+    max: 7
+
+  esp_panel_w12_label:
+    name: ESP Panel W12 Label
+    initial: "Blank"
+    max: 40
+
+  esp_panel_w12_value:
+    name: ESP Panel W12 Value
+    initial: ""
+    max: 40
+
+  esp_panel_w12_value_source:
+    name: ESP Panel W12 Value Source
+    initial: ""
+    max: 120
+
+  esp_panel_w12_icon:
+    name: ESP Panel W12 Icon
+    initial: "shape"
+    max: 80
+
+  esp_panel_w12_action:
+    name: ESP Panel W12 Action
+    initial: ""
+    max: 80
+
+  esp_panel_w12_icon_color:
+    name: ESP Panel W12 Icon Color
+    initial: "#f59e0b"
+    max: 7
+
+  esp_panel_w12_label_color:
+    name: ESP Panel W12 Label Color
+    initial: "#8e9fb8"
+    max: 7
+
+  esp_panel_w12_value_color:
+    name: ESP Panel W12 Value Color
+    initial: "#f1f5f9"
+    max: 7
+
+input_number:
+  esp_panel_w01_x:
+    name: ESP Panel W01 X
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 0
+
+  esp_panel_w01_y:
+    name: ESP Panel W01 Y
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 0
+
+  esp_panel_w01_w:
+    name: ESP Panel W01 Width
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 3
+
+  esp_panel_w01_h:
+    name: ESP Panel W01 Height
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 1
+
+  esp_panel_w01_icon_scale:
+    name: ESP Panel W01 Icon Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w01_label_scale:
+    name: ESP Panel W01 Label Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w01_value_scale:
+    name: ESP Panel W01 Value Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w02_x:
+    name: ESP Panel W02 X
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 3
+
+  esp_panel_w02_y:
+    name: ESP Panel W02 Y
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 0
+
+  esp_panel_w02_w:
+    name: ESP Panel W02 Width
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 3
+
+  esp_panel_w02_h:
+    name: ESP Panel W02 Height
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 1
+
+  esp_panel_w02_icon_scale:
+    name: ESP Panel W02 Icon Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w02_label_scale:
+    name: ESP Panel W02 Label Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w02_value_scale:
+    name: ESP Panel W02 Value Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w03_x:
+    name: ESP Panel W03 X
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 0
+
+  esp_panel_w03_y:
+    name: ESP Panel W03 Y
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 1
+
+  esp_panel_w03_w:
+    name: ESP Panel W03 Width
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 3
+
+  esp_panel_w03_h:
+    name: ESP Panel W03 Height
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 1
+
+  esp_panel_w03_icon_scale:
+    name: ESP Panel W03 Icon Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w03_label_scale:
+    name: ESP Panel W03 Label Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w03_value_scale:
+    name: ESP Panel W03 Value Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w04_x:
+    name: ESP Panel W04 X
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 3
+
+  esp_panel_w04_y:
+    name: ESP Panel W04 Y
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 1
+
+  esp_panel_w04_w:
+    name: ESP Panel W04 Width
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 2
+
+  esp_panel_w04_h:
+    name: ESP Panel W04 Height
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 1
+
+  esp_panel_w04_icon_scale:
+    name: ESP Panel W04 Icon Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w04_label_scale:
+    name: ESP Panel W04 Label Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w04_value_scale:
+    name: ESP Panel W04 Value Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w05_x:
+    name: ESP Panel W05 X
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 5
+
+  esp_panel_w05_y:
+    name: ESP Panel W05 Y
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 1
+
+  esp_panel_w05_w:
+    name: ESP Panel W05 Width
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 1
+
+  esp_panel_w05_h:
+    name: ESP Panel W05 Height
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 1
+
+  esp_panel_w05_icon_scale:
+    name: ESP Panel W05 Icon Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w05_label_scale:
+    name: ESP Panel W05 Label Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w05_value_scale:
+    name: ESP Panel W05 Value Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w06_x:
+    name: ESP Panel W06 X
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 0
+
+  esp_panel_w06_y:
+    name: ESP Panel W06 Y
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 4
+
+  esp_panel_w06_w:
+    name: ESP Panel W06 Width
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 2
+
+  esp_panel_w06_h:
+    name: ESP Panel W06 Height
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 2
+
+  esp_panel_w06_icon_scale:
+    name: ESP Panel W06 Icon Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w06_label_scale:
+    name: ESP Panel W06 Label Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w06_value_scale:
+    name: ESP Panel W06 Value Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w07_x:
+    name: ESP Panel W07 X
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 2
+
+  esp_panel_w07_y:
+    name: ESP Panel W07 Y
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 4
+
+  esp_panel_w07_w:
+    name: ESP Panel W07 Width
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 2
+
+  esp_panel_w07_h:
+    name: ESP Panel W07 Height
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 1
+
+  esp_panel_w07_icon_scale:
+    name: ESP Panel W07 Icon Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w07_label_scale:
+    name: ESP Panel W07 Label Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w07_value_scale:
+    name: ESP Panel W07 Value Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w08_x:
+    name: ESP Panel W08 X
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 2
+
+  esp_panel_w08_y:
+    name: ESP Panel W08 Y
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 5
+
+  esp_panel_w08_w:
+    name: ESP Panel W08 Width
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 2
+
+  esp_panel_w08_h:
+    name: ESP Panel W08 Height
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 1
+
+  esp_panel_w08_icon_scale:
+    name: ESP Panel W08 Icon Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w08_label_scale:
+    name: ESP Panel W08 Label Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w08_value_scale:
+    name: ESP Panel W08 Value Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w09_x:
+    name: ESP Panel W09 X
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 4
+
+  esp_panel_w09_y:
+    name: ESP Panel W09 Y
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 4
+
+  esp_panel_w09_w:
+    name: ESP Panel W09 Width
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 2
+
+  esp_panel_w09_h:
+    name: ESP Panel W09 Height
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 1
+
+  esp_panel_w09_icon_scale:
+    name: ESP Panel W09 Icon Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w09_label_scale:
+    name: ESP Panel W09 Label Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w09_value_scale:
+    name: ESP Panel W09 Value Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w10_x:
+    name: ESP Panel W10 X
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 4
+
+  esp_panel_w10_y:
+    name: ESP Panel W10 Y
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 5
+
+  esp_panel_w10_w:
+    name: ESP Panel W10 Width
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 2
+
+  esp_panel_w10_h:
+    name: ESP Panel W10 Height
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 1
+
+  esp_panel_w10_icon_scale:
+    name: ESP Panel W10 Icon Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w10_label_scale:
+    name: ESP Panel W10 Label Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w10_value_scale:
+    name: ESP Panel W10 Value Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w11_x:
+    name: ESP Panel W11 X
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 0
+
+  esp_panel_w11_y:
+    name: ESP Panel W11 Y
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 2
+
+  esp_panel_w11_w:
+    name: ESP Panel W11 Width
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 2
+
+  esp_panel_w11_h:
+    name: ESP Panel W11 Height
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 1
+
+  esp_panel_w11_icon_scale:
+    name: ESP Panel W11 Icon Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w11_label_scale:
+    name: ESP Panel W11 Label Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w11_value_scale:
+    name: ESP Panel W11 Value Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w12_x:
+    name: ESP Panel W12 X
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 2
+
+  esp_panel_w12_y:
+    name: ESP Panel W12 Y
+    min: 0
+    max: 5
+    step: 1
+    mode: box
+    initial: 2
+
+  esp_panel_w12_w:
+    name: ESP Panel W12 Width
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 2
+
+  esp_panel_w12_h:
+    name: ESP Panel W12 Height
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    initial: 1
+
+  esp_panel_w12_icon_scale:
+    name: ESP Panel W12 Icon Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w12_label_scale:
+    name: ESP Panel W12 Label Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+  esp_panel_w12_value_scale:
+    name: ESP Panel W12 Value Scale
+    min: 60
+    max: 180
+    step: 1
+    mode: box
+    initial: 100
+
+# Example automation
+# Create this in automations.yaml or the UI if you want widget taps to trigger actions.
+automation:
+  - alias: ESP Panel Dynamic V1 - Widget Tap Handler
+    id: esp_panel_dynamic_v1_widget_tap_handler
+    mode: queued
+    triggers:
+      - trigger: event
+        event_type: esphome.esp_panel_widget_tap
+    actions:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.widget == 'w06' }}"
+            sequence:
+              - action: switch.toggle
+                target:
+                  entity_id: switch.office_main_light
+
+
+
