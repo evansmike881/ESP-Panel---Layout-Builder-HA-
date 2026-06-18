@@ -72,11 +72,6 @@ const FONT_WEIGHT_OPTIONS = [
   { value: "normal", label: "Regular" },
   { value: "bold", label: "Bold" }
 ] as const;
-const PREVIEW_SCALE_OPTIONS = [
-  { value: 1, label: "100%" },
-  { value: 0.5, label: "50%" },
-  { value: 0.25, label: "25%" }
-] as const;
 const SCREEN_TABS = [{ id: "screen-1", label: "Screen 1" }] as const;
 const VALUE_PRESETS: Partial<Record<WidgetConfig["type"], string[]>> = {
   weather: ["Sunny", "Cloudy", "Partly Cloudy", "Rain", "Storm"],
@@ -198,10 +193,10 @@ function customThemeFrom(theme: PanelTheme, patch: Partial<PanelTheme> = {}): Pa
 
 function widgetStyle(widget: WidgetConfig, theme: PanelTheme): CSSProperties {
   return {
-    left: `calc(${(widget.x / GRID_SIZE) * 100}% + 1px)`,
-    top: `calc(${(widget.y / GRID_SIZE) * 100}% + 1px)`,
-    width: `calc(${(widget.w / GRID_SIZE) * 100}% - 2px)`,
-    height: `calc(${(widget.h / GRID_SIZE) * 100}% - 2px)`,
+    left: `calc(${(widget.x / GRID_SIZE) * 100}% + 2px)`,
+    top: `calc(${(widget.y / GRID_SIZE) * 100}% + 2px)`,
+    width: `calc(${(widget.w / GRID_SIZE) * 100}% - 4px)`,
+    height: `calc(${(widget.h / GRID_SIZE) * 100}% - 4px)`,
     ["--widget-bg-color" as string]: theme.widgetBg,
     ["--widget-border-color" as string]: theme.widgetBorder,
     ["--widget-selected-color" as string]: theme.accent,
@@ -423,9 +418,9 @@ export default function App() {
   const [valueSourceEntities, setValueSourceEntities] = useState<EntityOption[]>([]);
   const [entityQuery, setEntityQuery] = useState("");
   const [busy, setBusy] = useState(false);
-  const [previewScale, setPreviewScale] = useState<(typeof PREVIEW_SCALE_OPTIONS)[number]["value"]>(1);
+  const [previewScale, setPreviewScale] = useState(100);
   const [theme, setTheme] = useState<PanelTheme>(PANEL_THEMES.blue);
-  const [workspaceTab, setWorkspaceTab] = useState<"layout" | "theme" | "hidden">("layout");
+  const [workspaceTab, setWorkspaceTab] = useState<"workspace" | "theme" | "hidden">("workspace");
   const [menuOpen, setMenuOpen] = useState(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
   const interactionRef = useRef<Interaction | null>(null);
@@ -846,78 +841,45 @@ export default function App() {
         </section>
       )}
 
-      <main className="workspace">
-        <section className="preview-panel">
+      <main className="workspace-shell">
+        <section className="workspace-main">
+          <section className="preview-panel preview-panel-sticky">
           <div className="preview-header">
             <div>
-              <h2>Screen Workspace</h2>
-              <p>Choose one area at a time so the page stays focused and easier to use.</p>
+              <h2>Panel Preview</h2>
+              <p>Live 480x480 view of the selected screen.</p>
             </div>
             <div className="preview-header-tools">
-              <div className="theme-toggle" aria-label="Panel theme">
-                {PANEL_THEME_IDS.map((themeId) => (
-                  <button
-                    key={themeId}
-                    type="button"
-                    className={theme.id === themeId ? "theme-active" : ""}
-                    onClick={() => handleThemeChange(themeId)}
-                  >
-                    {PANEL_THEMES[themeId].name}
-                  </button>
-                ))}
-              </div>
-              <div className="workspace-tabbar" aria-label="Workspace sections">
-                <button
-                  type="button"
-                  className={workspaceTab === "layout" ? "workspace-tab-active" : ""}
-                  onClick={() => setWorkspaceTab("layout")}
-                >
-                  Layout
-                </button>
-                <button
-                  type="button"
-                  className={workspaceTab === "theme" ? "workspace-tab-active" : ""}
-                  onClick={() => setWorkspaceTab("theme")}
-                >
-                  Theme
-                </button>
-                <button
-                  type="button"
-                  className={workspaceTab === "hidden" ? "workspace-tab-active" : ""}
-                  onClick={() => setWorkspaceTab("hidden")}
-                >
-                  Hidden Widgets
-                </button>
-              </div>
-              <div className="scale-toggle" aria-label="Preview scale">
-                {PREVIEW_SCALE_OPTIONS.map((option) => (
-                  <button
-                    key={option.label}
-                    type="button"
-                    className={previewScale === option.value ? "scale-active" : ""}
-                    onClick={() => setPreviewScale(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+              <label className="preview-zoom" aria-label="Preview zoom">
+                <span>Preview size</span>
+                <div className="preview-zoom-row">
+                  <input
+                    type="range"
+                    min={25}
+                    max={100}
+                    step={5}
+                    value={previewScale}
+                    onChange={(event) => setPreviewScale(Number.parseInt(event.target.value, 10))}
+                  />
+                  <strong>{previewScale}%</strong>
+                </div>
+              </label>
               <div className="grid-key">
-                <span>{visibleWidgets.length} visible widgets</span>
-                <span>{hiddenWidgets.length} hidden widgets</span>
+                <span>Drag cards to move</span>
+                <span>Use the corner handle to resize</span>
               </div>
             </div>
           </div>
 
-          {workspaceTab === "layout" && (
             <div className="board-wrap">
               <div
                 className="board-stage"
-                style={{ width: `${480 * previewScale}px`, height: `${480 * previewScale}px`, ...previewThemeStyle(theme) }}
+                style={{ width: `${480 * (previewScale / 100)}px`, height: `${480 * (previewScale / 100)}px`, ...previewThemeStyle(theme) }}
               >
                 <div
                   className="board"
                   ref={boardRef}
-                  style={{ transform: `scale(${previewScale})` }}
+                  style={{ transform: `scale(${previewScale / 100})` }}
                 >
                   <div className="grid-overlay">
                     {GRID_LABELS.map((cell) => (
@@ -1005,74 +967,6 @@ export default function App() {
                 </div>
               </div>
             </div>
-          )}
-
-          {workspaceTab === "theme" && (
-            <EditorGroup title="Theme Colors" subtitle="Screen, card, border, text, and overlay palette" defaultOpen>
-              <ColorField label="Screen background" value={theme.screenBg} onChange={(value) => updateTheme({ screenBg: value })} />
-              <ColorField label="Widget background" value={theme.widgetBg} onChange={(value) => updateTheme({ widgetBg: value })} />
-              <ColorField label="Widget border" value={theme.widgetBorder} onChange={(value) => updateTheme({ widgetBorder: value })} />
-              <ColorField label="Accent" value={theme.accent} onChange={(value) => updateTheme({ accent: value })} />
-              <ColorField label="Icon color" value={theme.iconColor} onChange={(value) => updateTheme({ iconColor: value })} />
-              <ColorField label="Label color" value={theme.labelColor} onChange={(value) => updateTheme({ labelColor: value })} />
-              <ColorField label="Value color" value={theme.valueColor} onChange={(value) => updateTheme({ valueColor: value })} />
-              <ColorField label="Overlay background" value={theme.overlayBg} onChange={(value) => updateTheme({ overlayBg: value })} />
-              <ColorField label="Overlay title" value={theme.overlayTitle} onChange={(value) => updateTheme({ overlayTitle: value })} />
-              <ColorField label="Overlay text" value={theme.overlayText} onChange={(value) => updateTheme({ overlayText: value })} />
-            </EditorGroup>
-          )}
-
-          {workspaceTab === "hidden" && (
-            <div className="holding-area">
-              <div className="holding-header">
-                <div>
-                  <h3>Hidden Widgets</h3>
-                  <p>These stay off the screen preview until you mark them visible.</p>
-                </div>
-                <span>{hiddenWidgets.length} hidden</span>
-              </div>
-              {hiddenWidgets.length > 0 ? (
-                <div className="holding-grid">
-                  {hiddenWidgets.map((widget) => {
-                    const previewLabel = transformLabel(widget.label || "Untitled", widget.labelTransform);
-                    const previewValue =
-                      widget.type === "blank" ? "Blank spacer" : widget.value || (isAutoValueType(widget.type) ? valuePlaceholder(widget.type) : "No value");
-
-                    return (
-                      <button
-                        key={widget.id}
-                        type="button"
-                        className={`holding-card ${selectedId === widget.id ? "selected" : ""}`}
-                        onClick={() => setSelectedId(widget.id)}
-                      >
-                        <div className="holding-card-top">
-                          <span>{widget.id}</span>
-                          <small>{widget.type}</small>
-                        </div>
-                        <div className="holding-card-main">
-                          {widget.type !== "blank" && <MdiIcon icon={widget.icon} className="holding-icon" />}
-                          <div className="holding-text">
-                            <strong>{previewLabel}</strong>
-                            <span>{previewValue}</span>
-                          </div>
-                        </div>
-                        <div className="holding-card-meta">
-                          <span>
-                            {widget.w}x{widget.h}
-                          </span>
-                          <span>
-                            {widget.x},{widget.y}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="holding-empty">All widgets are currently visible on the panel preview.</p>
-              )}
-            </div>
-          )}
         </section>
 
         <aside className="editor-panel">
@@ -1555,6 +1449,144 @@ export default function App() {
             </>
           )}
         </aside>
+        </section>
+
+        <section className="workbench-panel">
+          <div className="workbench-header">
+            <div>
+              <h2>Screen Workspace</h2>
+              <p>Keep the preview in view while you manage themes, hidden widgets, and layout support tools here.</p>
+            </div>
+            <div className="workbench-meta">
+              <span>{visibleWidgets.length} visible widgets</span>
+              <span>{hiddenWidgets.length} hidden widgets</span>
+            </div>
+          </div>
+
+          <div className="workbench-toolbar">
+            <div className="workspace-tabbar" aria-label="Workspace sections">
+              <button
+                type="button"
+                className={workspaceTab === "workspace" ? "workspace-tab-active" : ""}
+                onClick={() => setWorkspaceTab("workspace")}
+              >
+                Workspace
+              </button>
+              <button
+                type="button"
+                className={workspaceTab === "theme" ? "workspace-tab-active" : ""}
+                onClick={() => setWorkspaceTab("theme")}
+              >
+                Theme
+              </button>
+              <button
+                type="button"
+                className={workspaceTab === "hidden" ? "workspace-tab-active" : ""}
+                onClick={() => setWorkspaceTab("hidden")}
+              >
+                Hidden Widgets
+              </button>
+            </div>
+          </div>
+
+          {workspaceTab === "workspace" && (
+            <div className="workspace-overview">
+              <div className="workspace-stat-card">
+                <strong>Live layout editing</strong>
+                <span>Drag any visible widget directly on the preview to move it around the 6x6 grid.</span>
+              </div>
+              <div className="workspace-stat-card">
+                <strong>Quick resizing</strong>
+                <span>Use the lower-right handle on a widget card to resize it while keeping the preview visible.</span>
+              </div>
+              <div className="workspace-stat-card">
+                <strong>Theme-aware panel</strong>
+                <span>Theme changes here affect the preview and can be pushed to the physical screen with apply actions.</span>
+              </div>
+            </div>
+          )}
+
+          {workspaceTab === "theme" && (
+            <div className="workbench-section">
+              <div className="theme-toggle" aria-label="Panel theme">
+                {PANEL_THEME_IDS.map((themeId) => (
+                  <button
+                    key={themeId}
+                    type="button"
+                    className={theme.id === themeId ? "theme-active" : ""}
+                    onClick={() => handleThemeChange(themeId)}
+                  >
+                    {PANEL_THEMES[themeId].name}
+                  </button>
+                ))}
+              </div>
+              <EditorGroup title="Theme Colors" subtitle="Screen, card, border, text, and overlay palette" defaultOpen>
+                <ColorField label="Screen background" value={theme.screenBg} onChange={(value) => updateTheme({ screenBg: value })} />
+                <ColorField label="Widget background" value={theme.widgetBg} onChange={(value) => updateTheme({ widgetBg: value })} />
+                <ColorField label="Widget border" value={theme.widgetBorder} onChange={(value) => updateTheme({ widgetBorder: value })} />
+                <ColorField label="Accent" value={theme.accent} onChange={(value) => updateTheme({ accent: value })} />
+                <ColorField label="Icon color" value={theme.iconColor} onChange={(value) => updateTheme({ iconColor: value })} />
+                <ColorField label="Label color" value={theme.labelColor} onChange={(value) => updateTheme({ labelColor: value })} />
+                <ColorField label="Value color" value={theme.valueColor} onChange={(value) => updateTheme({ valueColor: value })} />
+                <ColorField label="Overlay background" value={theme.overlayBg} onChange={(value) => updateTheme({ overlayBg: value })} />
+                <ColorField label="Overlay title" value={theme.overlayTitle} onChange={(value) => updateTheme({ overlayTitle: value })} />
+                <ColorField label="Overlay text" value={theme.overlayText} onChange={(value) => updateTheme({ overlayText: value })} />
+              </EditorGroup>
+            </div>
+          )}
+
+          {workspaceTab === "hidden" && (
+            <div className="holding-area">
+              <div className="holding-header">
+                <div>
+                  <h3>Hidden Widgets</h3>
+                  <p>These stay off the screen preview until you mark them visible.</p>
+                </div>
+                <span>{hiddenWidgets.length} hidden</span>
+              </div>
+              {hiddenWidgets.length > 0 ? (
+                <div className="holding-grid">
+                  {hiddenWidgets.map((widget) => {
+                    const previewLabel = transformLabel(widget.label || "Untitled", widget.labelTransform);
+                    const previewValue =
+                      widget.type === "blank" ? "Blank spacer" : widget.value || (isAutoValueType(widget.type) ? valuePlaceholder(widget.type) : "No value");
+
+                    return (
+                      <button
+                        key={widget.id}
+                        type="button"
+                        className={`holding-card ${selectedId === widget.id ? "selected" : ""}`}
+                        onClick={() => setSelectedId(widget.id)}
+                      >
+                        <div className="holding-card-top">
+                          <span>{widget.id}</span>
+                          <small>{widget.type}</small>
+                        </div>
+                        <div className="holding-card-main">
+                          {widget.type !== "blank" && <MdiIcon icon={widget.icon} className="holding-icon" />}
+                          <div className="holding-text">
+                            <strong>{previewLabel}</strong>
+                            <span>{previewValue}</span>
+                          </div>
+                        </div>
+                        <div className="holding-card-meta">
+                          <span>
+                            {widget.w}x{widget.h}
+                          </span>
+                          <span>
+                            {widget.x},{widget.y}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="holding-empty">All widgets are currently visible on the panel preview.</p>
+              )}
+            </div>
+          )}
+        </section>
       </main>
 
       {showHelperYaml && (
