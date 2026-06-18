@@ -1,7 +1,17 @@
 import mdiIcons from "@iconify-json/mdi/icons.json";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { applyWidget, applyWidgets, fetchEntities, fetchValueSources, fetchWidgets, reloadWidgets, type EntityOption } from "./api";
-import { DEFAULT_LAYOUT, GRID_SIZE, WIDGET_TYPES, type WidgetConfig, type WidgetResponse } from "./types";
+import {
+  DEFAULT_LAYOUT,
+  GRID_SIZE,
+  PANEL_THEME_IDS,
+  PANEL_THEMES,
+  WIDGET_TYPES,
+  type PanelTheme,
+  type PanelThemeId,
+  type WidgetConfig,
+  type WidgetResponse
+} from "./types";
 
 type Interaction =
   | {
@@ -155,12 +165,36 @@ function widgetScale(widget: WidgetConfig) {
   return clamp(0.86 + Math.sqrt(area) * 0.3 + widthBoost + heightBoost, 0.9, 2.6);
 }
 
-function widgetStyle(widget: WidgetConfig): CSSProperties {
+function applyThemeToWidgets(widgets: WidgetConfig[], theme: PanelTheme) {
+  return widgets.map((widget) => ({
+    ...widget,
+    iconColor: theme.iconColor,
+    labelColor: theme.labelColor,
+    valueColor: theme.valueColor
+  }));
+}
+
+function previewThemeStyle(theme: PanelTheme): CSSProperties {
   return {
-    left: `${(widget.x / GRID_SIZE) * 100}%`,
-    top: `${(widget.y / GRID_SIZE) * 100}%`,
-    width: `${(widget.w / GRID_SIZE) * 100}%`,
-    height: `${(widget.h / GRID_SIZE) * 100}%`,
+    ["--panel-screen-bg" as string]: theme.screenBg,
+    ["--panel-grid-line" as string]: `${theme.widgetBorder}33`,
+    ["--panel-grid-text" as string]: `${theme.labelColor}88`,
+    ["--widget-bg-color" as string]: theme.widgetBg,
+    ["--widget-border-color" as string]: theme.widgetBorder,
+    ["--widget-selected-color" as string]: theme.accent,
+    ["--widget-blank-color" as string]: theme.valueColor
+  };
+}
+
+function widgetStyle(widget: WidgetConfig, theme: PanelTheme): CSSProperties {
+  return {
+    left: `calc(${(widget.x / GRID_SIZE) * 100}% + 1px)`,
+    top: `calc(${(widget.y / GRID_SIZE) * 100}% + 1px)`,
+    width: `calc(${(widget.w / GRID_SIZE) * 100}% - 2px)`,
+    height: `calc(${(widget.h / GRID_SIZE) * 100}% - 2px)`,
+    ["--widget-bg-color" as string]: theme.widgetBg,
+    ["--widget-border-color" as string]: theme.widgetBorder,
+    ["--widget-selected-color" as string]: theme.accent,
     ["--widget-icon-color" as string]: widget.iconColor,
     ["--widget-label-color" as string]: widget.labelColor,
     ["--widget-value-color" as string]: widget.valueColor
@@ -379,6 +413,7 @@ export default function App() {
   const [entityQuery, setEntityQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [previewScale, setPreviewScale] = useState<(typeof PREVIEW_SCALE_OPTIONS)[number]["value"]>(1);
+  const [theme, setTheme] = useState<PanelTheme>(PANEL_THEMES.blue);
   const [menuOpen, setMenuOpen] = useState(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
   const interactionRef = useRef<Interaction | null>(null);
@@ -579,6 +614,7 @@ export default function App() {
   function hydrateResponse(data: WidgetResponse, message: string) {
     setWidgets(data.widgets);
     setDefaults(data.defaults);
+    setTheme(data.theme || PANEL_THEMES.blue);
     setHelperYaml(data.helperYaml);
     setWarnings(data.warnings);
     setMissingHelpers(data.missingHelpers);
@@ -597,7 +633,7 @@ export default function App() {
   async function handleApplyAll() {
     setBusy(true);
     try {
-      const result = await applyWidgets(widgets);
+      const result = await applyWidgets(widgets, theme);
       setWidgets(result.widgets);
       setWarnings(result.warnings);
       setStatus("All widget helpers updated");
@@ -645,9 +681,22 @@ export default function App() {
   }
 
   function handleReset() {
-    setWidgets(defaults);
-    setWarnings(detectWarnings(defaults));
+    const nextDefaults = applyThemeToWidgets(defaults, theme);
+    setWidgets(nextDefaults);
+    setWarnings(detectWarnings(nextDefaults));
     setStatus("Reset to default layout in the editor");
+    setStatusTone("warn");
+  }
+
+  function handleThemeChange(nextThemeId: PanelThemeId) {
+    const nextTheme = PANEL_THEMES[nextThemeId];
+    setTheme(nextTheme);
+    setWidgets((current) => {
+      const next = applyThemeToWidgets(current, nextTheme);
+      setWarnings(detectWarnings(next));
+      return next;
+    });
+    setStatus(`${nextTheme.name} theme ready. Apply all widgets to sync Home Assistant and the panel.`);
     setStatusTone("warn");
   }
 
@@ -754,6 +803,18 @@ export default function App() {
               <p>6 columns x 6 rows, 80px slots</p>
             </div>
             <div className="preview-header-tools">
+              <div className="theme-toggle" aria-label="Panel theme">
+                {PANEL_THEME_IDS.map((themeId) => (
+                  <button
+                    key={themeId}
+                    type="button"
+                    className={theme.id === themeId ? "theme-active" : ""}
+                    onClick={() => handleThemeChange(themeId)}
+                  >
+                    {PANEL_THEMES[themeId].name}
+                  </button>
+                ))}
+              </div>
               <div className="scale-toggle" aria-label="Preview scale">
                 {PREVIEW_SCALE_OPTIONS.map((option) => (
                   <button
@@ -776,7 +837,7 @@ export default function App() {
           <div className="board-wrap">
             <div
               className="board-stage"
-              style={{ width: `${480 * previewScale}px`, height: `${480 * previewScale}px` }}
+              style={{ width: `${480 * previewScale}px`, height: `${480 * previewScale}px`, ...previewThemeStyle(theme) }}
             >
               <div
                 className="board"
@@ -813,7 +874,7 @@ export default function App() {
                       key={widget.id}
                       type="button"
                       className={`widget-card ${selectedId === widget.id ? "selected" : ""} ${widget.type === "blank" ? "blank-widget" : ""}`}
-                      style={widgetStyle(widget)}
+                      style={widgetStyle(widget, theme)}
                       onClick={() => setSelectedId(widget.id)}
                       onPointerDown={(event) => handlePointerStart(event, widget, "drag")}
                     >

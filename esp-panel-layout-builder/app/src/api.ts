@@ -1,4 +1,4 @@
-import type { WidgetConfig, WidgetResponse } from "./types";
+import type { PanelTheme, WidgetConfig, WidgetResponse } from "./types";
 
 export interface EntityOption {
   entity_id: string;
@@ -43,10 +43,10 @@ export function reloadWidgets() {
   });
 }
 
-export function applyWidgets(widgets: WidgetConfig[]) {
+export function applyWidgets(widgets: WidgetConfig[], theme: PanelTheme) {
   return request<{ ok: boolean; widgets: WidgetConfig[]; warnings: string[] }>("api/apply", {
     method: "POST",
-    body: JSON.stringify({ widgets })
+    body: JSON.stringify({ widgets, theme })
   });
 }
 

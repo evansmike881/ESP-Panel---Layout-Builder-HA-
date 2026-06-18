@@ -1,5 +1,6 @@
 export const GRID_SIZE = 6;
 export const WIDGET_IDS = ["w01", "w02", "w03", "w04", "w05", "w06", "w07", "w08", "w09", "w10", "w11", "w12"] as const;
+export const PANEL_THEME_IDS = ["light", "dark", "blue", "red", "green"] as const;
 export const WIDGET_TYPES = [
   "blank",
   "clock",
@@ -12,10 +13,26 @@ export const WIDGET_TYPES = [
 ] as const;
 
 export type WidgetId = (typeof WIDGET_IDS)[number];
+export type PanelThemeId = (typeof PANEL_THEME_IDS)[number];
 export type WidgetType = (typeof WIDGET_TYPES)[number];
 export type WidgetContentAlign = "start" | "center" | "end";
 export type WidgetTextTransform = "none" | "uppercase";
 export type WidgetFontWeight = "normal" | "bold";
+
+export interface PanelTheme {
+  id: PanelThemeId;
+  name: string;
+  screenBg: string;
+  widgetBg: string;
+  widgetBorder: string;
+  iconColor: string;
+  labelColor: string;
+  valueColor: string;
+  overlayBg: string;
+  overlayTitle: string;
+  overlayText: string;
+  accent: string;
+}
 
 export interface WidgetConfig {
   id: WidgetId;
@@ -48,16 +65,90 @@ export interface WidgetResponse {
   missingHelpers: string[];
   helperYaml: string;
   defaults: WidgetConfig[];
+  theme: PanelTheme;
 }
+
+export const PANEL_THEMES: Record<PanelThemeId, PanelTheme> = {
+  light: {
+    id: "light",
+    name: "Light",
+    screenBg: "#f3f6fb",
+    widgetBg: "#ffffff",
+    widgetBorder: "#d4deee",
+    iconColor: "#2563eb",
+    labelColor: "#5b6f8d",
+    valueColor: "#14213d",
+    overlayBg: "#d8e4f4",
+    overlayTitle: "#1d4ed8",
+    overlayText: "#14213d",
+    accent: "#2563eb"
+  },
+  dark: {
+    id: "dark",
+    name: "Dark",
+    screenBg: "#050814",
+    widgetBg: "#101826",
+    widgetBorder: "#283548",
+    iconColor: "#f59e0b",
+    labelColor: "#8ea4c2",
+    valueColor: "#f8fbff",
+    overlayBg: "#000000",
+    overlayTitle: "#f59e0b",
+    overlayText: "#f8fbff",
+    accent: "#f59e0b"
+  },
+  blue: {
+    id: "blue",
+    name: "Blue",
+    screenBg: "#08142d",
+    widgetBg: "#0d1b33",
+    widgetBorder: "#285ea8",
+    iconColor: "#ffd166",
+    labelColor: "#a8c3ea",
+    valueColor: "#f1f5f9",
+    overlayBg: "#06101f",
+    overlayTitle: "#ffd166",
+    overlayText: "#f1f5f9",
+    accent: "#3b82f6"
+  },
+  red: {
+    id: "red",
+    name: "Red",
+    screenBg: "#2a0b12",
+    widgetBg: "#48121d",
+    widgetBorder: "#7f1d1d",
+    iconColor: "#fca5a5",
+    labelColor: "#fecaca",
+    valueColor: "#fff1f2",
+    overlayBg: "#140509",
+    overlayTitle: "#fb7185",
+    overlayText: "#fff1f2",
+    accent: "#ef4444"
+  },
+  green: {
+    id: "green",
+    name: "Green",
+    screenBg: "#071b14",
+    widgetBg: "#0e2a20",
+    widgetBorder: "#1f6f54",
+    iconColor: "#86efac",
+    labelColor: "#b7f7cb",
+    valueColor: "#f0fdf4",
+    overlayBg: "#04110d",
+    overlayTitle: "#4ade80",
+    overlayText: "#f0fdf4",
+    accent: "#22c55e"
+  }
+};
 
 const DEFAULT_STYLE = {
   contentAlign: "start" as const,
   labelTransform: "none" as const,
   labelWeight: "bold" as const,
   valueWeight: "normal" as const,
-  iconColor: "#eff7ff",
-  labelColor: "#ffffff",
-  valueColor: "#dbeafe",
+  iconColor: PANEL_THEMES.blue.iconColor,
+  labelColor: PANEL_THEMES.blue.labelColor,
+  valueColor: PANEL_THEMES.blue.valueColor,
   iconScale: 100,
   labelScale: 100,
   valueScale: 100

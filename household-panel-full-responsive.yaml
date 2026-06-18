@@ -23,6 +23,7 @@ esphome:
       - delay: 2s
       - lvgl.page.show: main_page
       - lvgl.widget.redraw:
+      - script.execute: apply_theme
       - script.execute: layout_all_widgets
       - script.execute: render_all_widgets
 
@@ -350,6 +351,23 @@ script:
       - delay: 12s
       - lvgl.widget.hide: notification_overlay
 
+  - id: apply_theme
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: screen_background
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D));'
+      - lvgl.widget.update:
+          id: notification_overlay
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F));'
+      - lvgl.label.update:
+          id: notification_title_label
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166));'
+      - lvgl.label.update:
+          id: notification_message_label
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_text_color).state, 0xF1F5F9));'
+      - script.execute: render_all_widgets
+
   - id: layout_all_widgets
     mode: restart
     then:
@@ -637,6 +655,9 @@ script:
       - lvgl.widget.update:
           id: w01_card
           hidden: !lambda 'return !id(w01_visible).state || id(w01_type).state == "blank";'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
       - lvgl.widget.update:
           id: w01_icon_label
           x: !lambda 'return esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_layout_mode).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state).icon_x;'
@@ -780,6 +801,9 @@ script:
       - lvgl.widget.update:
           id: w02_card
           hidden: !lambda 'return !id(w02_visible).state || id(w02_type).state == "blank";'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
       - lvgl.widget.update:
           id: w02_icon_label
           x: !lambda 'return esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_layout_mode).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state).icon_x;'
@@ -923,6 +947,9 @@ script:
       - lvgl.widget.update:
           id: w03_card
           hidden: !lambda 'return !id(w03_visible).state || id(w03_type).state == "blank";'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
       - lvgl.widget.update:
           id: w03_icon_label
           x: !lambda 'return esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_layout_mode).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state).icon_x;'
@@ -1066,6 +1093,9 @@ script:
       - lvgl.widget.update:
           id: w04_card
           hidden: !lambda 'return !id(w04_visible).state || id(w04_type).state == "blank";'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
       - lvgl.widget.update:
           id: w04_icon_label
           x: !lambda 'return esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_layout_mode).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state).icon_x;'
@@ -1209,6 +1239,9 @@ script:
       - lvgl.widget.update:
           id: w05_card
           hidden: !lambda 'return !id(w05_visible).state || id(w05_type).state == "blank";'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
       - lvgl.widget.update:
           id: w05_icon_label
           x: !lambda 'return esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_layout_mode).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state).icon_x;'
@@ -1352,6 +1385,9 @@ script:
       - lvgl.widget.update:
           id: w06_card
           hidden: !lambda 'return !id(w06_visible).state || id(w06_type).state == "blank";'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
       - lvgl.widget.update:
           id: w06_icon_label
           x: !lambda 'return esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_layout_mode).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state).icon_x;'
@@ -1495,6 +1531,9 @@ script:
       - lvgl.widget.update:
           id: w07_card
           hidden: !lambda 'return !id(w07_visible).state || id(w07_type).state == "blank";'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
       - lvgl.widget.update:
           id: w07_icon_label
           x: !lambda 'return esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_layout_mode).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state).icon_x;'
@@ -1638,6 +1677,9 @@ script:
       - lvgl.widget.update:
           id: w08_card
           hidden: !lambda 'return !id(w08_visible).state || id(w08_type).state == "blank";'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
       - lvgl.widget.update:
           id: w08_icon_label
           x: !lambda 'return esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_layout_mode).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state).icon_x;'
@@ -1781,6 +1823,9 @@ script:
       - lvgl.widget.update:
           id: w09_card
           hidden: !lambda 'return !id(w09_visible).state || id(w09_type).state == "blank";'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
       - lvgl.widget.update:
           id: w09_icon_label
           x: !lambda 'return esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_layout_mode).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state).icon_x;'
@@ -1924,6 +1969,9 @@ script:
       - lvgl.widget.update:
           id: w10_card
           hidden: !lambda 'return !id(w10_visible).state || id(w10_type).state == "blank";'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
       - lvgl.widget.update:
           id: w10_icon_label
           x: !lambda 'return esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_layout_mode).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state).icon_x;'
@@ -2067,6 +2115,9 @@ script:
       - lvgl.widget.update:
           id: w11_card
           hidden: !lambda 'return !id(w11_visible).state || id(w11_type).state == "blank";'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
       - lvgl.widget.update:
           id: w11_icon_label
           x: !lambda 'return esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_layout_mode).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state).icon_x;'
@@ -2210,6 +2261,9 @@ script:
       - lvgl.widget.update:
           id: w12_card
           hidden: !lambda 'return !id(w12_visible).state || id(w12_type).state == "blank";'
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          border_width: 1
       - lvgl.widget.update:
           id: w12_icon_label
           x: !lambda 'return esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_layout_mode).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state).icon_x;'
@@ -2833,6 +2887,41 @@ sensor:
       - script.execute: render_w12
 
 text_sensor:
+  - platform: homeassistant
+    id: panel_theme
+    entity_id: input_select.esp_panel_theme
+    on_value:
+      - script.execute: apply_theme
+  - platform: homeassistant
+    id: panel_screen_bg_color
+    entity_id: input_text.esp_panel_screen_bg_color
+    on_value:
+      - script.execute: apply_theme
+  - platform: homeassistant
+    id: panel_widget_bg_color
+    entity_id: input_text.esp_panel_widget_bg_color
+    on_value:
+      - script.execute: apply_theme
+  - platform: homeassistant
+    id: panel_widget_border_color
+    entity_id: input_text.esp_panel_widget_border_color
+    on_value:
+      - script.execute: apply_theme
+  - platform: homeassistant
+    id: panel_overlay_bg_color
+    entity_id: input_text.esp_panel_overlay_bg_color
+    on_value:
+      - script.execute: apply_theme
+  - platform: homeassistant
+    id: panel_overlay_title_color
+    entity_id: input_text.esp_panel_overlay_title_color
+    on_value:
+      - script.execute: apply_theme
+  - platform: homeassistant
+    id: panel_overlay_text_color
+    entity_id: input_text.esp_panel_overlay_text_color
+    on_value:
+      - script.execute: apply_theme
   - platform: homeassistant
     id: w01_type
     entity_id: input_select.esp_panel_w01_type
@@ -3607,6 +3696,7 @@ lvgl:
       scrollbar_mode: "OFF"
       widgets:
         - obj:
+            id: screen_background
             x: 0
             y: 0
             width: 480
@@ -4250,6 +4340,7 @@ lvgl:
                   pad_all: 20
                   widgets:
                     - label:
+                        id: notification_title_label
                         text: "Notification"
                         text_font: montserrat_36
                         text_color: 0xF59E0B

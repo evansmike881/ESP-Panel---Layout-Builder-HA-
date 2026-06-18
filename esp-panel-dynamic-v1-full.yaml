@@ -5,6 +5,16 @@
 #   packages: !include_dir_named packages
 
 input_select:
+  esp_panel_theme:
+    name: ESP Panel Theme
+    options:
+      - light
+      - dark
+      - blue
+      - red
+      - green
+    initial: blue
+
   esp_panel_w01_type:
     name: ESP Panel W01 Type
     options:
@@ -667,6 +677,36 @@ input_boolean:
     initial: false
 
 input_text:
+  esp_panel_screen_bg_color:
+    name: ESP Panel Screen Background Color
+    initial: "#08142d"
+    max: 7
+
+  esp_panel_widget_bg_color:
+    name: ESP Panel Widget Background Color
+    initial: "#0d1b33"
+    max: 7
+
+  esp_panel_widget_border_color:
+    name: ESP Panel Widget Border Color
+    initial: "#285ea8"
+    max: 7
+
+  esp_panel_overlay_bg_color:
+    name: ESP Panel Overlay Background Color
+    initial: "#06101f"
+    max: 7
+
+  esp_panel_overlay_title_color:
+    name: ESP Panel Overlay Title Color
+    initial: "#ffd166"
+    max: 7
+
+  esp_panel_overlay_text_color:
+    name: ESP Panel Overlay Text Color
+    initial: "#f1f5f9"
+    max: 7
+
   esp_panel_w01_label:
     name: ESP Panel W01 Label
     initial: "Clock"

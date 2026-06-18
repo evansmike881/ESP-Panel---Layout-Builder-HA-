@@ -10,6 +10,7 @@ const HASS_URL = process.env.HASS_URL || "http://supervisor/core/api";
 const TOKEN = process.env.SUPERVISOR_TOKEN || process.env.HASSIO_TOKEN || "";
 const GRID_SIZE = 6;
 const WIDGET_IDS = ["w01", "w02", "w03", "w04", "w05", "w06", "w07", "w08", "w09", "w10", "w11", "w12"];
+const PANEL_THEME_IDS = ["light", "dark", "blue", "red", "green"];
 const ACTION_ENTITY_DOMAINS = new Set([
   "light",
   "switch",
@@ -48,14 +49,86 @@ const WIDGET_TYPES = [
 const CONTENT_ALIGN_OPTIONS = ["start", "center", "end"];
 const TEXT_TRANSFORM_OPTIONS = ["none", "uppercase"];
 const FONT_WEIGHT_OPTIONS = ["normal", "bold"];
+const PANEL_THEMES = {
+  light: {
+    id: "light",
+    name: "Light",
+    screenBg: "#f3f6fb",
+    widgetBg: "#ffffff",
+    widgetBorder: "#d4deee",
+    iconColor: "#2563eb",
+    labelColor: "#5b6f8d",
+    valueColor: "#14213d",
+    overlayBg: "#d8e4f4",
+    overlayTitle: "#1d4ed8",
+    overlayText: "#14213d",
+    accent: "#2563eb"
+  },
+  dark: {
+    id: "dark",
+    name: "Dark",
+    screenBg: "#050814",
+    widgetBg: "#101826",
+    widgetBorder: "#283548",
+    iconColor: "#f59e0b",
+    labelColor: "#8ea4c2",
+    valueColor: "#f8fbff",
+    overlayBg: "#000000",
+    overlayTitle: "#f59e0b",
+    overlayText: "#f8fbff",
+    accent: "#f59e0b"
+  },
+  blue: {
+    id: "blue",
+    name: "Blue",
+    screenBg: "#08142d",
+    widgetBg: "#0d1b33",
+    widgetBorder: "#285ea8",
+    iconColor: "#ffd166",
+    labelColor: "#a8c3ea",
+    valueColor: "#f1f5f9",
+    overlayBg: "#06101f",
+    overlayTitle: "#ffd166",
+    overlayText: "#f1f5f9",
+    accent: "#3b82f6"
+  },
+  red: {
+    id: "red",
+    name: "Red",
+    screenBg: "#2a0b12",
+    widgetBg: "#48121d",
+    widgetBorder: "#7f1d1d",
+    iconColor: "#fca5a5",
+    labelColor: "#fecaca",
+    valueColor: "#fff1f2",
+    overlayBg: "#140509",
+    overlayTitle: "#fb7185",
+    overlayText: "#fff1f2",
+    accent: "#ef4444"
+  },
+  green: {
+    id: "green",
+    name: "Green",
+    screenBg: "#071b14",
+    widgetBg: "#0e2a20",
+    widgetBorder: "#1f6f54",
+    iconColor: "#86efac",
+    labelColor: "#b7f7cb",
+    valueColor: "#f0fdf4",
+    overlayBg: "#04110d",
+    overlayTitle: "#4ade80",
+    overlayText: "#f0fdf4",
+    accent: "#22c55e"
+  }
+};
 const DEFAULT_STYLE = {
   contentAlign: "start",
   labelTransform: "none",
   labelWeight: "bold",
   valueWeight: "normal",
-  iconColor: "#eff7ff",
-  labelColor: "#ffffff",
-  valueColor: "#dbeafe",
+  iconColor: PANEL_THEMES.blue.iconColor,
+  labelColor: PANEL_THEMES.blue.labelColor,
+  valueColor: PANEL_THEMES.blue.valueColor,
   iconScale: 100,
   labelScale: 100,
   valueScale: 100
@@ -112,12 +185,29 @@ function helperMap(id) {
   };
 }
 
+function themeHelperMap() {
+  return {
+    theme: "input_select.esp_panel_theme",
+    screenBg: "input_text.esp_panel_screen_bg_color",
+    widgetBg: "input_text.esp_panel_widget_bg_color",
+    widgetBorder: "input_text.esp_panel_widget_border_color",
+    overlayBg: "input_text.esp_panel_overlay_bg_color",
+    overlayTitle: "input_text.esp_panel_overlay_title_color",
+    overlayText: "input_text.esp_panel_overlay_text_color"
+  };
+}
+
 function copyDefaultWidget(id) {
   const widget = DEFAULT_LAYOUT.find((item) => item.id === id);
   if (!widget) {
     throw new Error(`Default widget definition missing for ${id}`);
   }
   return { ...widget };
+}
+
+function copyDefaultTheme(id = "blue") {
+  const theme = PANEL_THEMES[id] || PANEL_THEMES.blue;
+  return { ...theme };
 }
 
 function normalizeText(value) {
@@ -136,6 +226,23 @@ function normalizeOption(value, allowed, fallback) {
 function normalizeColor(value, fallback) {
   const normalized = normalizeText(value).trim();
   return /^#[0-9a-fA-F]{6}$/.test(normalized) ? normalized.toLowerCase() : fallback;
+}
+
+function sanitizeTheme(input) {
+  const baseTheme = copyDefaultTheme(input?.id);
+  return {
+    ...baseTheme,
+    screenBg: normalizeColor(input?.screenBg, baseTheme.screenBg),
+    widgetBg: normalizeColor(input?.widgetBg, baseTheme.widgetBg),
+    widgetBorder: normalizeColor(input?.widgetBorder, baseTheme.widgetBorder),
+    iconColor: normalizeColor(input?.iconColor, baseTheme.iconColor),
+    labelColor: normalizeColor(input?.labelColor, baseTheme.labelColor),
+    valueColor: normalizeColor(input?.valueColor, baseTheme.valueColor),
+    overlayBg: normalizeColor(input?.overlayBg, baseTheme.overlayBg),
+    overlayTitle: normalizeColor(input?.overlayTitle, baseTheme.overlayTitle),
+    overlayText: normalizeColor(input?.overlayText, baseTheme.overlayText),
+    accent: normalizeColor(input?.accent, baseTheme.accent)
+  };
 }
 
 function validateWidget(widget) {
@@ -371,7 +478,39 @@ function widgetFromStates(id, statesMap) {
   };
 }
 
+function themeFromStates(statesMap) {
+  const helpers = themeHelperMap();
+  const missing = [];
+  const readState = (entityId) => {
+    const state = statesMap.get(entityId);
+    if (!state) {
+      missing.push(entityId);
+      return undefined;
+    }
+    return state.state;
+  };
+
+  const themeId = readState(helpers.theme);
+  const theme = sanitizeTheme({
+    id: PANEL_THEME_IDS.includes(themeId) ? themeId : "blue",
+    screenBg: readState(helpers.screenBg),
+    widgetBg: readState(helpers.widgetBg),
+    widgetBorder: readState(helpers.widgetBorder),
+    overlayBg: readState(helpers.overlayBg),
+    overlayTitle: readState(helpers.overlayTitle),
+    overlayText: readState(helpers.overlayText)
+  });
+
+  return { theme, missing };
+}
+
 function helperPackageYaml() {
+  const defaultTheme = copyDefaultTheme();
+  const themeSelectLines = `  esp_panel_theme:
+    name: ESP Panel Theme
+    options:
+${PANEL_THEME_IDS.map((id) => `      - ${id}`).join("\n")}
+    initial: ${defaultTheme.id}`;
   const selectLines = WIDGET_IDS.map((id) => {
     const fallback = copyDefaultWidget(id);
     return `  esp_panel_${id}_type:
@@ -408,6 +547,32 @@ ${FONT_WEIGHT_OPTIONS.map((option) => `      - ${option}`).join("\n")}
     initial: ${fallback.visible ? "true" : "false"}`;
   }).join("\n");
 
+  const themeTextLines = [
+    `  esp_panel_screen_bg_color:
+    name: ESP Panel Screen Background Color
+    initial: "${defaultTheme.screenBg}"
+    max: 7`,
+    `  esp_panel_widget_bg_color:
+    name: ESP Panel Widget Background Color
+    initial: "${defaultTheme.widgetBg}"
+    max: 7`,
+    `  esp_panel_widget_border_color:
+    name: ESP Panel Widget Border Color
+    initial: "${defaultTheme.widgetBorder}"
+    max: 7`,
+    `  esp_panel_overlay_bg_color:
+    name: ESP Panel Overlay Background Color
+    initial: "${defaultTheme.overlayBg}"
+    max: 7`,
+    `  esp_panel_overlay_title_color:
+    name: ESP Panel Overlay Title Color
+    initial: "${defaultTheme.overlayTitle}"
+    max: 7`,
+    `  esp_panel_overlay_text_color:
+    name: ESP Panel Overlay Text Color
+    initial: "${defaultTheme.overlayText}"
+    max: 7`
+  ];
   const textLines = WIDGET_IDS.flatMap((id) => {
     const fallback = copyDefaultWidget(id);
     return [
@@ -498,12 +663,14 @@ ${FONT_WEIGHT_OPTIONS.map((option) => `      - ${option}`).join("\n")}
   }).join("\n");
 
   return `input_select:
+${themeSelectLines}
 ${selectLines}
 
 input_boolean:
 ${booleanLines}
 
 input_text:
+${themeTextLines.join("\n")}
 ${textLines}
 
 input_number:
@@ -582,6 +749,35 @@ async function writeWidget(widget) {
   }
 }
 
+async function writeTheme(theme) {
+  const helpers = themeHelperMap();
+
+  await hassFetch("/services/input_select/select_option", {
+    method: "POST",
+    body: JSON.stringify({
+      entity_id: helpers.theme,
+      option: theme.id
+    })
+  });
+
+  for (const [field, entityId] of Object.entries({
+    screenBg: helpers.screenBg,
+    widgetBg: helpers.widgetBg,
+    widgetBorder: helpers.widgetBorder,
+    overlayBg: helpers.overlayBg,
+    overlayTitle: helpers.overlayTitle,
+    overlayText: helpers.overlayText
+  })) {
+    await hassFetch("/services/input_text/set_value", {
+      method: "POST",
+      body: JSON.stringify({
+        entity_id: entityId,
+        value: theme[field]
+      })
+    });
+  }
+}
+
 function formatEntityState(state) {
   const rawState = normalizeText(state?.state);
   const unit = normalizeText(state?.attributes?.unit_of_measurement);
@@ -628,6 +824,8 @@ async function syncValueSources() {
 async function buildWidgetResponse() {
   const statesMap = await getStatesMap();
   const missingHelpers = [];
+  const themeResult = themeFromStates(statesMap);
+  missingHelpers.push(...themeResult.missing);
   const widgets = WIDGET_IDS.map((id) => {
     const result = widgetFromStates(id, statesMap);
     missingHelpers.push(...result.missing);
@@ -644,7 +842,8 @@ async function buildWidgetResponse() {
     ],
     missingHelpers,
     helperYaml: helperPackageYaml(),
-    defaults: DEFAULT_LAYOUT
+    defaults: DEFAULT_LAYOUT,
+    theme: themeResult.theme
   };
 }
 
@@ -675,7 +874,8 @@ app.get("/api/widgets", async (_request, response) => {
       warnings: ["Falling back to the built-in default layout."],
       missingHelpers: [],
       helperYaml: helperPackageYaml(),
-      defaults: DEFAULT_LAYOUT
+      defaults: DEFAULT_LAYOUT,
+      theme: copyDefaultTheme()
     });
   }
 });
@@ -743,6 +943,7 @@ app.post("/api/widgets/:id", async (request, response) => {
 app.post("/api/apply", async (request, response) => {
   try {
     const inputWidgets = Array.isArray(request.body?.widgets) ? request.body.widgets : [];
+    const theme = sanitizeTheme(request.body?.theme);
     if (inputWidgets.length !== WIDGET_IDS.length) {
       response.status(400).json({ error: `Expected ${WIDGET_IDS.length} widgets in request body.` });
       return;
@@ -760,6 +961,7 @@ app.post("/api/apply", async (request, response) => {
       return;
     }
 
+    await writeTheme(theme);
     for (const widget of widgets) {
       await writeWidget(widget);
     }
