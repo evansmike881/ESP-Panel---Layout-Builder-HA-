@@ -136,6 +136,9 @@ const PANEL_THEMES = {
   }
 };
 const DEFAULT_STYLE = {
+  showIcon: true,
+  showLabel: true,
+  showValue: true,
   contentAlign: "start",
   labelTransform: "none",
   labelWeight: "bold",
@@ -177,6 +180,9 @@ function helperMap(id) {
   return {
     type: `input_select.esp_panel_${id}_type`,
     visible: `input_boolean.esp_panel_${id}_visible`,
+    showIcon: `input_boolean.esp_panel_${id}_show_icon`,
+    showLabel: `input_boolean.esp_panel_${id}_show_label`,
+    showValue: `input_boolean.esp_panel_${id}_show_value`,
     label: `input_text.esp_panel_${id}_label`,
     value: `input_text.esp_panel_${id}_value`,
     valueSource: `input_text.esp_panel_${id}_value_source`,
@@ -268,6 +274,11 @@ function validateWidget(widget) {
   if (!WIDGET_TYPES.includes(widget.type)) {
     errors.push(`Invalid widget type for ${widget.id}: ${widget.type}`);
   }
+  ["visible", "showIcon", "showLabel", "showValue"].forEach((field) => {
+    if (typeof widget[field] !== "boolean") {
+      errors.push(`${widget.id} ${field} must be true or false`);
+    }
+  });
   if (!CONTENT_ALIGN_OPTIONS.includes(widget.contentAlign)) {
     errors.push(`${widget.id} contentAlign must be start, center, or end`);
   }
@@ -344,6 +355,9 @@ function sanitizeWidget(input, fallback) {
     id: input?.id || fallback.id,
     type: WIDGET_TYPES.includes(input?.type) ? input.type : fallback.type,
     visible: typeof input?.visible === "boolean" ? input.visible : fallback.visible,
+    showIcon: typeof input?.showIcon === "boolean" ? input.showIcon : fallback.showIcon,
+    showLabel: typeof input?.showLabel === "boolean" ? input.showLabel : fallback.showLabel,
+    showValue: typeof input?.showValue === "boolean" ? input.showValue : fallback.showValue,
     label: normalizeText(input?.label ?? fallback.label),
     value: normalizeText(input?.value ?? fallback.value),
     valueSource: normalizeText(input?.valueSource ?? fallback.valueSource),
@@ -371,7 +385,7 @@ function sanitizeWidget(input, fallback) {
 function compareWidgetValues(expected, actual) {
   const mismatches = [];
 
-  for (const field of ["type", "visible", "label", "value", "valueSource", "icon", "action", "contentAlign", "labelTransform", "labelWeight", "valueWeight", "iconColor", "labelColor", "valueColor", "iconScale", "labelScale", "valueScale", "x", "y", "w", "h"]) {
+  for (const field of ["type", "visible", "showIcon", "showLabel", "showValue", "label", "value", "valueSource", "icon", "action", "contentAlign", "labelTransform", "labelWeight", "valueWeight", "iconColor", "labelColor", "valueColor", "iconScale", "labelScale", "valueScale", "x", "y", "w", "h"]) {
     if (expected[field] !== actual[field]) {
       mismatches.push(
         `${expected.id} ${field} expected "${expected[field]}" but Home Assistant has "${actual[field]}"`
@@ -443,6 +457,9 @@ function widgetFromStates(id, statesMap) {
 
   const type = readState(helpers.type);
   const visible = readState(helpers.visible);
+  const showIcon = readState(helpers.showIcon);
+  const showLabel = readState(helpers.showLabel);
+  const showValue = readState(helpers.showValue);
   const label = readState(helpers.label);
   const value = readState(helpers.value);
   const valueSource = readState(helpers.valueSource);
@@ -468,6 +485,9 @@ function widgetFromStates(id, statesMap) {
       id,
       type: WIDGET_TYPES.includes(type) ? type : fallback.type,
       visible: visible === undefined ? fallback.visible : visible === "on",
+      showIcon: showIcon === undefined ? fallback.showIcon : showIcon === "on",
+      showLabel: showLabel === undefined ? fallback.showLabel : showLabel === "on",
+      showValue: showValue === undefined ? fallback.showValue : showValue === "on",
       label: normalizeText(label ?? fallback.label),
       value: normalizeText(value ?? fallback.value),
       valueSource: normalizeText(valueSource ?? fallback.valueSource),
@@ -558,7 +578,16 @@ ${FONT_WEIGHT_OPTIONS.map((option) => `      - ${option}`).join("\n")}
     const fallback = copyDefaultWidget(id);
     return `  esp_panel_${id}_visible:
     name: ESP Panel ${id.toUpperCase()} Visible
-    initial: ${fallback.visible ? "true" : "false"}`;
+    initial: ${fallback.visible ? "true" : "false"}
+  esp_panel_${id}_show_icon:
+    name: ESP Panel ${id.toUpperCase()} Show Icon
+    initial: ${fallback.showIcon ? "true" : "false"}
+  esp_panel_${id}_show_label:
+    name: ESP Panel ${id.toUpperCase()} Show Label
+    initial: ${fallback.showLabel ? "true" : "false"}
+  esp_panel_${id}_show_value:
+    name: ESP Panel ${id.toUpperCase()} Show Value
+    initial: ${fallback.showValue ? "true" : "false"}`;
   }).join("\n");
 
   const themeTextLines = [
@@ -709,6 +738,19 @@ async function writeWidget(widget) {
       entity_id: helpers.visible
     })
   });
+
+  for (const [field, entityId] of Object.entries({
+    showIcon: helpers.showIcon,
+    showLabel: helpers.showLabel,
+    showValue: helpers.showValue
+  })) {
+    await hassFetch(`/services/input_boolean/${widget[field] ? "turn_on" : "turn_off"}`, {
+      method: "POST",
+      body: JSON.stringify({
+        entity_id: entityId
+      })
+    });
+  }
 
   for (const [field, entityId] of Object.entries({
     label: helpers.label,

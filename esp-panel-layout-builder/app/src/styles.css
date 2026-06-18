@@ -461,6 +461,29 @@ h1 {
   overflow: hidden;
 }
 
+.widget-card[style*="--widget-tone:on"] {
+  background: linear-gradient(145deg, rgba(20, 116, 82, 0.96), rgba(16, 185, 129, 0.9));
+  border-color: rgba(110, 231, 183, 0.85);
+  box-shadow: 0 10px 24px rgba(5, 150, 105, 0.28);
+}
+
+.widget-card[style*="--widget-tone:off"] {
+  background: linear-gradient(145deg, rgba(55, 65, 81, 0.96), rgba(31, 41, 55, 0.92));
+  border-color: rgba(148, 163, 184, 0.32);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.26);
+}
+
+.widget-card[style*="--widget-tone:on"] .widget-preview-icon,
+.widget-card[style*="--widget-tone:on"] .widget-preview-value {
+  filter: saturate(1.08) brightness(1.05);
+}
+
+.widget-card[style*="--widget-tone:off"] .widget-preview-icon,
+.widget-card[style*="--widget-tone:off"] .widget-preview-label,
+.widget-card[style*="--widget-tone:off"] .widget-preview-value {
+  opacity: 0.82;
+}
+
 .widget-card.selected {
   border-color: var(--widget-selected-color, #ffd166);
   box-shadow: 0 0 0 2px var(--widget-selected-color, #ffd166), 0 18px 30px rgba(0, 0, 0, 0.28);

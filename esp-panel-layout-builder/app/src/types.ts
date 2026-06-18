@@ -38,6 +38,9 @@ export interface WidgetConfig {
   id: WidgetId;
   type: WidgetType;
   visible: boolean;
+  showIcon: boolean;
+  showLabel: boolean;
+  showValue: boolean;
   label: string;
   value: string;
   valueSource: string;
@@ -156,6 +159,9 @@ export const PANEL_THEMES: Record<PanelThemeId, PanelTheme> = {
 };
 
 const DEFAULT_STYLE = {
+  showIcon: true,
+  showLabel: true,
+  showValue: true,
   contentAlign: "start" as const,
   labelTransform: "none" as const,
   labelWeight: "bold" as const,

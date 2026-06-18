@@ -96,6 +96,42 @@ static inline std::string esp_panel_preview_value_text(const std::string &type_n
   return value;
 }
 
+static inline std::string esp_panel_trim(std::string value) {
+  value.erase(value.begin(), std::find_if(value.begin(), value.end(), [](unsigned char ch) { return !std::isspace(ch); }));
+  value.erase(std::find_if(value.rbegin(), value.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), value.end());
+  return value;
+}
+
+static inline int esp_panel_state_kind(std::string value) {
+  value = esp_panel_trim(value);
+  std::transform(value.begin(), value.end(), value.begin(), [](unsigned char character) {
+    return static_cast<char>(std::tolower(character));
+  });
+
+  if (value == "on" || value == "open" || value == "opening" || value == "online" || value == "true" || value == "active" || value == "home") {
+    return 1;
+  }
+  if (value == "off" || value == "closed" || value == "closing" || value == "offline" || value == "false" || value == "inactive" || value == "away") {
+    return -1;
+  }
+  return 0;
+}
+
+static inline uint32_t esp_panel_widget_bg_for_state(const std::string &type_name, const std::string &value, uint32_t fallback) {
+  if (type_name != "button") {
+    return fallback;
+  }
+
+  const int kind = esp_panel_state_kind(value);
+  if (kind > 0) {
+    return 0x147452;
+  }
+  if (kind < 0) {
+    return 0x1F2937;
+  }
+  return fallback;
+}
+
 static inline std::string esp_panel_icon_glyph(std::string icon_name, std::string type_name) {
   std::transform(icon_name.begin(), icon_name.end(), icon_name.begin(), [](unsigned char character) {
     return static_cast<char>(std::tolower(character));
@@ -137,7 +173,7 @@ static inline std::string esp_panel_icon_glyph(std::string icon_name, std::strin
 }
 
 static inline EspPanelWidgetGeometry esp_panel_widget_geometry(
-    int grid_w, int grid_h, const std::string &align, const std::string &layout_mode, const std::string &type_name, int icon_scale, int label_scale, int value_scale) {
+    int grid_w, int grid_h, const std::string &align, const std::string &layout_mode, const std::string &type_name, int icon_scale, int label_scale, int value_scale, bool show_icon, bool show_label, bool show_value) {
   const int card_w = std::max(1, grid_w) * 80 - 6;
   const int card_h = std::max(1, grid_h) * 80 - 6;
   const int min_side = std::min(card_w, card_h);
@@ -160,6 +196,44 @@ static inline EspPanelWidgetGeometry esp_panel_widget_geometry(
   geometry.card_w = card_w;
   geometry.card_h = card_h;
 
+  if (!show_icon && !show_label && !show_value) {
+    geometry.text_align_code = center_aligned ? 1 : (end_aligned ? 2 : 0);
+    return geometry;
+  }
+
+  if (show_value && !show_icon && !show_label) {
+    const int value_px = esp_panel_scale_px(card_h / 2, value_scale, 16, 42);
+    geometry.value_px = value_px;
+    geometry.value_x = padding;
+    geometry.value_y = std::max(padding, (card_h - value_px - 8) / 2);
+    geometry.value_w = std::max(8, card_w - padding * 2);
+    geometry.value_h = value_px + 12;
+    geometry.text_align_code = center_aligned ? 1 : (end_aligned ? 2 : 1);
+    return geometry;
+  }
+
+  if (show_label && !show_icon && !show_value) {
+    const int label_px = esp_panel_scale_px(tall ? 18 : 16, label_scale, 12, 30);
+    geometry.label_px = label_px;
+    geometry.label_x = padding;
+    geometry.label_y = std::max(padding, (card_h - label_px - 8) / 2);
+    geometry.label_w = std::max(8, card_w - padding * 2);
+    geometry.label_h = label_px + 12;
+    geometry.text_align_code = center_aligned ? 1 : (end_aligned ? 2 : 1);
+    return geometry;
+  }
+
+  if (show_icon && !show_label && !show_value) {
+    const int icon_px = esp_panel_scale_px(min_side / 2, icon_scale, 24, 72);
+    geometry.icon_px = icon_px;
+    geometry.icon_w = std::min(card_w - padding * 2, icon_px + 16);
+    geometry.icon_h = icon_px + 8;
+    geometry.icon_x = (card_w - geometry.icon_w) / 2;
+    geometry.icon_y = std::max(padding, (card_h - geometry.icon_h) / 2);
+    geometry.text_align_code = 1;
+    return geometry;
+  }
+
   if (stacked) {
     const int icon_px = esp_panel_scale_px(tall ? min_side / 2 : min_side / 3, icon_scale, 18, 64);
     const int label_px = esp_panel_scale_px(tall ? 16 : 12, label_scale, 10, 28);
@@ -169,25 +243,27 @@ static inline EspPanelWidgetGeometry esp_panel_widget_geometry(
     geometry.label_px = label_px;
     geometry.value_px = value_px;
 
-    geometry.icon_w = std::min(card_w - padding * 2, icon_px + 12);
-    geometry.icon_h = icon_px + 8;
-    if (center_aligned) {
-      geometry.icon_x = (card_w - geometry.icon_w) / 2;
-    } else if (end_aligned) {
-      geometry.icon_x = card_w - padding - geometry.icon_w;
-    } else {
-      geometry.icon_x = padding;
+    geometry.icon_w = show_icon ? std::min(card_w - padding * 2, icon_px + 12) : 0;
+    geometry.icon_h = show_icon ? icon_px + 8 : 0;
+    if (show_icon) {
+      if (center_aligned) {
+        geometry.icon_x = (card_w - geometry.icon_w) / 2;
+      } else if (end_aligned) {
+        geometry.icon_x = card_w - padding - geometry.icon_w;
+      } else {
+        geometry.icon_x = padding;
+      }
     }
     geometry.icon_y = padding;
 
     geometry.label_w = std::max(8, card_w - padding * 2);
-    geometry.label_h = label_px + 8;
+    geometry.label_h = show_label ? label_px + 8 : 0;
     geometry.label_x = padding;
-    geometry.label_y = geometry.icon_y + geometry.icon_h + gap;
+    geometry.label_y = geometry.icon_y + (show_icon ? geometry.icon_h + gap : 0);
 
     geometry.value_w = std::max(8, card_w - padding * 2);
     geometry.value_x = padding;
-    geometry.value_y = geometry.label_y + geometry.label_h + gap;
+    geometry.value_y = geometry.label_y + (show_label ? geometry.label_h + gap : 0);
     geometry.value_h = std::max(value_px + 8, card_h - geometry.value_y - padding);
     geometry.text_align_code = center_aligned ? 1 : (end_aligned ? 2 : 0);
     return geometry;
@@ -197,27 +273,32 @@ static inline EspPanelWidgetGeometry esp_panel_widget_geometry(
   const int icon_px = esp_panel_scale_px(base_icon_px, icon_scale, 18, 64);
   const int label_px = esp_panel_scale_px(card_h / 6, label_scale, 10, wide ? 22 : 18);
   const int value_px = esp_panel_scale_px(auto_value ? card_h / 2 : card_h / 3, value_scale, 14, wide ? 40 : 32);
-  const int icon_w = std::min(icon_px + 12, std::max(28, card_w / 3));
+  const int icon_w = show_icon ? std::min(icon_px + 12, std::max(28, card_w / 3)) : 0;
   const int text_gap = gap + 2;
-  const int text_w = std::max(24, card_w - padding * 2 - icon_w - text_gap);
+  const int text_w = std::max(24, card_w - padding * 2 - (show_icon ? icon_w + text_gap : 0));
 
   geometry.icon_px = icon_px;
   geometry.label_px = label_px;
   geometry.value_px = value_px;
   geometry.icon_w = icon_w;
-  geometry.icon_h = icon_px + 8;
-  geometry.icon_y = (card_h - geometry.icon_h) / 2;
-  geometry.icon_x = icon_right ? card_w - padding - icon_w : padding;
-  geometry.label_x = icon_right ? padding : padding + icon_w + text_gap;
+  geometry.icon_h = show_icon ? icon_px + 8 : 0;
+  geometry.icon_y = show_icon ? (card_h - geometry.icon_h) / 2 : 0;
+  geometry.icon_x = show_icon ? (icon_right ? card_w - padding - icon_w : padding) : 0;
+  geometry.label_x = icon_right ? padding : padding + (show_icon ? icon_w + text_gap : 0);
   geometry.label_y = padding + (grid_h > 1 ? 10 : 2);
   geometry.label_w = text_w;
-  geometry.label_h = label_px + 8;
+  geometry.label_h = show_label ? label_px + 8 : 0;
   geometry.value_x = geometry.label_x;
-  geometry.value_y = geometry.label_y + geometry.label_h + gap;
+  geometry.value_y = geometry.label_y + (show_label ? geometry.label_h + gap : 0);
   geometry.value_w = text_w;
   geometry.value_h = std::max(value_px + 8, card_h - geometry.value_y - padding);
   geometry.text_align_code = center_aligned ? 1 : (end_aligned ? 2 : 0);
   return geometry;
+}
+
+static inline EspPanelWidgetGeometry esp_panel_widget_geometry(
+    int grid_w, int grid_h, const std::string &align, const std::string &layout_mode, const std::string &type_name, int icon_scale, int label_scale, int value_scale) {
+  return esp_panel_widget_geometry(grid_w, grid_h, align, layout_mode, type_name, icon_scale, label_scale, value_scale, true, true, true);
 }
 
 static inline EspPanelTextBounds esp_panel_text_bounds(int area_x, int area_w, int align_code, const std::string &text, int font_px) {

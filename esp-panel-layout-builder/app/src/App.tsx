@@ -113,6 +113,20 @@ function widgetCapabilities(type: WidgetConfig["type"]) {
   };
 }
 
+function widgetStateTone(widget: WidgetConfig) {
+  const value = widget.value.trim().toLowerCase();
+  if (widget.type !== "button") {
+    return "neutral";
+  }
+  if (["on", "open", "opening", "playing", "online", "true", "active", "home"].includes(value)) {
+    return "on";
+  }
+  if (["off", "closed", "closing", "paused", "offline", "false", "inactive", "away"].includes(value)) {
+    return "off";
+  }
+  return "neutral";
+}
+
 function detectWarnings(widgets: WidgetConfig[]) {
   const warnings: string[] = [];
   for (let index = 0; index < widgets.length; index += 1) {
@@ -192,6 +206,7 @@ function customThemeFrom(theme: PanelTheme, patch: Partial<PanelTheme> = {}): Pa
 }
 
 function widgetStyle(widget: WidgetConfig, theme: PanelTheme): CSSProperties {
+  const tone = widgetStateTone(widget);
   return {
     left: `calc(${(widget.x / GRID_SIZE) * 100}% + 2px)`,
     top: `calc(${(widget.y / GRID_SIZE) * 100}% + 2px)`,
@@ -200,6 +215,7 @@ function widgetStyle(widget: WidgetConfig, theme: PanelTheme): CSSProperties {
     ["--widget-bg-color" as string]: theme.widgetBg,
     ["--widget-border-color" as string]: theme.widgetBorder,
     ["--widget-selected-color" as string]: theme.accent,
+    ["--widget-tone" as string]: tone,
     ["--widget-icon-color" as string]: widget.iconColor,
     ["--widget-label-color" as string]: widget.labelColor,
     ["--widget-value-color" as string]: widget.valueColor
@@ -214,6 +230,9 @@ type PreviewGeometry = {
 };
 
 function previewGeometry(widget: WidgetConfig): PreviewGeometry {
+  const showIcon = widget.showIcon && widget.type !== "blank";
+  const showLabel = widget.showLabel && widget.type !== "blank";
+  const showValue = widget.showValue && widget.type !== "blank";
   const cardW = Math.max(1, widget.w) * 80 - 6;
   const cardH = Math.max(1, widget.h) * 80 - 6;
   const minSide = Math.min(cardW, cardH);
@@ -229,27 +248,80 @@ function previewGeometry(widget: WidgetConfig): PreviewGeometry {
   const gap = clamp(Math.round(minSide / 18), 4, 12);
   const textAlign: CSSProperties["textAlign"] = centerAligned ? "center" : endAligned ? "right" : "left";
 
+  if (!showIcon && !showLabel && !showValue) {
+    return {
+      icon: { x: 0, y: 0, w: 0, h: 0, font: 0 },
+      label: { x: padding, y: padding, w: Math.max(8, cardW - padding * 2), h: 0, font: 0 },
+      value: { x: padding, y: padding, w: Math.max(8, cardW - padding * 2), h: 0, font: 0 },
+      textAlign
+    };
+  }
+
+  if (showValue && !showIcon && !showLabel) {
+    const valueBase = autoValue ? cardH / 2 : cardH / 2;
+    const valueFont = clamp(Math.round((valueBase * widget.valueScale) / 100), 16, 42);
+    return {
+      icon: { x: 0, y: 0, w: 0, h: 0, font: 0 },
+      label: { x: 0, y: 0, w: 0, h: 0, font: 0 },
+      value: {
+        x: padding,
+        y: Math.max(padding, (cardH - valueFont - 8) / 2),
+        w: Math.max(8, cardW - padding * 2),
+        h: valueFont + 12,
+        font: valueFont
+      },
+      textAlign: centerAligned || !endAligned ? "center" : "right"
+    };
+  }
+
+  if (showLabel && !showIcon && !showValue) {
+    const labelFont = clamp(Math.round(((tall ? 18 : 16) * widget.labelScale) / 100), 12, 30);
+    return {
+      icon: { x: 0, y: 0, w: 0, h: 0, font: 0 },
+      label: {
+        x: padding,
+        y: Math.max(padding, (cardH - labelFont - 8) / 2),
+        w: Math.max(8, cardW - padding * 2),
+        h: labelFont + 12,
+        font: labelFont
+      },
+      value: { x: 0, y: 0, w: 0, h: 0, font: 0 },
+      textAlign: centerAligned || !endAligned ? "center" : "right"
+    };
+  }
+
+  if (showIcon && !showLabel && !showValue) {
+    const iconFont = clamp(Math.round(((minSide / 2) * widget.iconScale) / 100), 24, 72);
+    const iconW = Math.min(cardW - padding * 2, iconFont + 16);
+    return {
+      icon: { x: (cardW - iconW) / 2, y: Math.max(padding, (cardH - iconFont - 8) / 2), w: iconW, h: iconFont + 8, font: iconFont },
+      label: { x: 0, y: 0, w: 0, h: 0, font: 0 },
+      value: { x: 0, y: 0, w: 0, h: 0, font: 0 },
+      textAlign: "center"
+    };
+  }
+
   if (stacked) {
     const iconFont = clamp(Math.round(((tall ? minSide / 2 : minSide / 3) * widget.iconScale) / 100), 18, 64);
     const labelFont = clamp(Math.round(((tall ? 16 : 12) * widget.labelScale) / 100), 10, 28);
     const valueBase = autoValue ? cardH / 4 : cardH / 5;
     const valueFont = clamp(Math.round((valueBase * widget.valueScale) / 100), 14, 40);
-    const iconW = Math.min(cardW - padding * 2, iconFont + 12);
-    const iconH = iconFont + 8;
-    const iconX = centerAligned ? (cardW - iconW) / 2 : endAligned ? cardW - padding - iconW : padding;
-    const labelY = padding + iconH + gap;
-    const labelH = labelFont + 8;
-    const valueY = labelY + labelH + gap;
+    const iconW = showIcon ? Math.min(cardW - padding * 2, iconFont + 12) : 0;
+    const iconH = showIcon ? iconFont + 8 : 0;
+    const iconX = showIcon ? (centerAligned ? (cardW - iconW) / 2 : endAligned ? cardW - padding - iconW : padding) : 0;
+    const labelY = padding + (showIcon ? iconH + gap : 0);
+    const labelH = showLabel ? labelFont + 8 : 0;
+    const valueY = labelY + (showLabel ? labelH + gap : 0);
 
     return {
-      icon: { x: iconX, y: padding, w: iconW, h: iconH, font: iconFont },
-      label: { x: padding, y: labelY, w: Math.max(8, cardW - padding * 2), h: labelH, font: labelFont },
+      icon: { x: iconX, y: padding, w: iconW, h: iconH, font: showIcon ? iconFont : 0 },
+      label: { x: padding, y: labelY, w: Math.max(8, cardW - padding * 2), h: labelH, font: showLabel ? labelFont : 0 },
       value: {
         x: padding,
         y: valueY,
         w: Math.max(8, cardW - padding * 2),
         h: Math.max(valueFont + 8, cardH - valueY - padding),
-        font: valueFont
+        font: showValue ? valueFont : 0
       },
       textAlign
     };
@@ -260,24 +332,24 @@ function previewGeometry(widget: WidgetConfig): PreviewGeometry {
   const labelFont = clamp(Math.round(((cardH / 6) * widget.labelScale) / 100), 10, wide ? 22 : 18);
   const valueBase = autoValue ? cardH / 2 : cardH / 3;
   const valueFont = clamp(Math.round((valueBase * widget.valueScale) / 100), 14, wide ? 40 : 32);
-  const iconW = Math.min(iconFont + 12, Math.max(28, Math.round(cardW / 3)));
-  const iconH = iconFont + 8;
+  const iconW = showIcon ? Math.min(iconFont + 12, Math.max(28, Math.round(cardW / 3))) : 0;
+  const iconH = showIcon ? iconFont + 8 : 0;
   const textGap = gap + 2;
-  const textW = Math.max(24, cardW - padding * 2 - iconW - textGap);
-  const labelX = padding + iconW + textGap;
+  const textW = Math.max(24, cardW - padding * 2 - (showIcon ? iconW + textGap : 0));
+  const labelX = padding + (showIcon ? iconW + textGap : 0);
   const labelY = padding + (widget.h > 1 ? 10 : 2);
-  const labelH = labelFont + 8;
-  const valueY = labelY + labelH + gap;
+  const labelH = showLabel ? labelFont + 8 : 0;
+  const valueY = labelY + (showLabel ? labelH + gap : 0);
 
   return {
-    icon: { x: padding, y: (cardH - iconH) / 2, w: iconW, h: iconH, font: iconFont },
-    label: { x: labelX, y: labelY, w: textW, h: labelH, font: labelFont },
+    icon: { x: padding, y: showIcon ? (cardH - iconH) / 2 : 0, w: iconW, h: iconH, font: showIcon ? iconFont : 0 },
+    label: { x: labelX, y: labelY, w: textW, h: labelH, font: showLabel ? labelFont : 0 },
     value: {
       x: labelX,
       y: valueY,
       w: textW,
       h: Math.max(valueFont + 8, cardH - valueY - padding),
-      font: valueFont
+      font: showValue ? valueFont : 0
     },
     textAlign
   };
@@ -925,45 +997,51 @@ export default function App() {
                           <div className="widget-blank">Blank spacer</div>
                         ) : (
                           <>
-                            <MdiIcon
-                              icon={widget.icon}
-                              className="widget-preview-icon"
-                              style={{
-                                left: `${geometry.icon.x}px`,
-                                top: `${geometry.icon.y}px`,
-                                width: `${geometry.icon.w}px`,
-                                height: `${geometry.icon.h}px`,
-                                fontSize: `${geometry.icon.font}px`
-                              }}
-                            />
-                            <strong
-                              className="widget-preview-label"
-                              style={{
-                                left: `${geometry.label.x}px`,
-                                top: `${geometry.label.y}px`,
-                                width: `${geometry.label.w}px`,
-                                minHeight: `${geometry.label.h}px`,
-                                fontSize: `${geometry.label.font}px`,
-                                textAlign: geometry.textAlign,
-                                fontWeight: widget.labelWeight
-                              }}
-                            >
-                              {previewLabel}
-                            </strong>
-                            <span
-                              className="widget-preview-value"
-                              style={{
-                                left: `${geometry.value.x}px`,
-                                top: `${geometry.value.y}px`,
-                                width: `${geometry.value.w}px`,
-                                minHeight: `${geometry.value.h}px`,
-                                fontSize: `${geometry.value.font}px`,
-                                textAlign: geometry.textAlign,
-                                fontWeight: widget.valueWeight
-                              }}
-                            >
-                              {previewValue}
-                            </span>
+                            {widget.showIcon && (
+                              <MdiIcon
+                                icon={widget.icon}
+                                className="widget-preview-icon"
+                                style={{
+                                  left: `${geometry.icon.x}px`,
+                                  top: `${geometry.icon.y}px`,
+                                  width: `${geometry.icon.w}px`,
+                                  height: `${geometry.icon.h}px`,
+                                  fontSize: `${geometry.icon.font}px`
+                                }}
+                              />
+                            )}
+                            {widget.showLabel && (
+                              <strong
+                                className="widget-preview-label"
+                                style={{
+                                  left: `${geometry.label.x}px`,
+                                  top: `${geometry.label.y}px`,
+                                  width: `${geometry.label.w}px`,
+                                  minHeight: `${geometry.label.h}px`,
+                                  fontSize: `${geometry.label.font}px`,
+                                  textAlign: geometry.textAlign,
+                                  fontWeight: widget.labelWeight
+                                }}
+                              >
+                                {previewLabel}
+                              </strong>
+                            )}
+                            {widget.showValue && (
+                              <span
+                                className="widget-preview-value"
+                                style={{
+                                  left: `${geometry.value.x}px`,
+                                  top: `${geometry.value.y}px`,
+                                  width: `${geometry.value.w}px`,
+                                  minHeight: `${geometry.value.h}px`,
+                                  fontSize: `${geometry.value.font}px`,
+                                  textAlign: geometry.textAlign,
+                                  fontWeight: widget.valueWeight
+                                }}
+                              >
+                                {previewValue}
+                              </span>
+                            )}
                           </>
                         )}
                         <span className="resize-handle" onPointerDown={(event) => handlePointerStart(event, widget, "resize")} />
@@ -1085,6 +1163,33 @@ export default function App() {
                       ))}
                     </select>
                   </label>
+
+                  <div className="field-grid">
+                    <label className="field checkbox-field">
+                      <span>Show icon</span>
+                      <input
+                        type="checkbox"
+                        checked={selectedWidget.showIcon}
+                        onChange={(event) => updateWidget(selectedWidget.id, { showIcon: event.target.checked })}
+                      />
+                    </label>
+                    <label className="field checkbox-field">
+                      <span>Show label</span>
+                      <input
+                        type="checkbox"
+                        checked={selectedWidget.showLabel}
+                        onChange={(event) => updateWidget(selectedWidget.id, { showLabel: event.target.checked })}
+                      />
+                    </label>
+                    <label className="field checkbox-field">
+                      <span>Show value</span>
+                      <input
+                        type="checkbox"
+                        checked={selectedWidget.showValue}
+                        onChange={(event) => updateWidget(selectedWidget.id, { showValue: event.target.checked })}
+                      />
+                    </label>
+                  </div>
 
                   {capabilities.showLabel && (
                     <>
