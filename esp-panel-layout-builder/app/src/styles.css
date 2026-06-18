@@ -1,8 +1,42 @@
 :root {
   color-scheme: light;
   font-family: "Segoe UI", "Trebuchet MS", sans-serif;
-  color: #1f2a3c;
-  background: #f5f7fb;
+  --app-bg: #f5f7fb;
+  --app-text: #1f2a3c;
+  --app-muted: #66758c;
+  --app-muted-strong: #52637c;
+  --surface: #ffffff;
+  --surface-soft: #f3f6fb;
+  --surface-soft-2: #f8fafd;
+  --border: #dbe2ee;
+  --border-strong: #d7deea;
+  --shadow: 0 8px 24px rgba(31, 42, 60, 0.06);
+  --hover-shadow: 0 6px 18px rgba(31, 42, 60, 0.08);
+  --primary: #0f6fff;
+  --primary-soft: #eaf2ff;
+  --warning: #8a5b00;
+  --notice-bg: #fffaf0;
+  color: var(--app-text);
+  background: var(--app-bg);
+}
+
+.app-theme-dark {
+  color-scheme: dark;
+  --app-bg: #0f141c;
+  --app-text: #edf2fa;
+  --app-muted: #9ba9bc;
+  --app-muted-strong: #bdc8d8;
+  --surface: #171d27;
+  --surface-soft: #202836;
+  --surface-soft-2: #1b2230;
+  --border: #2a3445;
+  --border-strong: #334157;
+  --shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  --hover-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+  --primary: #4f9bff;
+  --primary-soft: #1d3356;
+  --warning: #f4c46a;
+  --notice-bg: #2a2212;
 }
 
 * {
@@ -12,7 +46,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: #f5f7fb;
+  background: var(--app-bg);
 }
 
 button,
@@ -64,7 +98,7 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.78rem;
-  color: #6b7c93;
+  color: var(--app-muted);
 }
 
 h1,
@@ -80,19 +114,41 @@ h1 {
 .topbar-subtitle {
   margin-top: 8px;
   max-width: 620px;
-  color: #66758c;
+  color: var(--app-muted);
 }
 
+.app-theme-toggle,
 .menu-trigger,
 .menu-dropdown button,
 .primary,
 .modal-actions button {
-  border: 1px solid #d7deea;
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
-  background: #ffffff;
-  color: #1f2a3c;
+  background: var(--surface);
+  color: var(--app-text);
   padding: 12px 16px;
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.app-theme-toggle {
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+}
+
+.app-theme-toggle button {
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--app-muted-strong);
+  padding: 8px 12px;
+}
+
+.app-theme-toggle .app-theme-active {
+  background: var(--primary);
+  color: #ffffff;
 }
 
 .menu-trigger:hover,
@@ -100,12 +156,12 @@ h1 {
 .primary:hover,
 .modal-actions button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(31, 42, 60, 0.08);
+  box-shadow: var(--hover-shadow);
 }
 
 .primary {
-  border-color: #0f6fff;
-  background: #0f6fff;
+  border-color: var(--primary);
+  background: var(--primary);
   color: #ffffff;
 }
 
@@ -124,10 +180,10 @@ h1 {
 .editor-panel,
 .docs-panel,
 .modal {
-  border: 1px solid #dbe2ee;
+  border: 1px solid var(--border);
   border-radius: 20px;
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(31, 42, 60, 0.06);
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .status-pill {
@@ -145,17 +201,17 @@ h1 {
 }
 
 .screen-tab {
-  border: 1px solid #d7deea;
+  border: 1px solid var(--border-strong);
   border-radius: 999px;
-  background: #f5f8fd;
-  color: #41526b;
+  background: var(--surface-soft);
+  color: var(--app-muted-strong);
   padding: 10px 14px;
 }
 
 .screen-tab-active {
-  border-color: #0f6fff;
-  background: #eaf2ff;
-  color: #0f4eb8;
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
 .status-dot {
@@ -180,7 +236,8 @@ h1 {
 .notice-panel {
   padding: 16px 18px;
   margin-bottom: 20px;
-  color: #8a5b00;
+  color: var(--warning);
+  background: var(--notice-bg);
 }
 
 .workspace {
@@ -196,6 +253,9 @@ h1 {
 
 .preview-panel {
   flex: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .editor-panel {
@@ -209,7 +269,7 @@ h1 {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  color: #6b7c93;
+  color: var(--app-muted);
   font-size: 0.92rem;
 }
 
@@ -217,7 +277,7 @@ h1 {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 10px;
+  gap: 12px;
 }
 
 .workspace-tabbar,
@@ -228,8 +288,8 @@ h1 {
   gap: 8px;
   padding: 6px;
   border-radius: 999px;
-  background: #f3f6fb;
-  border: 1px solid #dbe2ee;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
 }
 
 .workspace-tabbar button,
@@ -239,22 +299,36 @@ h1 {
   border-radius: 999px;
   padding: 8px 12px;
   background: transparent;
-  color: #52637c;
+  color: var(--app-muted-strong);
 }
 
 .workspace-tabbar .workspace-tab-active,
 .theme-toggle .theme-active,
 .scale-toggle .scale-active {
-  background: #0f6fff;
+  background: var(--primary);
   color: #ffffff;
 }
 
 .board-wrap {
-  margin-top: 18px;
-  padding: 16px;
-  border-radius: 24px;
-  background: #f3f6fb;
-  border: 1px solid #dbe2ee;
+  padding: 18px;
+  border-radius: 28px;
+  background:
+    linear-gradient(145deg, #f6f7f9 0%, #cfd4db 38%, #fbfdff 52%, #b9c0c8 100%);
+  border: 1px solid #b3bac3;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -2px 8px rgba(101, 110, 123, 0.18),
+    0 12px 32px rgba(31, 42, 60, 0.12);
+}
+
+.app-theme-dark .board-wrap {
+  background:
+    linear-gradient(145deg, #8c939d 0%, #5b6471 35%, #cfd6de 52%, #4f5660 100%);
+  border-color: #6e7683;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -2px 10px rgba(0, 0, 0, 0.24),
+    0 14px 34px rgba(0, 0, 0, 0.28);
 }
 
 .board-stage {
@@ -414,11 +488,10 @@ h1 {
 }
 
 .holding-area {
-  margin-top: 18px;
   padding: 16px;
-  border: 1px dashed #cfd8e6;
+  border: 1px dashed var(--border-strong);
   border-radius: 20px;
-  background: #f8fafd;
+  background: var(--surface-soft-2);
 }
 
 .holding-header,
@@ -834,10 +907,10 @@ h1 {
   flex-direction: column;
   min-width: 240px;
   padding: 10px;
-  border: 1px solid rgba(20, 33, 61, 0.08);
+  border: 1px solid var(--border);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.97);
-  box-shadow: 0 18px 44px rgba(20, 33, 61, 0.12);
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .menu-dropdown button {
@@ -872,7 +945,7 @@ h1 {
 
 .modal-copy {
   margin-bottom: 12px;
-  color: #4f678e;
+  color: var(--app-muted);
 }
 
 .modal textarea {

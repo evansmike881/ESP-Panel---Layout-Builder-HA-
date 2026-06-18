@@ -50,10 +50,10 @@ export function applyWidgets(widgets: WidgetConfig[], theme: PanelTheme) {
   });
 }
 
-export function applyWidget(widget: WidgetConfig) {
+export function applyWidget(widget: WidgetConfig, theme?: PanelTheme) {
   return request<{ ok: boolean; widget: WidgetConfig; warnings: string[] }>(`api/widgets/${widget.id}`, {
     method: "POST",
-    body: JSON.stringify(widget)
+    body: JSON.stringify({ ...widget, theme })
   });
 }
 

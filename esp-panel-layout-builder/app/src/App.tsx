@@ -410,6 +410,7 @@ export default function App() {
   const [widgets, setWidgets] = useState<WidgetConfig[]>(DEFAULT_LAYOUT);
   const [defaults, setDefaults] = useState<WidgetConfig[]>(DEFAULT_LAYOUT);
   const [selectedId, setSelectedId] = useState<string>("w01");
+  const [appTheme, setAppTheme] = useState<"light" | "dark">("light");
   const [status, setStatus] = useState("Loading from Home Assistant...");
   const [statusTone, setStatusTone] = useState<"ok" | "warn" | "error">("warn");
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -664,7 +665,7 @@ export default function App() {
 
     setBusy(true);
     try {
-      const result = await applyWidget(selectedWidget);
+      const result = await applyWidget(selectedWidget, theme);
       updateWidget(result.widget.id, result.widget);
       setWarnings(result.warnings);
       setStatus(`Applied ${result.widget.id}`);
@@ -749,7 +750,7 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell app-theme-${appTheme}`}>
       <header className="topbar">
         <div>
           <p className="eyebrow">Home Assistant Add-on</p>
@@ -757,6 +758,22 @@ export default function App() {
           <p className="topbar-subtitle">Cleaner panel editing with live preview, theme control, and room for multiple screens.</p>
         </div>
         <div className="topbar-actions">
+          <div className="app-theme-toggle" aria-label="Builder theme">
+            <button
+              type="button"
+              className={appTheme === "light" ? "app-theme-active" : ""}
+              onClick={() => setAppTheme("light")}
+            >
+              Light
+            </button>
+            <button
+              type="button"
+              className={appTheme === "dark" ? "app-theme-active" : ""}
+              onClick={() => setAppTheme("dark")}
+            >
+              Dark
+            </button>
+          </div>
           <div className={`status-pill status-${statusTone}`}>
             <span className="status-dot" />
             <span>{status}</span>

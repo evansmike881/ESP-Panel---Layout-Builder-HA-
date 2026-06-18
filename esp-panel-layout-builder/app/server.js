@@ -934,6 +934,7 @@ app.post("/api/widgets/:id", async (request, response) => {
 
     const fallback = copyDefaultWidget(id);
     const widget = sanitizeWidget({ ...request.body, id }, fallback);
+    const theme = sanitizeTheme(request.body?.theme);
     const errors = validateWidget(widget);
 
     if (errors.length > 0) {
@@ -941,6 +942,7 @@ app.post("/api/widgets/:id", async (request, response) => {
       return;
     }
 
+    await writeTheme(theme);
     await writeWidget(widget);
     const { current, mismatches } = await verifyWrittenWidgets([widget]);
     const storedWidget = current.widgets.find((item) => item.id === widget.id) || widget;
