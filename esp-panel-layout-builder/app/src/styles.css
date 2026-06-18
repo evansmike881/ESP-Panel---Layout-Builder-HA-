@@ -223,16 +223,19 @@ h1 {
 
 .board-stage {
   width: 480px;
+  height: 480px;
   max-width: 100%;
   margin: 0 auto;
+  position: relative;
 }
 
 .board {
   position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1;
+  width: 480px;
+  height: 480px;
   border-radius: 22px;
   overflow: hidden;
+  transform-origin: top left;
   background:
     radial-gradient(circle at top, rgba(46, 204, 113, 0.12), transparent 44%),
     linear-gradient(180deg, #101b33 0%, #0c1324 100%);

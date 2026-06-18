@@ -774,8 +774,15 @@ export default function App() {
           </div>
 
           <div className="board-wrap">
-            <div className="board-stage" style={{ width: `${480 * previewScale}px` }}>
-              <div className="board" ref={boardRef}>
+            <div
+              className="board-stage"
+              style={{ width: `${480 * previewScale}px`, height: `${480 * previewScale}px` }}
+            >
+              <div
+                className="board"
+                ref={boardRef}
+                style={{ transform: `scale(${previewScale})` }}
+              >
                 <div className="grid-overlay">
                   {GRID_LABELS.map((cell) => (
                     <div
