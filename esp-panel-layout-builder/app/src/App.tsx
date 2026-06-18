@@ -321,16 +321,38 @@ function previewGeometry(widget: WidgetConfig): PreviewGeometry {
   }
 
   if (stacked) {
-    const iconFont = clamp(Math.round(((tall ? minSide / 2 : minSide / 3) * widget.iconScale) / 100), 18, 64);
-    const labelFont = clamp(Math.round(((tall ? 16 : 12) * widget.labelScale) / 100), 10, 28);
-    const valueBase = autoValue ? cardH / 4 : cardH / 5;
-    const valueFont = clamp(Math.round((valueBase * widget.valueScale) / 100), 14, 40);
+    let iconFont = clamp(
+      Math.round((((showIcon && showLabel && showValue ? minSide / 3 : tall ? minSide / 2 : minSide / 3) * widget.iconScale) / 100)),
+      16,
+      56
+    );
+    let labelFont = clamp(Math.round(((tall ? 14 : 12) * widget.labelScale) / 100), 9, 24);
+    let valueFont = clamp(Math.round((((autoValue ? cardH / 4 : showIcon && showLabel ? cardH / 6 : cardH / 5) * widget.valueScale) / 100)), 12, 34);
+    let stackGap = gap;
+
+    let iconH = showIcon ? iconFont + 6 : 0;
+    let labelH = showLabel ? labelFont + 6 : 0;
+    let valueH = showValue ? valueFont + 6 : 0;
+    let neededH = iconH + labelH + valueH;
+    if (showIcon && (showLabel || showValue)) neededH += stackGap;
+    if (showLabel && showValue) neededH += stackGap;
+    const availableH = Math.max(24, cardH - padding * 2);
+
+    if (neededH > availableH) {
+      const fit = availableH / neededH;
+      iconFont = showIcon ? clamp(Math.floor(iconFont * fit), 14, iconFont) : 0;
+      labelFont = showLabel ? clamp(Math.floor(labelFont * fit), 9, labelFont) : 0;
+      valueFont = showValue ? clamp(Math.floor(valueFont * fit), 11, valueFont) : 0;
+      stackGap = Math.max(3, Math.floor(stackGap * fit));
+      iconH = showIcon ? iconFont + 6 : 0;
+      labelH = showLabel ? labelFont + 6 : 0;
+      valueH = showValue ? valueFont + 6 : 0;
+    }
+
     const iconW = showIcon ? Math.min(cardW - padding * 2, iconFont + 12) : 0;
-    const iconH = showIcon ? iconFont + 8 : 0;
     const iconX = showIcon ? (centerAligned ? (cardW - iconW) / 2 : endAligned ? cardW - padding - iconW : padding) : 0;
-    const labelY = padding + (showIcon ? iconH + gap : 0);
-    const labelH = showLabel ? labelFont + 8 : 0;
-    const valueY = labelY + (showLabel ? labelH + gap : 0);
+    const labelY = padding + (showIcon ? iconH + stackGap : 0);
+    const valueY = labelY + (showLabel ? labelH + stackGap : 0);
 
     return {
       icon: { x: iconX, y: padding, w: iconW, h: iconH, font: showIcon ? iconFont : 0 },
@@ -339,7 +361,7 @@ function previewGeometry(widget: WidgetConfig): PreviewGeometry {
         x: padding,
         y: valueY,
         w: Math.max(8, cardW - padding * 2),
-        h: Math.max(valueFont + 8, cardH - valueY - padding),
+        h: Math.max(showValue ? valueFont + 6 : 0, cardH - valueY - padding),
         font: showValue ? valueFont : 0
       },
       textAlign

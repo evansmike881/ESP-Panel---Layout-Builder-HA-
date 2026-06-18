@@ -449,7 +449,8 @@ h1 {
 
 .widget-card {
   position: absolute;
-  padding: 12px;
+  box-sizing: border-box;
+  padding: 0;
   border: var(--widget-border-width, 2px) solid var(--widget-border-color, rgba(255, 255, 255, 0.08));
   border-radius: 18px;
   text-align: left;
