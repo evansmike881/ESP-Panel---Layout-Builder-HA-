@@ -6,6 +6,7 @@ export const WIDGET_TYPES = [
   "clock",
   "date",
   "button",
+  "media",
   "status"
 ] as const;
 

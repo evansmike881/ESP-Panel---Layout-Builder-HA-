@@ -219,6 +219,40 @@ static inline bool esp_panel_string_starts_with(const std::string &value, const 
   return value.size() >= prefix_len && value.compare(0, prefix_len, prefix) == 0;
 }
 
+static inline bool esp_panel_is_media_action(const std::string &value) {
+  return esp_panel_string_starts_with(value, "media|");
+}
+
+static inline std::string esp_panel_media_target(const std::string &value) {
+  if (!esp_panel_is_media_action(value)) {
+    return "";
+  }
+  const size_t first = value.find('|');
+  if (first == std::string::npos) {
+    return "";
+  }
+  const size_t second = value.find('|', first + 1);
+  if (second == std::string::npos) {
+    return "";
+  }
+  return value.substr(first + 1, second - first - 1);
+}
+
+static inline std::string esp_panel_media_url(const std::string &value) {
+  if (!esp_panel_is_media_action(value)) {
+    return "";
+  }
+  const size_t first = value.find('|');
+  if (first == std::string::npos) {
+    return "";
+  }
+  const size_t second = value.find('|', first + 1);
+  if (second == std::string::npos || second + 1 >= value.size()) {
+    return "";
+  }
+  return value.substr(second + 1);
+}
+
 static inline EspPanelRuntimeThemeConfig esp_panel_parse_theme_runtime(const std::string &encoded) {
   EspPanelRuntimeThemeConfig config;
   const std::vector<std::string> parts = esp_panel_split(encoded);
@@ -318,7 +352,9 @@ static inline uint32_t esp_panel_widget_bg_for_state(
     uint32_t button_on,
     uint32_t button_off) {
   if (type_name != "button") {
-    return fallback;
+    if (type_name != "media") {
+      return fallback;
+    }
   }
 
   const int kind = esp_panel_state_kind(value);
@@ -382,6 +418,7 @@ static inline std::string esp_panel_icon_glyph(std::string icon_name, std::strin
   if (icon_name.find("thermometer") != std::string::npos || icon_name.find("temperature") != std::string::npos || type_name == "temperature") return std::string("\U000F050F");
   if (icon_name.find("water-percent") != std::string::npos || icon_name == "humidity" || icon_name.find("humidity") != std::string::npos || icon_name == "water" || type_name == "humidity") return std::string("\U000F058E");
   if (icon_name.find("ceiling-light") != std::string::npos || icon_name.find("lightbulb") != std::string::npos || icon_name.find("lamp") != std::string::npos || icon_name == "light" || type_name == "button") return std::string("\U000F0769");
+  if (icon_name.find("speaker") != std::string::npos || icon_name.find("music") != std::string::npos || icon_name.find("radio") != std::string::npos || icon_name.find("audio") != std::string::npos || type_name == "media") return std::string("\U000F05A9");
   if (icon_name.find("clock") != std::string::npos || type_name == "clock") return std::string("\U000F0150");
   if (icon_name.find("calendar") != std::string::npos || type_name == "date") return std::string("\U000F00ED");
   if (icon_name.find("wifi") != std::string::npos) return std::string("\U000F05A9");

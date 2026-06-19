@@ -48,6 +48,7 @@ const WIDGET_TYPES = [
   "clock",
   "date",
   "button",
+  "media",
   "status"
 ];
 const LEGACY_WIDGET_TYPE_MAP = {
@@ -273,6 +274,13 @@ function runtimeActionValue(widget) {
   if (looksLikeEntityId(widget.action)) {
     return widget.action;
   }
+  if (widget.type === "media") {
+    const target = looksLikeEntityId(widget.valueSource) ? widget.valueSource.trim() : "";
+    const streamUrl = normalizeText(widget.action).trim();
+    if (target && streamUrl) {
+      return `media|${target}|${streamUrl}`;
+    }
+  }
   if (widget.type === "button" && looksLikeEntityId(widget.valueSource)) {
     return widget.valueSource;
   }
@@ -304,8 +312,7 @@ function runtimeWidgetConfigValue(widget) {
     String(widget.x),
     String(widget.y),
     String(widget.w),
-    String(widget.h),
-    runtimeActionValue(widget)
+    String(widget.h)
   ].map(encodeRuntimeText).join("|");
 }
 
@@ -326,7 +333,8 @@ function runtimeThemeConfigValue(theme) {
 function runtimeHelperMap(id) {
   return {
     config: `input_text.esp_panel_runtime_${id}_config`,
-    value: `input_text.esp_panel_runtime_${id}_value`
+    value: `input_text.esp_panel_runtime_${id}_value`,
+    action: `input_text.esp_panel_runtime_${id}_action`
   };
 }
 
@@ -708,7 +716,11 @@ function helperPackageYaml() {
     max: 255`,
       `  esp_panel_runtime_${id}_value:
     name: ESP Panel Runtime ${id.toUpperCase()} Value
-    initial: "${fallback.value}"`
+    initial: "${fallback.value}"`,
+      `  esp_panel_runtime_${id}_action:
+    name: ESP Panel Runtime ${id.toUpperCase()} Action
+    initial: "${runtimeActionValue(fallback)}"
+    max: 255`
     ];
   }).join("\n");
   return `input_text:
@@ -793,6 +805,7 @@ async function syncRuntimeWidget(widget) {
   const helpers = runtimeHelperMap(widget.id);
   await writeRuntimeText(helpers.config, runtimeWidgetConfigValue(widget), warnings, `${widget.id} config helper`);
   await writeRuntimeText(helpers.value, widget.value, warnings, `${widget.id} value helper`);
+  await writeRuntimeText(helpers.action, runtimeActionValue(widget), warnings, `${widget.id} action helper`);
   return warnings;
 }
 
@@ -811,7 +824,7 @@ async function findMissingRuntimeHelpers() {
       runtimeThemeHelper(),
       ...WIDGET_IDS.flatMap((id) => {
         const helpers = runtimeHelperMap(id);
-        return [helpers.config, helpers.value];
+        return [helpers.config, helpers.value, helpers.action];
       })
     ];
     return required.filter((entityId) => !statesMap.has(entityId));

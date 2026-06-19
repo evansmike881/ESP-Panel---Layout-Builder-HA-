@@ -52,6 +52,7 @@ const PANEL_SUPPORTED_ICONS = [
   "clock",
   "calendar",
   "shape",
+  "speaker",
   "wifi",
   "sofa",
   "door",
@@ -77,17 +78,20 @@ const WIDGET_TYPE_LABELS: Record<WidgetConfig["type"], string> = {
   clock: "Clock",
   date: "Date",
   button: "Button",
+  media: "Media button",
   status: "Sensor / status"
 };
 const SCREEN_TABS = [{ id: "screen-1", label: "Screen 1" }] as const;
 const VALUE_PRESETS: Partial<Record<WidgetConfig["type"], string[]>> = {
   button: ["ON", "OFF", "Tap"],
+  media: ["idle", "playing", "paused", "stopped"],
   status: ["Online", "Offline", "Ready", "Open", "Closed", "Sunny", "Partly Cloudy", "21.5", "55%"]
 };
 const ACTION_PRESETS: Partial<Record<WidgetConfig["type"], string[]>> = {
   clock: ["clock"],
   date: ["date"],
   button: ["office_light", "main_light", "front_door", "toggle_light"],
+  media: ["https://example.com/stream.mp3", "https://example.com/live.aac"],
   status: ["weather", "temperature", "humidity", "wifi_status", "home_scene", "sofa_status", "system_status"]
 };
 
@@ -102,7 +106,7 @@ function isAutoValueType(type: WidgetConfig["type"]) {
 function widgetCapabilities(type: WidgetConfig["type"]) {
   const blank = type === "blank";
   const autoValue = isAutoValueType(type);
-  const action = type === "button" || type === "status";
+  const action = type === "button" || type === "status" || type === "media";
   return {
     showLabel: !blank,
     showValueInput: !blank && !autoValue,
@@ -119,7 +123,7 @@ function widgetStateTone(widget: WidgetConfig) {
     return "neutral";
   }
   const value = widget.value.trim().toLowerCase();
-  if (widget.type !== "button") {
+  if (widget.type !== "button" && widget.type !== "media") {
     return "neutral";
   }
   if (["on", "open", "opening", "playing", "online", "true", "active", "home"].includes(value)) {
@@ -439,6 +443,8 @@ function valuePlaceholder(type: WidgetConfig["type"]) {
       return "Auto-generated from Home Assistant date";
     case "button":
       return "Example: ON or OFF";
+    case "media":
+      return "Example: playing or stopped";
     case "status":
       return "Example: Online, 21.5, or Partly Cloudy";
     default:
@@ -450,6 +456,8 @@ function actionPlaceholder(type: WidgetConfig["type"]) {
   switch (type) {
     case "button":
       return "Example: switch.office_main_light";
+    case "media":
+      return "Example: https://example.com/stream.mp3";
     case "status":
       return "Example: binary_sensor.front_door";
     default:
@@ -463,6 +471,8 @@ function valueSourcePlaceholder(type: WidgetConfig["type"]) {
       return "Example: sensor.outdoor_temperature, sensor.office_humidity, or binary_sensor.front_door";
     case "button":
       return "Optional: show the state of a related entity";
+    case "media":
+      return "Target media_player entity, for example media_player.household_panel_speaker";
     default:
       return "Optional Home Assistant entity to mirror into this widget value";
   }
@@ -577,7 +587,10 @@ export default function App() {
   }, [capabilities.showValueInput, selectedWidget]);
   const entitySuggestions = useMemo(() => {
     const query = entityQuery.trim().toLowerCase();
-    const actionQuery = selectedWidget?.action.trim().toLowerCase() || "";
+    const actionQuery =
+      selectedWidget?.type === "media"
+        ? selectedWidget?.valueSource.trim().toLowerCase() || ""
+        : selectedWidget?.action.trim().toLowerCase() || "";
     const effectiveQuery = query || actionQuery;
 
     if (!effectiveQuery) {
@@ -599,7 +612,7 @@ export default function App() {
       .slice(0, 30);
   }, [valueSourceEntities, selectedWidget]);
   const selectedActionEntity = useMemo(
-    () => entities.find((entity) => entity.entity_id === selectedWidget?.action),
+    () => entities.find((entity) => entity.entity_id === (selectedWidget?.type === "media" ? selectedWidget?.valueSource : selectedWidget?.action)),
     [entities, selectedWidget]
   );
   const selectedValueEntity = useMemo(
@@ -621,8 +634,8 @@ export default function App() {
 
   useEffect(() => {
     setIconQuery(selectedWidget?.icon || "");
-    setEntityQuery(selectedWidget?.action || "");
-  }, [selectedWidget?.id, selectedWidget?.icon, selectedWidget?.action]);
+    setEntityQuery(selectedWidget?.type === "media" ? selectedWidget?.valueSource || "" : selectedWidget?.action || "");
+  }, [selectedWidget?.id, selectedWidget?.icon, selectedWidget?.action, selectedWidget?.valueSource, selectedWidget?.type]);
 
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
@@ -1446,7 +1459,7 @@ export default function App() {
                   {capabilities.showValueSource && (
                     <>
                       <label className="field">
-                        <span>Value Source</span>
+                        <span>{selectedWidget.type === "media" ? "Target Player" : "Value Source"}</span>
                         <input
                           type="text"
                           list="value-entity-options"
@@ -1464,7 +1477,7 @@ export default function App() {
                       </datalist>
                       <div className="suggestion-block">
                         <div className="suggestion-header">
-                          <span>Entity state for widget content</span>
+                          <span>{selectedWidget.type === "media" ? "Media player targets" : "Entity state for widget content"}</span>
                           <span>{valueSourceSuggestions.length} shown</span>
                         </div>
                         <div className="entity-results">
@@ -1485,9 +1498,13 @@ export default function App() {
                         </div>
                       </div>
                       <p className="field-hint">
-                        {selectedValueEntity
-                          ? `The add-on will copy ${selectedValueEntity.name} into this widget every 15 seconds.`
-                          : "Pick an entity here if you want the widget content to follow a sensor, switch, binary sensor, or similar entity."}
+                        {selectedWidget.type === "media"
+                          ? selectedValueEntity
+                            ? `Tap will control ${selectedValueEntity.name} and use the stream URL below.`
+                            : "Pick the Home Assistant media_player entity this button should control on the physical panel."
+                          : selectedValueEntity
+                            ? `The add-on will copy ${selectedValueEntity.name} into this widget every 15 seconds.`
+                            : "Pick an entity here if you want the widget content to follow a sensor, switch, binary sensor, or similar entity."}
                       </p>
                     </>
                   )}
@@ -1495,7 +1512,7 @@ export default function App() {
                   {capabilities.showAction && (
                     <>
                       <label className="field">
-                        <span>Action Key</span>
+                        <span>{selectedWidget.type === "media" ? "Stream URL" : "Action Key"}</span>
                         <input
                           type="text"
                           list="action-keys"
@@ -1510,7 +1527,7 @@ export default function App() {
                         ))}
                       </datalist>
                       <label className="field">
-                        <span>Target Entity</span>
+                        <span>{selectedWidget.type === "media" ? "Browse Player Entity" : "Target Entity"}</span>
                         <input
                           type="text"
                           list="entity-options"
@@ -1536,10 +1553,10 @@ export default function App() {
                             <button
                               key={entity.entity_id}
                               type="button"
-                              className={`entity-option ${selectedWidget.action === entity.entity_id ? "active" : ""}`}
+                              className={`entity-option ${(selectedWidget.type === "media" ? selectedWidget.valueSource : selectedWidget.action) === entity.entity_id ? "active" : ""}`}
                               onClick={() => {
                                 setEntityQuery(entity.entity_id);
-                                updateWidget(selectedWidget.id, { action: entity.entity_id });
+                                updateWidget(selectedWidget.id, selectedWidget.type === "media" ? { valueSource: entity.entity_id } : { action: entity.entity_id });
                               }}
                             >
                               <strong>{entity.name}</strong>
@@ -1552,8 +1569,9 @@ export default function App() {
                         </div>
                       </div>
                       <p className="field-hint">
-                        Store a Home Assistant entity ID here to make tap automations much easier to wire up.
-                        {selectedActionEntity ? ` Selected: ${selectedActionEntity.name}` : ""}
+                        {selectedWidget.type === "media"
+                          ? "For media widgets, use the player picker above and put the stream URL in the Stream URL field."
+                          : `Store a Home Assistant entity ID here to make tap automations much easier to wire up.${selectedActionEntity ? ` Selected: ${selectedActionEntity.name}` : ""}`}
                       </p>
                       {actionSuggestions.length > 0 && (
                         <div className="suggestion-block">
