@@ -276,6 +276,7 @@ function runtimeWidgetConfigValue(widget) {
     widget.label,
     widget.icon,
     widget.contentAlign,
+    "auto",
     widget.labelTransform,
     widget.labelWeight,
     widget.valueWeight,
@@ -288,7 +289,8 @@ function runtimeWidgetConfigValue(widget) {
     String(widget.x),
     String(widget.y),
     String(widget.w),
-    String(widget.h)
+    String(widget.h),
+    widget.action
   ].map(encodeRuntimeText).join("|");
 }
 

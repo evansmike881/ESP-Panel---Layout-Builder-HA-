@@ -11,21 +11,11 @@ esphome:
   on_boot:
     priority: -200
     then:
-      - delay: 5s
-      - light.turn_off: display_backlight
-      - delay: 500ms
-      - lvgl.page.show: main_page
-      - lvgl.widget.redraw:
-      - delay: 500ms
+      - delay: 2s
       - light.turn_on:
           id: display_backlight
           brightness: 85%
-      - delay: 2s
-      - lvgl.page.show: main_page
-      - lvgl.widget.redraw:
-      - script.execute: apply_theme
-      - script.execute: layout_all_widgets
-      - script.execute: render_all_widgets
+      - script.execute: refresh_panel
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -55,6 +45,10 @@ api:
         - script.execute:
             id: show_notification
             message: !lambda "return message;"
+  on_client_connected:
+    then:
+      - delay: 1s
+      - script.execute: refresh_panel
 
 ota:
   - platform: esphome
@@ -62,10 +56,18 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  on_connect:
+    then:
+      - delay: 1s
+      - script.execute: refresh_panel
 
 time:
   - platform: homeassistant
     id: ha_time
+    on_time_sync:
+      then:
+        - script.execute: update_clock_widgets
+        - script.execute: update_date_widgets
 
 output:
   - platform: ledc
@@ -106,7 +108,6 @@ display:
     id: my_display
     model: GUITION-4848S040
     auto_clear_enabled: false
-    update_interval: never
     dimensions:
       width: 480
       height: 480
@@ -350,6 +351,79 @@ script:
       - lvgl.widget.show: notification_overlay
       - delay: 12s
       - lvgl.widget.hide: notification_overlay
+
+  - id: refresh_panel
+    mode: restart
+    then:
+      - lvgl.page.show: main_page
+      - script.execute: apply_theme
+      - script.execute: layout_all_widgets
+      - script.execute: render_all_widgets
+      - script.execute: update_clock_widgets
+      - script.execute: update_date_widgets
+      - lvgl.widget.redraw:
+
+  - id: dispatch_entity_action
+    mode: queued
+    parameters:
+      entity: string
+    then:
+      - if:
+          condition:
+            lambda: 'return esp_panel_string_starts_with(entity, "light.");'
+          then:
+            - homeassistant.service:
+                service: light.toggle
+                data:
+                  entity_id: !lambda "return entity;"
+      - if:
+          condition:
+            lambda: 'return esp_panel_string_starts_with(entity, "switch.");'
+          then:
+            - homeassistant.service:
+                service: switch.toggle
+                data:
+                  entity_id: !lambda "return entity;"
+      - if:
+          condition:
+            lambda: 'return esp_panel_string_starts_with(entity, "input_boolean.");'
+          then:
+            - homeassistant.service:
+                service: input_boolean.toggle
+                data:
+                  entity_id: !lambda "return entity;"
+      - if:
+          condition:
+            lambda: 'return esp_panel_string_starts_with(entity, "fan.");'
+          then:
+            - homeassistant.service:
+                service: fan.toggle
+                data:
+                  entity_id: !lambda "return entity;"
+      - if:
+          condition:
+            lambda: 'return esp_panel_string_starts_with(entity, "scene.");'
+          then:
+            - homeassistant.service:
+                service: scene.turn_on
+                data:
+                  entity_id: !lambda "return entity;"
+      - if:
+          condition:
+            lambda: 'return esp_panel_string_starts_with(entity, "script.");'
+          then:
+            - homeassistant.service:
+                service: script.turn_on
+                data:
+                  entity_id: !lambda "return entity;"
+      - if:
+          condition:
+            lambda: 'return esp_panel_string_starts_with(entity, "button.");'
+          then:
+            - homeassistant.service:
+                service: button.press
+                data:
+                  entity_id: !lambda "return entity;"
 
   - id: apply_theme
     mode: restart
@@ -2507,1551 +2581,1290 @@ binary_sensor:
     id: w01_visible
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_show_border
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_show_icon
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_show_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_show_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_visible
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_show_border
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_show_icon
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_show_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_show_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_visible
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_show_border
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_show_icon
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_show_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_show_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_visible
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_show_border
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_show_icon
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_show_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_show_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_visible
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_show_border
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_show_icon
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_show_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_show_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_visible
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_show_border
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_show_icon
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_show_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_show_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_visible
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_show_border
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_show_icon
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_show_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_show_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_visible
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_show_border
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_show_icon
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_show_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_show_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_visible
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_show_border
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_show_icon
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_show_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_show_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_visible
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_show_border
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_show_icon
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_show_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_show_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_visible
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_show_border
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_show_icon
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_show_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_show_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_visible
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_show_border
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_show_icon
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_show_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_show_value
     lambda: |-
       return {};
-    update_interval: never
 
 sensor:
   - platform: template
     id: w01_x
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w01_y
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w01_w
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w01_h
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w01_icon_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w01_label_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w01_value_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w02_x
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w02_y
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w02_w
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w02_h
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w02_icon_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w02_label_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w02_value_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w03_x
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w03_y
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w03_w
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w03_h
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w03_icon_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w03_label_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w03_value_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w04_x
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w04_y
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w04_w
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w04_h
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w04_icon_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w04_label_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w04_value_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w05_x
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w05_y
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w05_w
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w05_h
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w05_icon_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w05_label_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w05_value_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w06_x
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w06_y
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w06_w
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w06_h
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w06_icon_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w06_label_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w06_value_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w07_x
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w07_y
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w07_w
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w07_h
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w07_icon_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w07_label_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w07_value_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w08_x
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w08_y
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w08_w
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w08_h
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w08_icon_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w08_label_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w08_value_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w09_x
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w09_y
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w09_w
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w09_h
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w09_icon_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w09_label_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w09_value_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w10_x
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w10_y
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w10_w
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w10_h
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w10_icon_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w10_label_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w10_value_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w11_x
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w11_y
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w11_w
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w11_h
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w11_icon_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w11_label_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w11_value_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w12_x
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w12_y
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w12_w
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w12_h
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w12_icon_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w12_label_scale
     lambda: |-
       return NAN;
-    update_interval: never
   - platform: template
     id: w12_value_scale
     lambda: |-
       return NAN;
-    update_interval: never
 
 text_sensor:
   - platform: template
     id: panel_theme
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: panel_screen_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: panel_widget_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: panel_widget_border_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: panel_button_on_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: panel_button_off_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: panel_overlay_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: panel_overlay_title_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: panel_overlay_text_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_type
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_icon
     lambda: |-
       return {};
-    update_interval: never
+  - platform: template
+    id: w01_action
+    lambda: |-
+      return {};
   - platform: template
     id: w01_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_content_align
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_layout_mode
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_label_transform
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_label_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_value_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_icon_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_label_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w01_value_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_type
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_icon
     lambda: |-
       return {};
-    update_interval: never
+  - platform: template
+    id: w02_action
+    lambda: |-
+      return {};
   - platform: template
     id: w02_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_content_align
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_layout_mode
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_label_transform
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_label_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_value_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_icon_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_label_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w02_value_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_type
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_icon
     lambda: |-
       return {};
-    update_interval: never
+  - platform: template
+    id: w03_action
+    lambda: |-
+      return {};
   - platform: template
     id: w03_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_content_align
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_layout_mode
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_label_transform
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_label_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_value_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_icon_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_label_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w03_value_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_type
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_icon
     lambda: |-
       return {};
-    update_interval: never
+  - platform: template
+    id: w04_action
+    lambda: |-
+      return {};
   - platform: template
     id: w04_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_content_align
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_layout_mode
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_label_transform
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_label_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_value_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_icon_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_label_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w04_value_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_type
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_icon
     lambda: |-
       return {};
-    update_interval: never
+  - platform: template
+    id: w05_action
+    lambda: |-
+      return {};
   - platform: template
     id: w05_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_content_align
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_layout_mode
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_label_transform
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_label_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_value_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_icon_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_label_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w05_value_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_type
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_icon
     lambda: |-
       return {};
-    update_interval: never
+  - platform: template
+    id: w06_action
+    lambda: |-
+      return {};
   - platform: template
     id: w06_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_content_align
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_layout_mode
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_label_transform
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_label_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_value_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_icon_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_label_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w06_value_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_type
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_icon
     lambda: |-
       return {};
-    update_interval: never
+  - platform: template
+    id: w07_action
+    lambda: |-
+      return {};
   - platform: template
     id: w07_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_content_align
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_layout_mode
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_label_transform
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_label_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_value_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_icon_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_label_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w07_value_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_type
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_icon
     lambda: |-
       return {};
-    update_interval: never
+  - platform: template
+    id: w08_action
+    lambda: |-
+      return {};
   - platform: template
     id: w08_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_content_align
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_layout_mode
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_label_transform
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_label_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_value_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_icon_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_label_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w08_value_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_type
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_icon
     lambda: |-
       return {};
-    update_interval: never
+  - platform: template
+    id: w09_action
+    lambda: |-
+      return {};
   - platform: template
     id: w09_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_content_align
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_layout_mode
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_label_transform
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_label_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_value_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_icon_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_label_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w09_value_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_type
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_icon
     lambda: |-
       return {};
-    update_interval: never
+  - platform: template
+    id: w10_action
+    lambda: |-
+      return {};
   - platform: template
     id: w10_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_content_align
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_layout_mode
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_label_transform
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_label_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_value_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_icon_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_label_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w10_value_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_type
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_icon
     lambda: |-
       return {};
-    update_interval: never
+  - platform: template
+    id: w11_action
+    lambda: |-
+      return {};
   - platform: template
     id: w11_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_content_align
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_layout_mode
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_label_transform
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_label_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_value_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_icon_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_label_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w11_value_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_type
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_label
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_value
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_icon
     lambda: |-
       return {};
-    update_interval: never
+  - platform: template
+    id: w12_action
+    lambda: |-
+      return {};
   - platform: template
     id: w12_bg_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_content_align
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_layout_mode
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_label_transform
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_label_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_value_weight
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_icon_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_label_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: template
     id: w12_value_color
     lambda: |-
       return {};
-    update_interval: never
   - platform: homeassistant
     id: panel_runtime_theme_source
     entity_id: input_text.esp_panel_runtime_theme
@@ -4083,6 +3896,7 @@ text_sensor:
           id(w01_bg_color).publish_state(config.bg_color);
           id(w01_label).publish_state(config.label);
           id(w01_icon).publish_state(config.icon);
+          id(w01_action).publish_state(config.action);
           id(w01_content_align).publish_state(config.content_align);
           id(w01_layout_mode).publish_state(config.layout_mode);
           id(w01_label_transform).publish_state(config.label_transform);
@@ -4122,6 +3936,7 @@ text_sensor:
           id(w02_bg_color).publish_state(config.bg_color);
           id(w02_label).publish_state(config.label);
           id(w02_icon).publish_state(config.icon);
+          id(w02_action).publish_state(config.action);
           id(w02_content_align).publish_state(config.content_align);
           id(w02_layout_mode).publish_state(config.layout_mode);
           id(w02_label_transform).publish_state(config.label_transform);
@@ -4161,6 +3976,7 @@ text_sensor:
           id(w03_bg_color).publish_state(config.bg_color);
           id(w03_label).publish_state(config.label);
           id(w03_icon).publish_state(config.icon);
+          id(w03_action).publish_state(config.action);
           id(w03_content_align).publish_state(config.content_align);
           id(w03_layout_mode).publish_state(config.layout_mode);
           id(w03_label_transform).publish_state(config.label_transform);
@@ -4200,6 +4016,7 @@ text_sensor:
           id(w04_bg_color).publish_state(config.bg_color);
           id(w04_label).publish_state(config.label);
           id(w04_icon).publish_state(config.icon);
+          id(w04_action).publish_state(config.action);
           id(w04_content_align).publish_state(config.content_align);
           id(w04_layout_mode).publish_state(config.layout_mode);
           id(w04_label_transform).publish_state(config.label_transform);
@@ -4239,6 +4056,7 @@ text_sensor:
           id(w05_bg_color).publish_state(config.bg_color);
           id(w05_label).publish_state(config.label);
           id(w05_icon).publish_state(config.icon);
+          id(w05_action).publish_state(config.action);
           id(w05_content_align).publish_state(config.content_align);
           id(w05_layout_mode).publish_state(config.layout_mode);
           id(w05_label_transform).publish_state(config.label_transform);
@@ -4278,6 +4096,7 @@ text_sensor:
           id(w06_bg_color).publish_state(config.bg_color);
           id(w06_label).publish_state(config.label);
           id(w06_icon).publish_state(config.icon);
+          id(w06_action).publish_state(config.action);
           id(w06_content_align).publish_state(config.content_align);
           id(w06_layout_mode).publish_state(config.layout_mode);
           id(w06_label_transform).publish_state(config.label_transform);
@@ -4317,6 +4136,7 @@ text_sensor:
           id(w07_bg_color).publish_state(config.bg_color);
           id(w07_label).publish_state(config.label);
           id(w07_icon).publish_state(config.icon);
+          id(w07_action).publish_state(config.action);
           id(w07_content_align).publish_state(config.content_align);
           id(w07_layout_mode).publish_state(config.layout_mode);
           id(w07_label_transform).publish_state(config.label_transform);
@@ -4356,6 +4176,7 @@ text_sensor:
           id(w08_bg_color).publish_state(config.bg_color);
           id(w08_label).publish_state(config.label);
           id(w08_icon).publish_state(config.icon);
+          id(w08_action).publish_state(config.action);
           id(w08_content_align).publish_state(config.content_align);
           id(w08_layout_mode).publish_state(config.layout_mode);
           id(w08_label_transform).publish_state(config.label_transform);
@@ -4395,6 +4216,7 @@ text_sensor:
           id(w09_bg_color).publish_state(config.bg_color);
           id(w09_label).publish_state(config.label);
           id(w09_icon).publish_state(config.icon);
+          id(w09_action).publish_state(config.action);
           id(w09_content_align).publish_state(config.content_align);
           id(w09_layout_mode).publish_state(config.layout_mode);
           id(w09_label_transform).publish_state(config.label_transform);
@@ -4434,6 +4256,7 @@ text_sensor:
           id(w10_bg_color).publish_state(config.bg_color);
           id(w10_label).publish_state(config.label);
           id(w10_icon).publish_state(config.icon);
+          id(w10_action).publish_state(config.action);
           id(w10_content_align).publish_state(config.content_align);
           id(w10_layout_mode).publish_state(config.layout_mode);
           id(w10_label_transform).publish_state(config.label_transform);
@@ -4473,6 +4296,7 @@ text_sensor:
           id(w11_bg_color).publish_state(config.bg_color);
           id(w11_label).publish_state(config.label);
           id(w11_icon).publish_state(config.icon);
+          id(w11_action).publish_state(config.action);
           id(w11_content_align).publish_state(config.content_align);
           id(w11_layout_mode).publish_state(config.layout_mode);
           id(w11_label_transform).publish_state(config.label_transform);
@@ -4512,6 +4336,7 @@ text_sensor:
           id(w12_bg_color).publish_state(config.bg_color);
           id(w12_label).publish_state(config.label);
           id(w12_icon).publish_state(config.icon);
+          id(w12_action).publish_state(config.action);
           id(w12_content_align).publish_state(config.content_align);
           id(w12_layout_mode).publish_state(config.layout_mode);
           id(w12_label_transform).publish_state(config.label_transform);
@@ -4575,6 +4400,9 @@ lvgl:
                   bg_opa: 95%
                   border_width: 0
                   radius: 10
+                  clickable: true
+                  scrollable: false
+                  press_lock: true
                   scrollbar_mode: "OFF"
                   pad_all: 0
                   on_click:
@@ -4583,9 +4411,13 @@ lvgl:
                           event: esphome.esp_panel_widget_tap
                           data:
                             widget: w01
+                      - script.execute:
+                          id: dispatch_entity_action
+                          entity: !lambda "return id(w01_action).state;"
                   widgets:
                     - label:
                         id: w01_icon_label
+                        clickable: false
                         x: 7
                         y: 8
                         width: 38
@@ -4596,6 +4428,7 @@ lvgl:
                         text_color: 0xF59E0B
                     - label:
                         id: w01_label_label
+                        clickable: false
                         x: 48
                         y: 8
                         width: 170
@@ -4607,6 +4440,7 @@ lvgl:
                         long_mode: DOT
                     - label:
                         id: w01_value_label
+                        clickable: false
                         x: 48
                         y: 26
                         width: 170
@@ -4626,6 +4460,9 @@ lvgl:
                   bg_opa: 95%
                   border_width: 0
                   radius: 10
+                  clickable: true
+                  scrollable: false
+                  press_lock: true
                   scrollbar_mode: "OFF"
                   pad_all: 0
                   on_click:
@@ -4634,9 +4471,13 @@ lvgl:
                           event: esphome.esp_panel_widget_tap
                           data:
                             widget: w02
+                      - script.execute:
+                          id: dispatch_entity_action
+                          entity: !lambda "return id(w02_action).state;"
                   widgets:
                     - label:
                         id: w02_icon_label
+                        clickable: false
                         x: 7
                         y: 8
                         width: 38
@@ -4647,6 +4488,7 @@ lvgl:
                         text_color: 0xF59E0B
                     - label:
                         id: w02_label_label
+                        clickable: false
                         x: 48
                         y: 8
                         width: 170
@@ -4658,6 +4500,7 @@ lvgl:
                         long_mode: DOT
                     - label:
                         id: w02_value_label
+                        clickable: false
                         x: 48
                         y: 26
                         width: 170
@@ -4677,6 +4520,9 @@ lvgl:
                   bg_opa: 95%
                   border_width: 0
                   radius: 10
+                  clickable: true
+                  scrollable: false
+                  press_lock: true
                   scrollbar_mode: "OFF"
                   pad_all: 0
                   on_click:
@@ -4685,9 +4531,13 @@ lvgl:
                           event: esphome.esp_panel_widget_tap
                           data:
                             widget: w03
+                      - script.execute:
+                          id: dispatch_entity_action
+                          entity: !lambda "return id(w03_action).state;"
                   widgets:
                     - label:
                         id: w03_icon_label
+                        clickable: false
                         x: 7
                         y: 8
                         width: 38
@@ -4698,6 +4548,7 @@ lvgl:
                         text_color: 0xF59E0B
                     - label:
                         id: w03_label_label
+                        clickable: false
                         x: 48
                         y: 8
                         width: 170
@@ -4709,6 +4560,7 @@ lvgl:
                         long_mode: DOT
                     - label:
                         id: w03_value_label
+                        clickable: false
                         x: 48
                         y: 26
                         width: 170
@@ -4728,6 +4580,9 @@ lvgl:
                   bg_opa: 95%
                   border_width: 0
                   radius: 10
+                  clickable: true
+                  scrollable: false
+                  press_lock: true
                   scrollbar_mode: "OFF"
                   pad_all: 0
                   on_click:
@@ -4736,9 +4591,13 @@ lvgl:
                           event: esphome.esp_panel_widget_tap
                           data:
                             widget: w04
+                      - script.execute:
+                          id: dispatch_entity_action
+                          entity: !lambda "return id(w04_action).state;"
                   widgets:
                     - label:
                         id: w04_icon_label
+                        clickable: false
                         x: 7
                         y: 8
                         width: 38
@@ -4749,6 +4608,7 @@ lvgl:
                         text_color: 0xF59E0B
                     - label:
                         id: w04_label_label
+                        clickable: false
                         x: 48
                         y: 8
                         width: 90
@@ -4760,6 +4620,7 @@ lvgl:
                         long_mode: DOT
                     - label:
                         id: w04_value_label
+                        clickable: false
                         x: 48
                         y: 26
                         width: 90
@@ -4779,6 +4640,9 @@ lvgl:
                   bg_opa: 95%
                   border_width: 0
                   radius: 10
+                  clickable: true
+                  scrollable: false
+                  press_lock: true
                   scrollbar_mode: "OFF"
                   pad_all: 0
                   on_click:
@@ -4787,9 +4651,13 @@ lvgl:
                           event: esphome.esp_panel_widget_tap
                           data:
                             widget: w05
+                      - script.execute:
+                          id: dispatch_entity_action
+                          entity: !lambda "return id(w05_action).state;"
                   widgets:
                     - label:
                         id: w05_icon_label
+                        clickable: false
                         x: 18
                         y: 5
                         width: 38
@@ -4800,6 +4668,7 @@ lvgl:
                         text_color: 0xF59E0B
                     - label:
                         id: w05_label_label
+                        clickable: false
                         x: 4
                         y: 39
                         width: 66
@@ -4811,6 +4680,7 @@ lvgl:
                         long_mode: DOT
                     - label:
                         id: w05_value_label
+                        clickable: false
                         x: 4
                         y: 54
                         width: 66
@@ -4830,6 +4700,9 @@ lvgl:
                   bg_opa: 95%
                   border_width: 0
                   radius: 10
+                  clickable: true
+                  scrollable: false
+                  press_lock: true
                   scrollbar_mode: "OFF"
                   pad_all: 0
                   on_click:
@@ -4838,9 +4711,13 @@ lvgl:
                           event: esphome.esp_panel_widget_tap
                           data:
                             widget: w06
+                      - script.execute:
+                          id: dispatch_entity_action
+                          entity: !lambda "return id(w06_action).state;"
                   widgets:
                     - label:
                         id: w06_icon_label
+                        clickable: false
                         x: 56
                         y: 14
                         width: 42
@@ -4851,6 +4728,7 @@ lvgl:
                         text_color: 0xF59E0B
                     - label:
                         id: w06_label_label
+                        clickable: false
                         x: 8
                         y: 62
                         width: 138
@@ -4862,6 +4740,7 @@ lvgl:
                         long_mode: DOT
                     - label:
                         id: w06_value_label
+                        clickable: false
                         x: 8
                         y: 88
                         width: 138
@@ -4882,6 +4761,9 @@ lvgl:
                   bg_opa: 95%
                   border_width: 0
                   radius: 10
+                  clickable: true
+                  scrollable: false
+                  press_lock: true
                   scrollbar_mode: "OFF"
                   pad_all: 8
                   on_click:
@@ -4890,9 +4772,13 @@ lvgl:
                           event: esphome.esp_panel_widget_tap
                           data:
                             widget: w07
+                      - script.execute:
+                          id: dispatch_entity_action
+                          entity: !lambda "return id(w07_action).state;"
                   widgets:
                     - label:
                         id: w07_icon_label
+                        clickable: false
                         x: 7
                         y: 8
                         width: 38
@@ -4903,6 +4789,7 @@ lvgl:
                         text_color: 0xF59E0B
                     - label:
                         id: w07_label_label
+                        clickable: false
                         x: 48
                         y: 8
                         width: 90
@@ -4914,6 +4801,7 @@ lvgl:
                         long_mode: DOT
                     - label:
                         id: w07_value_label
+                        clickable: false
                         x: 48
                         y: 26
                         width: 90
@@ -4934,6 +4822,9 @@ lvgl:
                   bg_opa: 95%
                   border_width: 0
                   radius: 10
+                  clickable: true
+                  scrollable: false
+                  press_lock: true
                   scrollbar_mode: "OFF"
                   pad_all: 8
                   on_click:
@@ -4942,9 +4833,13 @@ lvgl:
                           event: esphome.esp_panel_widget_tap
                           data:
                             widget: w08
+                      - script.execute:
+                          id: dispatch_entity_action
+                          entity: !lambda "return id(w08_action).state;"
                   widgets:
                     - label:
                         id: w08_icon_label
+                        clickable: false
                         x: 7
                         y: 8
                         width: 38
@@ -4955,6 +4850,7 @@ lvgl:
                         text_color: 0xF59E0B
                     - label:
                         id: w08_label_label
+                        clickable: false
                         x: 48
                         y: 8
                         width: 90
@@ -4966,6 +4862,7 @@ lvgl:
                         long_mode: DOT
                     - label:
                         id: w08_value_label
+                        clickable: false
                         x: 48
                         y: 26
                         width: 90
@@ -4986,6 +4883,9 @@ lvgl:
                   bg_opa: 95%
                   border_width: 0
                   radius: 10
+                  clickable: true
+                  scrollable: false
+                  press_lock: true
                   scrollbar_mode: "OFF"
                   pad_all: 8
                   on_click:
@@ -4994,9 +4894,13 @@ lvgl:
                           event: esphome.esp_panel_widget_tap
                           data:
                             widget: w09
+                      - script.execute:
+                          id: dispatch_entity_action
+                          entity: !lambda "return id(w09_action).state;"
                   widgets:
                     - label:
                         id: w09_icon_label
+                        clickable: false
                         x: 7
                         y: 8
                         width: 38
@@ -5007,6 +4911,7 @@ lvgl:
                         text_color: 0xF59E0B
                     - label:
                         id: w09_label_label
+                        clickable: false
                         x: 48
                         y: 8
                         width: 90
@@ -5018,6 +4923,7 @@ lvgl:
                         long_mode: DOT
                     - label:
                         id: w09_value_label
+                        clickable: false
                         x: 48
                         y: 26
                         width: 90
@@ -5038,6 +4944,9 @@ lvgl:
                   bg_opa: 95%
                   border_width: 0
                   radius: 10
+                  clickable: true
+                  scrollable: false
+                  press_lock: true
                   scrollbar_mode: "OFF"
                   pad_all: 8
                   on_click:
@@ -5046,9 +4955,13 @@ lvgl:
                           event: esphome.esp_panel_widget_tap
                           data:
                             widget: w10
+                      - script.execute:
+                          id: dispatch_entity_action
+                          entity: !lambda "return id(w10_action).state;"
                   widgets:
                     - label:
                         id: w10_icon_label
+                        clickable: false
                         x: 7
                         y: 8
                         width: 38
@@ -5059,6 +4972,7 @@ lvgl:
                         text_color: 0xF59E0B
                     - label:
                         id: w10_label_label
+                        clickable: false
                         x: 48
                         y: 8
                         width: 90
@@ -5070,6 +4984,7 @@ lvgl:
                         long_mode: DOT
                     - label:
                         id: w10_value_label
+                        clickable: false
                         x: 48
                         y: 26
                         width: 90
@@ -5090,6 +5005,9 @@ lvgl:
                   bg_opa: 95%
                   border_width: 0
                   radius: 10
+                  clickable: true
+                  scrollable: false
+                  press_lock: true
                   scrollbar_mode: "OFF"
                   pad_all: 8
                   on_click:
@@ -5098,9 +5016,13 @@ lvgl:
                           event: esphome.esp_panel_widget_tap
                           data:
                             widget: w11
+                      - script.execute:
+                          id: dispatch_entity_action
+                          entity: !lambda "return id(w11_action).state;"
                   widgets:
                     - label:
                         id: w11_icon_label
+                        clickable: false
                         x: 7
                         y: 8
                         width: 38
@@ -5111,6 +5033,7 @@ lvgl:
                         text_color: 0xF59E0B
                     - label:
                         id: w11_label_label
+                        clickable: false
                         x: 48
                         y: 8
                         width: 90
@@ -5122,6 +5045,7 @@ lvgl:
                         long_mode: DOT
                     - label:
                         id: w11_value_label
+                        clickable: false
                         x: 48
                         y: 26
                         width: 90
@@ -5142,6 +5066,9 @@ lvgl:
                   bg_opa: 95%
                   border_width: 0
                   radius: 10
+                  clickable: true
+                  scrollable: false
+                  press_lock: true
                   scrollbar_mode: "OFF"
                   pad_all: 8
                   on_click:
@@ -5150,9 +5077,13 @@ lvgl:
                           event: esphome.esp_panel_widget_tap
                           data:
                             widget: w12
+                      - script.execute:
+                          id: dispatch_entity_action
+                          entity: !lambda "return id(w12_action).state;"
                   widgets:
                     - label:
                         id: w12_icon_label
+                        clickable: false
                         x: 7
                         y: 8
                         width: 38
@@ -5163,6 +5094,7 @@ lvgl:
                         text_color: 0xF59E0B
                     - label:
                         id: w12_label_label
+                        clickable: false
                         x: 48
                         y: 8
                         width: 90
@@ -5174,6 +5106,7 @@ lvgl:
                         long_mode: DOT
                     - label:
                         id: w12_value_label
+                        clickable: false
                         x: 48
                         y: 26
                         width: 90

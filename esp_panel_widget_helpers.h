@@ -45,6 +45,7 @@ struct EspPanelRuntimeWidgetConfig {
   std::string icon = "shape";
   std::string content_align = "start";
   std::string layout_mode = "auto";
+  std::string action = "";
   std::string label_transform = "none";
   std::string label_weight = "bold";
   std::string value_weight = "normal";
@@ -164,6 +165,23 @@ static inline int esp_panel_runtime_int_field(
 static inline EspPanelRuntimeWidgetConfig esp_panel_parse_widget_runtime(const std::string &encoded) {
   EspPanelRuntimeWidgetConfig config;
   const std::vector<std::string> parts = esp_panel_split(encoded);
+  const bool has_layout_mode = parts.size() >= 24;
+  const bool has_action = parts.size() >= 25;
+  const size_t label_transform_index = has_layout_mode ? 11 : 10;
+  const size_t label_weight_index = has_layout_mode ? 12 : 11;
+  const size_t value_weight_index = has_layout_mode ? 13 : 12;
+  const size_t icon_color_index = has_layout_mode ? 14 : 13;
+  const size_t label_color_index = has_layout_mode ? 15 : 14;
+  const size_t value_color_index = has_layout_mode ? 16 : 15;
+  const size_t icon_scale_index = has_layout_mode ? 17 : 16;
+  const size_t label_scale_index = has_layout_mode ? 18 : 17;
+  const size_t value_scale_index = has_layout_mode ? 19 : 18;
+  const size_t x_index = has_layout_mode ? 20 : 19;
+  const size_t y_index = has_layout_mode ? 21 : 20;
+  const size_t w_index = has_layout_mode ? 22 : 21;
+  const size_t h_index = has_layout_mode ? 23 : 22;
+  const size_t action_index = has_action ? parts.size() - 1 : SIZE_MAX;
+
   config.type = esp_panel_runtime_text_field(parts, 0, config.type);
   config.visible = esp_panel_runtime_bool_field(parts, 1, config.visible);
   config.show_border = esp_panel_runtime_bool_field(parts, 2, config.show_border);
@@ -174,20 +192,31 @@ static inline EspPanelRuntimeWidgetConfig esp_panel_parse_widget_runtime(const s
   config.label = esp_panel_runtime_text_field(parts, 7, config.label);
   config.icon = esp_panel_runtime_text_field(parts, 8, config.icon);
   config.content_align = esp_panel_runtime_text_field(parts, 9, config.content_align);
-  config.label_transform = esp_panel_runtime_text_field(parts, 10, config.label_transform);
-  config.label_weight = esp_panel_runtime_text_field(parts, 11, config.label_weight);
-  config.value_weight = esp_panel_runtime_text_field(parts, 12, config.value_weight);
-  config.icon_color = esp_panel_runtime_text_field(parts, 13, config.icon_color);
-  config.label_color = esp_panel_runtime_text_field(parts, 14, config.label_color);
-  config.value_color = esp_panel_runtime_text_field(parts, 15, config.value_color);
-  config.icon_scale = esp_panel_runtime_int_field(parts, 16, config.icon_scale);
-  config.label_scale = esp_panel_runtime_int_field(parts, 17, config.label_scale);
-  config.value_scale = esp_panel_runtime_int_field(parts, 18, config.value_scale);
-  config.x = esp_panel_runtime_int_field(parts, 19, config.x);
-  config.y = esp_panel_runtime_int_field(parts, 20, config.y);
-  config.w = esp_panel_runtime_int_field(parts, 21, config.w);
-  config.h = esp_panel_runtime_int_field(parts, 22, config.h);
+  if (has_layout_mode) {
+    config.layout_mode = esp_panel_runtime_text_field(parts, 10, config.layout_mode);
+  }
+  config.label_transform = esp_panel_runtime_text_field(parts, label_transform_index, config.label_transform);
+  config.label_weight = esp_panel_runtime_text_field(parts, label_weight_index, config.label_weight);
+  config.value_weight = esp_panel_runtime_text_field(parts, value_weight_index, config.value_weight);
+  config.icon_color = esp_panel_runtime_text_field(parts, icon_color_index, config.icon_color);
+  config.label_color = esp_panel_runtime_text_field(parts, label_color_index, config.label_color);
+  config.value_color = esp_panel_runtime_text_field(parts, value_color_index, config.value_color);
+  config.icon_scale = esp_panel_runtime_int_field(parts, icon_scale_index, config.icon_scale);
+  config.label_scale = esp_panel_runtime_int_field(parts, label_scale_index, config.label_scale);
+  config.value_scale = esp_panel_runtime_int_field(parts, value_scale_index, config.value_scale);
+  config.x = esp_panel_runtime_int_field(parts, x_index, config.x);
+  config.y = esp_panel_runtime_int_field(parts, y_index, config.y);
+  config.w = esp_panel_runtime_int_field(parts, w_index, config.w);
+  config.h = esp_panel_runtime_int_field(parts, h_index, config.h);
+  if (has_action) {
+    config.action = esp_panel_runtime_text_field(parts, action_index, config.action);
+  }
   return config;
+}
+
+static inline bool esp_panel_string_starts_with(const std::string &value, const char *prefix) {
+  const size_t prefix_len = std::char_traits<char>::length(prefix);
+  return value.size() >= prefix_len && value.compare(0, prefix_len, prefix) == 0;
 }
 
 static inline EspPanelRuntimeThemeConfig esp_panel_parse_theme_runtime(const std::string &encoded) {
