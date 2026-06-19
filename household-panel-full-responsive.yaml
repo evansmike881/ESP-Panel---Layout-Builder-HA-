@@ -94,9 +94,29 @@ touchscreen:
   id: my_touchscreen
   display: my_display
   i2c_id: bus_a
-  transform:
-    mirror_x: true
-    mirror_y: true
+  on_touch:
+    then:
+      - lambda: |-
+          id(last_touch_x) = touch.x;
+          id(last_touch_y) = touch.y;
+          ESP_LOGW("touch_diag", "TOUCH start id=%d state=%d x=%d y=%d raw_x=%d raw_y=%d",
+                   touch.id, touch.state, touch.x, touch.y, touch.x_raw, touch.y_raw);
+  on_update:
+    then:
+      - lambda: |-
+          for (auto &t : touches) {
+            id(last_touch_x) = t.x;
+            id(last_touch_y) = t.y;
+            ESP_LOGW("touch_diag", "TOUCH move id=%d state=%d x=%d y=%d raw_x=%d raw_y=%d",
+                     t.id, t.state, t.x, t.y, t.x_raw, t.y_raw);
+          }
+  on_release:
+    then:
+      - script.execute: handle_touch_release
+      - logger.log:
+          level: WARN
+          tag: touch_diag
+          format: "TOUCH release"
 
 spi:
   - id: lcd_spi
@@ -108,6 +128,7 @@ display:
     id: my_display
     model: GUITION-4848S040
     auto_clear_enabled: false
+    update_interval: never
     dimensions:
       width: 480
       height: 480
@@ -338,6 +359,14 @@ globals:
     type: int
     restore_value: no
     initial_value: "6"
+  - id: last_touch_x
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: last_touch_y
+    type: int
+    restore_value: no
+    initial_value: "0"
 
 script:
   - id: show_notification
@@ -424,6 +453,142 @@ script:
                 service: button.press
                 data:
                   entity_id: !lambda "return entity;"
+
+  - id: handle_touch_release
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: |-
+              const int x = id(last_touch_x);
+              const int y = id(last_touch_y);
+              return id(w01_visible).state && x >= (int) id(w01_x).state * id(slot_w) + 3 && x < ((int) id(w01_x).state * id(slot_w) + 3 + ((int) id(w01_w).state * id(slot_w)) - id(slot_gap)) &&
+                     y >= (int) id(w01_y).state * id(slot_h) + 3 && y < ((int) id(w01_y).state * id(slot_h) + 3 + ((int) id(w01_h).state * id(slot_h)) - id(slot_gap));
+          then:
+            - script.execute:
+                id: dispatch_entity_action
+                entity: !lambda "return id(w01_action).state;"
+      - if:
+          condition:
+            lambda: |-
+              const int x = id(last_touch_x);
+              const int y = id(last_touch_y);
+              return id(w02_visible).state && x >= (int) id(w02_x).state * id(slot_w) + 3 && x < ((int) id(w02_x).state * id(slot_w) + 3 + ((int) id(w02_w).state * id(slot_w)) - id(slot_gap)) &&
+                     y >= (int) id(w02_y).state * id(slot_h) + 3 && y < ((int) id(w02_y).state * id(slot_h) + 3 + ((int) id(w02_h).state * id(slot_h)) - id(slot_gap));
+          then:
+            - script.execute:
+                id: dispatch_entity_action
+                entity: !lambda "return id(w02_action).state;"
+      - if:
+          condition:
+            lambda: |-
+              const int x = id(last_touch_x);
+              const int y = id(last_touch_y);
+              return id(w03_visible).state && x >= (int) id(w03_x).state * id(slot_w) + 3 && x < ((int) id(w03_x).state * id(slot_w) + 3 + ((int) id(w03_w).state * id(slot_w)) - id(slot_gap)) &&
+                     y >= (int) id(w03_y).state * id(slot_h) + 3 && y < ((int) id(w03_y).state * id(slot_h) + 3 + ((int) id(w03_h).state * id(slot_h)) - id(slot_gap));
+          then:
+            - script.execute:
+                id: dispatch_entity_action
+                entity: !lambda "return id(w03_action).state;"
+      - if:
+          condition:
+            lambda: |-
+              const int x = id(last_touch_x);
+              const int y = id(last_touch_y);
+              return id(w04_visible).state && x >= (int) id(w04_x).state * id(slot_w) + 3 && x < ((int) id(w04_x).state * id(slot_w) + 3 + ((int) id(w04_w).state * id(slot_w)) - id(slot_gap)) &&
+                     y >= (int) id(w04_y).state * id(slot_h) + 3 && y < ((int) id(w04_y).state * id(slot_h) + 3 + ((int) id(w04_h).state * id(slot_h)) - id(slot_gap));
+          then:
+            - script.execute:
+                id: dispatch_entity_action
+                entity: !lambda "return id(w04_action).state;"
+      - if:
+          condition:
+            lambda: |-
+              const int x = id(last_touch_x);
+              const int y = id(last_touch_y);
+              return id(w05_visible).state && x >= (int) id(w05_x).state * id(slot_w) + 3 && x < ((int) id(w05_x).state * id(slot_w) + 3 + ((int) id(w05_w).state * id(slot_w)) - id(slot_gap)) &&
+                     y >= (int) id(w05_y).state * id(slot_h) + 3 && y < ((int) id(w05_y).state * id(slot_h) + 3 + ((int) id(w05_h).state * id(slot_h)) - id(slot_gap));
+          then:
+            - script.execute:
+                id: dispatch_entity_action
+                entity: !lambda "return id(w05_action).state;"
+      - if:
+          condition:
+            lambda: |-
+              const int x = id(last_touch_x);
+              const int y = id(last_touch_y);
+              return id(w06_visible).state && x >= (int) id(w06_x).state * id(slot_w) + 3 && x < ((int) id(w06_x).state * id(slot_w) + 3 + ((int) id(w06_w).state * id(slot_w)) - id(slot_gap)) &&
+                     y >= (int) id(w06_y).state * id(slot_h) + 3 && y < ((int) id(w06_y).state * id(slot_h) + 3 + ((int) id(w06_h).state * id(slot_h)) - id(slot_gap));
+          then:
+            - script.execute:
+                id: dispatch_entity_action
+                entity: !lambda "return id(w06_action).state;"
+      - if:
+          condition:
+            lambda: |-
+              const int x = id(last_touch_x);
+              const int y = id(last_touch_y);
+              return id(w07_visible).state && x >= (int) id(w07_x).state * id(slot_w) + 3 && x < ((int) id(w07_x).state * id(slot_w) + 3 + ((int) id(w07_w).state * id(slot_w)) - id(slot_gap)) &&
+                     y >= (int) id(w07_y).state * id(slot_h) + 3 && y < ((int) id(w07_y).state * id(slot_h) + 3 + ((int) id(w07_h).state * id(slot_h)) - id(slot_gap));
+          then:
+            - script.execute:
+                id: dispatch_entity_action
+                entity: !lambda "return id(w07_action).state;"
+      - if:
+          condition:
+            lambda: |-
+              const int x = id(last_touch_x);
+              const int y = id(last_touch_y);
+              return id(w08_visible).state && x >= (int) id(w08_x).state * id(slot_w) + 3 && x < ((int) id(w08_x).state * id(slot_w) + 3 + ((int) id(w08_w).state * id(slot_w)) - id(slot_gap)) &&
+                     y >= (int) id(w08_y).state * id(slot_h) + 3 && y < ((int) id(w08_y).state * id(slot_h) + 3 + ((int) id(w08_h).state * id(slot_h)) - id(slot_gap));
+          then:
+            - script.execute:
+                id: dispatch_entity_action
+                entity: !lambda "return id(w08_action).state;"
+      - if:
+          condition:
+            lambda: |-
+              const int x = id(last_touch_x);
+              const int y = id(last_touch_y);
+              return id(w09_visible).state && x >= (int) id(w09_x).state * id(slot_w) + 3 && x < ((int) id(w09_x).state * id(slot_w) + 3 + ((int) id(w09_w).state * id(slot_w)) - id(slot_gap)) &&
+                     y >= (int) id(w09_y).state * id(slot_h) + 3 && y < ((int) id(w09_y).state * id(slot_h) + 3 + ((int) id(w09_h).state * id(slot_h)) - id(slot_gap));
+          then:
+            - script.execute:
+                id: dispatch_entity_action
+                entity: !lambda "return id(w09_action).state;"
+      - if:
+          condition:
+            lambda: |-
+              const int x = id(last_touch_x);
+              const int y = id(last_touch_y);
+              return id(w10_visible).state && x >= (int) id(w10_x).state * id(slot_w) + 3 && x < ((int) id(w10_x).state * id(slot_w) + 3 + ((int) id(w10_w).state * id(slot_w)) - id(slot_gap)) &&
+                     y >= (int) id(w10_y).state * id(slot_h) + 3 && y < ((int) id(w10_y).state * id(slot_h) + 3 + ((int) id(w10_h).state * id(slot_h)) - id(slot_gap));
+          then:
+            - script.execute:
+                id: dispatch_entity_action
+                entity: !lambda "return id(w10_action).state;"
+      - if:
+          condition:
+            lambda: |-
+              const int x = id(last_touch_x);
+              const int y = id(last_touch_y);
+              return id(w11_visible).state && x >= (int) id(w11_x).state * id(slot_w) + 3 && x < ((int) id(w11_x).state * id(slot_w) + 3 + ((int) id(w11_w).state * id(slot_w)) - id(slot_gap)) &&
+                     y >= (int) id(w11_y).state * id(slot_h) + 3 && y < ((int) id(w11_y).state * id(slot_h) + 3 + ((int) id(w11_h).state * id(slot_h)) - id(slot_gap));
+          then:
+            - script.execute:
+                id: dispatch_entity_action
+                entity: !lambda "return id(w11_action).state;"
+      - if:
+          condition:
+            lambda: |-
+              const int x = id(last_touch_x);
+              const int y = id(last_touch_y);
+              return id(w12_visible).state && x >= (int) id(w12_x).state * id(slot_w) + 3 && x < ((int) id(w12_x).state * id(slot_w) + 3 + ((int) id(w12_w).state * id(slot_w)) - id(slot_gap)) &&
+                     y >= (int) id(w12_y).state * id(slot_h) + 3 && y < ((int) id(w12_y).state * id(slot_h) + 3 + ((int) id(w12_h).state * id(slot_h)) - id(slot_gap));
+          then:
+            - script.execute:
+                id: dispatch_entity_action
+                entity: !lambda "return id(w12_action).state;"
 
   - id: apply_theme
     mode: restart
@@ -601,6 +766,7 @@ script:
             lambda: 'return id(w12_type).state == "clock";'
           then:
             - script.execute: render_w12
+      - lvgl.widget.redraw:
 
   - id: update_date_widgets
     mode: restart
@@ -665,6 +831,7 @@ script:
             lambda: 'return id(w12_type).state == "date";'
           then:
             - script.execute: render_w12
+      - lvgl.widget.redraw:
 
   - id: layout_w01
     mode: restart
@@ -790,6 +957,22 @@ script:
   - id: render_w01
     mode: restart
     then:
+      - lambda: |-
+          if (id(w01_type).state == "clock") {
+            auto now = id(ha_time).now();
+            if (now.is_valid()) {
+              char buffer[6];
+              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
+              id(w01_value).publish_state(std::string(buffer));
+            }
+          } else if (id(w01_type).state == "date") {
+            auto now = id(ha_time).now();
+            if (now.is_valid()) {
+              char buffer[16];
+              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
+              id(w01_value).publish_state(std::string(buffer));
+            }
+          }
       - lvgl.widget.update:
           id: w01_card
           hidden: !lambda 'return !id(w01_visible).state || id(w01_type).state == "blank";'
@@ -866,19 +1049,8 @@ script:
       - lvgl.label.update:
           id: w01_value_label
           text: !lambda |-
-            if (id(w01_type).state == "clock") {
-              auto now = id(ha_time).now();
-              if (!now.is_valid()) return std::string("--:--");
-              char buffer[6];
-              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
-              return std::string(buffer);
-            }
-            if (id(w01_type).state == "date") {
-              auto now = id(ha_time).now();
-              if (!now.is_valid()) return std::string("--");
-              char buffer[16];
-              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
-              return std::string(buffer);
+            if (id(w01_type).state == "clock" || id(w01_type).state == "date") {
+              return id(w01_value).state;
             }
             return id(w01_value).state;
           text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w01_value_color).state, 0xF1F5F9));'
@@ -939,6 +1111,22 @@ script:
   - id: render_w02
     mode: restart
     then:
+      - lambda: |-
+          if (id(w02_type).state == "clock") {
+            auto now = id(ha_time).now();
+            if (now.is_valid()) {
+              char buffer[6];
+              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
+              id(w02_value).publish_state(std::string(buffer));
+            }
+          } else if (id(w02_type).state == "date") {
+            auto now = id(ha_time).now();
+            if (now.is_valid()) {
+              char buffer[16];
+              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
+              id(w02_value).publish_state(std::string(buffer));
+            }
+          }
       - lvgl.widget.update:
           id: w02_card
           hidden: !lambda 'return !id(w02_visible).state || id(w02_type).state == "blank";'
@@ -1015,19 +1203,8 @@ script:
       - lvgl.label.update:
           id: w02_value_label
           text: !lambda |-
-            if (id(w02_type).state == "clock") {
-              auto now = id(ha_time).now();
-              if (!now.is_valid()) return std::string("--:--");
-              char buffer[6];
-              snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
-              return std::string(buffer);
-            }
-            if (id(w02_type).state == "date") {
-              auto now = id(ha_time).now();
-              if (!now.is_valid()) return std::string("--");
-              char buffer[16];
-              snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
-              return std::string(buffer);
+            if (id(w02_type).state == "clock" || id(w02_type).state == "date") {
+              return id(w02_value).state;
             }
             return id(w02_value).state;
           text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w02_value_color).state, 0xF1F5F9));'
