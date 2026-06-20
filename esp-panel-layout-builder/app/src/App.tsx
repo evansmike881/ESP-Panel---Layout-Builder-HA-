@@ -551,7 +551,7 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [previewScale, setPreviewScale] = useState(100);
   const [theme, setTheme] = useState<PanelTheme>(PANEL_THEMES.blue);
-  const [workspaceTab, setWorkspaceTab] = useState<"workspace" | "theme" | "hidden">("workspace");
+  const [workspaceTab, setWorkspaceTab] = useState<"theme" | "hidden">("theme");
   const [menuOpen, setMenuOpen] = useState(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
   const interactionRef = useRef<Interaction | null>(null);
@@ -1645,13 +1645,6 @@ export default function App() {
             <div className="workspace-tabbar" aria-label="Workspace sections">
               <button
                 type="button"
-                className={workspaceTab === "workspace" ? "workspace-tab-active" : ""}
-                onClick={() => setWorkspaceTab("workspace")}
-              >
-                Workspace
-              </button>
-              <button
-                type="button"
                 className={workspaceTab === "theme" ? "workspace-tab-active" : ""}
                 onClick={() => setWorkspaceTab("theme")}
               >
@@ -1666,23 +1659,6 @@ export default function App() {
               </button>
             </div>
           </div>
-
-          {workspaceTab === "workspace" && (
-            <div className="workspace-overview">
-              <div className="workspace-stat-card">
-                <strong>Live layout editing</strong>
-                <span>Drag any visible widget directly on the preview to move it around the 6x6 grid.</span>
-              </div>
-              <div className="workspace-stat-card">
-                <strong>Quick resizing</strong>
-                <span>Use the lower-right handle on a widget card to resize it while keeping the preview visible.</span>
-              </div>
-              <div className="workspace-stat-card">
-                <strong>Theme-aware panel</strong>
-                <span>Theme changes here affect the preview and can be pushed to the physical screen with apply actions.</span>
-              </div>
-            </div>
-          )}
 
           {workspaceTab === "theme" && (
             <div className="workbench-section">
