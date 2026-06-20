@@ -788,56 +788,26 @@ script:
       - lvgl.label.update:
           id: media_overlay_target_label
           text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_text_color).state, 0xF1F5F9));'
-      - lvgl.widget.update:
-          id: media_btn_play_pause
-          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 8));'
-          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 10));'
-          bg_grad_dir: VER
-          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          outline_width: 1
-          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 22));'
-          outline_opa: 20%
-          clip_corner: true
-      - lvgl.widget.update:
-          id: media_btn_stop
-          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 8));'
-          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 10));'
-          bg_grad_dir: VER
-          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          outline_width: 1
-          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 22));'
-          outline_opa: 20%
-          clip_corner: true
-      - lvgl.widget.update:
-          id: media_btn_vol_down
-          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 8));'
-          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 10));'
-          bg_grad_dir: VER
-          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          outline_width: 1
-          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 22));'
-          outline_opa: 20%
-          clip_corner: true
-      - lvgl.widget.update:
-          id: media_btn_vol_up
-          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 8));'
-          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 10));'
-          bg_grad_dir: VER
-          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          outline_width: 1
-          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 22));'
-          outline_opa: 20%
-          clip_corner: true
-      - lvgl.widget.update:
-          id: media_btn_close
-          bg_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F), 8));'
-          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F), 18));'
-          bg_grad_dir: VER
-          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          outline_width: 1
-          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166), 20));'
-          outline_opa: 22%
-          clip_corner: true
+      - lvgl.bar.update:
+          id: media_overlay_accent_bar
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F), 10));'
+      - lvgl.line.update:
+          id: media_overlay_divider
+          line_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 20));'
+          points:
+            - 0, 2
+            - 344, 2
+      - lvgl.buttonmatrix.update:
+          id: media_control_matrix
+          items:
+            bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 8));'
+            bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 10));'
+            bg_grad_dir: VER
+            border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+            text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_text_color).state, 0xF1F5F9));'
+      - lvgl.label.update:
+          id: media_overlay_hint_label
+          text_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_text_color).state, 0xF1F5F9), 18));'
       - script.execute: render_all_widgets
       - lvgl.widget.redraw:
 
@@ -6028,168 +5998,110 @@ lvgl:
                         width: 420
                         text_align: CENTER
                         long_mode: DOT
-                    - obj:
-                        id: media_btn_play_pause
-                        x: 40
-                        y: 150
-                        width: 180
-                        height: 80
-                        bg_color: 0x0D1B33
+                    - bar:
+                        id: media_overlay_accent_bar
+                        x: 56
+                        y: 118
+                        width: 328
+                        height: 12
+                        min_value: 0
+                        max_value: 100
+                        value: 72
+                        bg_color: 0x22324F
                         bg_opa: 100%
-                        radius: 20
-                        border_width: 2
-                        border_color: 0x285EA8
-                        shadow_width: 16
-                        shadow_color: 0x000000
-                        shadow_opa: 20%
-                        clickable: true
-                        scrollable: false
-                        press_lock: true
-                        on_click:
-                          then:
-                            - homeassistant.service:
-                                service: media_player.media_play_pause
-                                data:
-                                  entity_id: !lambda "return id(active_media_target);"
-                        widgets:
-                          - label:
-                              x: 0
-                              y: 25
-                              width: 180
-                              height: 28
-                              text: "Play / Pause"
-                              text_font: montserrat_18
-                              text_color: 0xF1F5F9
-                              text_align: CENTER
-                    - obj:
-                        id: media_btn_stop
-                        x: 260
-                        y: 150
-                        width: 180
-                        height: 80
-                        bg_color: 0x0D1B33
-                        bg_opa: 100%
-                        radius: 20
-                        border_width: 2
-                        border_color: 0x285EA8
-                        shadow_width: 16
-                        shadow_color: 0x000000
-                        shadow_opa: 20%
-                        clickable: true
-                        scrollable: false
-                        press_lock: true
-                        on_click:
-                          then:
-                            - homeassistant.service:
-                                service: media_player.media_stop
-                                data:
-                                  entity_id: !lambda "return id(active_media_target);"
-                        widgets:
-                          - label:
-                              x: 0
-                              y: 25
-                              width: 180
-                              height: 28
-                              text: "Stop"
-                              text_font: montserrat_18
-                              text_color: 0xF1F5F9
-                              text_align: CENTER
-                    - obj:
-                        id: media_btn_vol_down
-                        x: 40
-                        y: 260
-                        width: 180
-                        height: 80
-                        bg_color: 0x0D1B33
-                        bg_opa: 100%
-                        radius: 20
-                        border_width: 2
-                        border_color: 0x285EA8
-                        shadow_width: 16
-                        shadow_color: 0x000000
-                        shadow_opa: 20%
-                        clickable: true
-                        scrollable: false
-                        press_lock: true
-                        on_click:
-                          then:
-                            - homeassistant.service:
-                                service: media_player.volume_down
-                                data:
-                                  entity_id: !lambda "return id(active_media_target);"
-                        widgets:
-                          - label:
-                              x: 0
-                              y: 25
-                              width: 180
-                              height: 28
-                              text: "Volume -"
-                              text_font: montserrat_18
-                              text_color: 0xF1F5F9
-                              text_align: CENTER
-                    - obj:
-                        id: media_btn_vol_up
-                        x: 260
-                        y: 260
-                        width: 180
-                        height: 80
-                        bg_color: 0x0D1B33
-                        bg_opa: 100%
-                        radius: 20
-                        border_width: 2
-                        border_color: 0x285EA8
-                        shadow_width: 16
-                        shadow_color: 0x000000
-                        shadow_opa: 20%
-                        clickable: true
-                        scrollable: false
-                        press_lock: true
-                        on_click:
-                          then:
-                            - homeassistant.service:
-                                service: media_player.volume_up
-                                data:
-                                  entity_id: !lambda "return id(active_media_target);"
-                        widgets:
-                          - label:
-                              x: 0
-                              y: 25
-                              width: 180
-                              height: 28
-                              text: "Volume +"
-                              text_font: montserrat_18
-                              text_color: 0xF1F5F9
-                              text_align: CENTER
-                    - obj:
-                        id: media_btn_close
-                        x: 120
-                        y: 370
-                        width: 240
-                        height: 72
-                        bg_color: 0x1F2937
-                        bg_opa: 100%
-                        radius: 20
-                        border_width: 2
-                        border_color: 0x285EA8
-                        shadow_width: 16
-                        shadow_color: 0x000000
-                        shadow_opa: 20%
-                        clickable: true
-                        scrollable: false
-                        press_lock: true
-                        on_click:
-                          then:
-                            - lvgl.widget.hide: media_overlay
-                        widgets:
-                          - label:
-                              x: 0
-                              y: 22
-                              width: 240
-                              height: 28
-                              text: "Close"
-                              text_font: montserrat_18
-                              text_color: 0xF1F5F9
-                              text_align: CENTER
+                        border_width: 0
+                        radius: 10
+                        pad_all: 2
+                        indicator:
+                          bg_color: 0xFFD166
+                          bg_grad_color: 0x4A88FF
+                          bg_grad_dir: HOR
+                          radius: 10
+                    - line:
+                        id: media_overlay_divider
+                        x: 48
+                        y: 144
+                        width: 344
+                        height: 4
+                        line_width: 2
+                        line_rounded: true
+                        line_color: 0x8FA6C8
+                        points:
+                          - 0, 2
+                          - 344, 2
+                    - buttonmatrix:
+                        id: media_control_matrix
+                        x: 44
+                        y: 172
+                        width: 392
+                        height: 170
+                        bg_opa: 0%
+                        border_width: 0
+                        pad_all: 0
+                        pad_row: 14
+                        pad_column: 14
+                        items:
+                          bg_color: 0x0D1B33
+                          bg_grad_color: 0x091425
+                          bg_grad_dir: VER
+                          bg_opa: 100%
+                          radius: 20
+                          border_width: 2
+                          border_color: 0x285EA8
+                          shadow_width: 14
+                          shadow_color: 0x000000
+                          shadow_opa: 18%
+                          text_color: 0xF1F5F9
+                          text_font: montserrat_18
+                        rows:
+                          - buttons:
+                              - id: media_matrix_play_pause
+                                text: "Play / Pause"
+                                on_click:
+                                  then:
+                                    - homeassistant.service:
+                                        service: media_player.media_play_pause
+                                        data:
+                                          entity_id: !lambda "return id(active_media_target);"
+                              - id: media_matrix_stop
+                                text: "Stop"
+                                on_click:
+                                  then:
+                                    - homeassistant.service:
+                                        service: media_player.media_stop
+                                        data:
+                                          entity_id: !lambda "return id(active_media_target);"
+                              - id: media_matrix_close
+                                text: "Close"
+                                on_click:
+                                  then:
+                                    - lvgl.widget.hide: media_overlay
+                          - buttons:
+                              - id: media_matrix_volume_down
+                                text: "Volume -"
+                                on_click:
+                                  then:
+                                    - homeassistant.service:
+                                        service: media_player.volume_down
+                                        data:
+                                          entity_id: !lambda "return id(active_media_target);"
+                              - id: media_matrix_volume_up
+                                text: "Volume +"
+                                on_click:
+                                  then:
+                                    - homeassistant.service:
+                                        service: media_player.volume_up
+                                        data:
+                                          entity_id: !lambda "return id(active_media_target);"
+                    - label:
+                        id: media_overlay_hint_label
+                        text: "Long press a media tile to open this panel"
+                        text_font: montserrat_14
+                        text_color: 0xB8C6DA
+                        align: BOTTOM_MID
+                        y: -20
+                        width: 380
+                        text_align: CENTER
 
 
 

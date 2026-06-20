@@ -538,6 +538,17 @@ function actionPlaceholder(type: WidgetConfig["type"]) {
   }
 }
 
+function previewWidgetState(widget: WidgetConfig) {
+  const value = widget.value.trim();
+  if (!value) {
+    if (widget.type === "clock" || widget.type === "date") {
+      return "Live";
+    }
+    return "Ready";
+  }
+  return value;
+}
+
 function valueSourcePlaceholder(type: WidgetConfig["type"]) {
   switch (type) {
     case "status":
@@ -1102,12 +1113,13 @@ export default function App() {
                     const previewValue =
                       widget.type === "blank" ? "" : widget.value || (isAutoValueType(widget.type) ? valuePlaceholder(widget.type) : "No value");
                     const geometry = previewGeometry(widget);
+                    const stateChip = previewWidgetState(widget);
 
                     return (
                       <button
                         key={widget.id}
                         type="button"
-                        className={`widget-card ${selectedId === widget.id ? "selected" : ""} ${widget.type === "blank" ? "blank-widget" : ""}`}
+                        className={`widget-card widget-card-${widget.type} ${selectedId === widget.id ? "selected" : ""} ${widget.type === "blank" ? "blank-widget" : ""}`}
                         style={widgetStyle(widget, theme)}
                         onClick={() => setSelectedId(widget.id)}
                         onPointerDown={(event) => handlePointerStart(event, widget, "drag")}
@@ -1121,6 +1133,24 @@ export default function App() {
                           <div className="widget-blank">Blank spacer</div>
                         ) : (
                           <>
+                            <span className="widget-accent-rail" />
+                            {(widget.type === "clock" || widget.type === "date") && <span className="widget-chip">Live</span>}
+                            {widget.type === "status" && (
+                              <span className="widget-status-cluster" aria-hidden="true">
+                                <span />
+                                <span />
+                                <span />
+                              </span>
+                            )}
+                            {widget.type === "media" && (
+                              <span className="widget-media-cluster" aria-hidden="true">
+                                <span />
+                                <span />
+                                <span />
+                                <span />
+                              </span>
+                            )}
+                            {(widget.type === "button" || widget.type === "media") && <span className="widget-state-chip">{stateChip}</span>}
                             {widget.showIcon && (
                               <MdiIcon
                                 icon={widget.icon}
@@ -1175,6 +1205,29 @@ export default function App() {
                       </button>
                     );
                   })}
+                  {selectedWidget?.type === "media" && (
+                    <div className="preview-media-overlay" aria-hidden="true">
+                      <div className="preview-media-scrim" />
+                      <div className="preview-media-panel">
+                        <div className="preview-media-header">
+                          <strong>{transformLabel(selectedWidget.label || "Media Controls", selectedWidget.labelTransform)}</strong>
+                          <span>{selectedWidget.valueSource || "media_player target"}</span>
+                        </div>
+                        <div className="preview-media-bar">
+                          <span className="preview-media-bar-fill" />
+                        </div>
+                        <div className="preview-media-divider" />
+                        <div className="preview-media-matrix">
+                          <button type="button">Play / Pause</button>
+                          <button type="button">Stop</button>
+                          <button type="button">Close</button>
+                          <button type="button">Volume -</button>
+                          <button type="button">Volume +</button>
+                        </div>
+                        <p className="preview-media-footnote">Long press any media card on the panel to open this control surface.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
