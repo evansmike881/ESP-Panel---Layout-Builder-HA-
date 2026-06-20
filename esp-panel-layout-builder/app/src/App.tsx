@@ -142,6 +142,18 @@ function widgetStateTone(widget: WidgetConfig) {
 function effectiveWidgetBg(widget: WidgetConfig, theme: PanelTheme) {
   const override = widget.widgetBgColor.trim().toLowerCase();
   if (!override) {
+    if (widget.type === "clock" || widget.type === "date") {
+      return `color-mix(in srgb, ${theme.widgetBg} 74%, ${theme.screenBg})`;
+    }
+    if (widget.type === "status") {
+      return `color-mix(in srgb, ${theme.widgetBg} 52%, ${theme.screenBg})`;
+    }
+    if (widget.type === "media") {
+      return `color-mix(in srgb, ${theme.widgetBg} 66%, ${theme.screenBg})`;
+    }
+    if (widget.type === "button") {
+      return `color-mix(in srgb, ${theme.widgetBg} 72%, ${theme.screenBg})`;
+    }
     return theme.widgetBg;
   }
   if (override === "transparent") {
@@ -1088,6 +1100,19 @@ export default function App() {
                   style={{ transform: `scale(${previewScale / 100})` }}
                 >
                   <div className="board-surface-glow" />
+                  <div className="board-inner-frame" />
+                  <div className="board-header-panel">
+                    <strong>ESP Panel</strong>
+                    <span>LVGL surface</span>
+                  </div>
+                  <div className="board-header-bar">
+                    <span className="board-header-bar-fill" />
+                  </div>
+                  <div className="board-header-chip">
+                    <strong>UI</strong>
+                    <span>Active</span>
+                  </div>
+                  <div className="board-footer-line" />
                   <div className="board-corner-stamp">LVGL</div>
                   <div className="grid-overlay">
                     {GRID_LABELS.map((cell) => (

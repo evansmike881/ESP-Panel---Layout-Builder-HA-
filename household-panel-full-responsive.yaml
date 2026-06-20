@@ -687,6 +687,39 @@ script:
           id: screen_glow_secondary
           bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166), 24));'
       - lvgl.widget.update:
+          id: screen_inner_frame
+          border_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 26));'
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166), 34));'
+      - lvgl.widget.update:
+          id: screen_header_panel
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), 10));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+      - lvgl.label.update:
+          id: screen_header_title
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_text_color).state, 0xF1F5F9));'
+      - lvgl.label.update:
+          id: screen_header_subtitle
+          text_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 24));'
+      - lvgl.bar.update:
+          id: screen_header_bar
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), 6));'
+      - lvgl.widget.update:
+          id: screen_header_chip
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), 8));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+      - lvgl.label.update:
+          id: screen_header_chip_title
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166));'
+      - lvgl.label.update:
+          id: screen_header_chip_value
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_text_color).state, 0xF1F5F9));'
+      - lvgl.line.update:
+          id: screen_footer_line
+          line_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 20));'
+          points:
+            - 0, 2
+            - 164, 2
+      - lvgl.widget.update:
           id: w01_card
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
@@ -4986,6 +5019,118 @@ lvgl:
                   border_width: 0
                   clickable: false
                   scrollable: false
+              - obj:
+                  id: screen_inner_frame
+                  x: 12
+                  y: 12
+                  width: 456
+                  height: 456
+                  radius: 30
+                  bg_opa: 0%
+                  border_width: 1
+                  border_color: 0x89A6CF
+                  outline_width: 1
+                  outline_color: 0xFFFFFF
+                  outline_opa: 8%
+                  clickable: false
+                  scrollable: false
+              - obj:
+                  id: screen_header_panel
+                  x: 18
+                  y: 18
+                  width: 172
+                  height: 46
+                  radius: 18
+                  bg_color: 0x11213B
+                  bg_opa: 42%
+                  border_width: 1
+                  border_color: 0x285EA8
+                  clickable: false
+                  scrollable: false
+                  widgets:
+                    - label:
+                        id: screen_header_title
+                        x: 14
+                        y: 8
+                        width: 144
+                        height: 18
+                        text: "ESP Panel"
+                        text_font: montserrat_bold_16
+                        text_color: 0xF1F5F9
+                    - label:
+                        id: screen_header_subtitle
+                        x: 14
+                        y: 25
+                        width: 144
+                        height: 14
+                        text: "LVGL surface"
+                        text_font: montserrat_10
+                        text_color: 0x8E9FB8
+              - bar:
+                  id: screen_header_bar
+                  x: 202
+                  y: 30
+                  width: 146
+                  height: 8
+                  min_value: 0
+                  max_value: 100
+                  value: 72
+                  bg_color: 0x17263E
+                  bg_opa: 100%
+                  border_width: 0
+                  radius: 8
+                  pad_all: 2
+                  indicator:
+                    bg_color: 0xFFD166
+                    bg_grad_color: 0x4A88FF
+                    bg_grad_dir: HOR
+                    radius: 8
+              - obj:
+                  id: screen_header_chip
+                  x: 360
+                  y: 18
+                  width: 102
+                  height: 46
+                  radius: 18
+                  bg_color: 0x11213B
+                  bg_opa: 38%
+                  border_width: 1
+                  border_color: 0x285EA8
+                  clickable: false
+                  scrollable: false
+                  widgets:
+                    - label:
+                        id: screen_header_chip_title
+                        x: 0
+                        y: 8
+                        width: 102
+                        height: 14
+                        text: "UI"
+                        text_font: montserrat_bold_12
+                        text_align: CENTER
+                        text_color: 0xFFD166
+                    - label:
+                        id: screen_header_chip_value
+                        x: 0
+                        y: 22
+                        width: 102
+                        height: 14
+                        text: "Active"
+                        text_font: montserrat_10
+                        text_align: CENTER
+                        text_color: 0xDCE7F7
+              - line:
+                  id: screen_footer_line
+                  x: 158
+                  y: 452
+                  width: 164
+                  height: 4
+                  line_width: 2
+                  line_rounded: true
+                  line_color: 0x285EA8
+                  points:
+                    - 0, 2
+                    - 164, 2
               - obj:
                   id: w01_card
                   x: 3

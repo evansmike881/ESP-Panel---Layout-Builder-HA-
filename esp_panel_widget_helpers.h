@@ -422,7 +422,23 @@ static inline uint32_t esp_panel_widget_effective_bg(
     return esp_panel_parse_color(normalized, widget_bg);
   }
 
-  return esp_panel_widget_bg_for_state(type_name, value, widget_bg, button_on, button_off);
+  const uint32_t base = esp_panel_widget_bg_for_state(type_name, value, widget_bg, button_on, button_off);
+  const uint32_t mixed_screen = esp_panel_color_blend(base, screen_bg, 52);
+
+  if (type_name == "clock" || type_name == "date") {
+    return esp_panel_color_lighten(esp_panel_color_blend(base, screen_bg, 74), 10);
+  }
+  if (type_name == "status") {
+    return esp_panel_color_lighten(mixed_screen, 4);
+  }
+  if (type_name == "media") {
+    return esp_panel_color_lighten(esp_panel_color_blend(base, screen_bg, 34), 6);
+  }
+  if (type_name == "button") {
+    return esp_panel_color_lighten(esp_panel_color_blend(base, screen_bg, 28), 4);
+  }
+
+  return base;
 }
 
 static inline uint32_t esp_panel_widget_accent_color(

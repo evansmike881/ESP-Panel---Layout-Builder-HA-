@@ -606,9 +606,115 @@ h2 {
   pointer-events: none;
 }
 
+.board-inner-frame,
+.board-header-panel,
+.board-header-bar,
+.board-header-chip,
+.board-footer-line {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.board-inner-frame {
+  inset: 12px;
+  border-radius: 30px;
+  border: 1px solid color-mix(in srgb, var(--widget-border-color, #285ea8) 66%, white);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.board-header-panel,
+.board-header-chip {
+  top: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--widget-border-color, #285ea8) 78%, white);
+  background: color-mix(in srgb, var(--panel-screen-bg, #08142d) 76%, white);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 18px rgba(0, 0, 0, 0.16);
+}
+
+.board-header-panel {
+  left: 18px;
+  width: 172px;
+}
+
+.board-header-panel strong,
+.board-header-chip strong {
+  font-size: 0.92rem;
+  line-height: 1;
+  color: var(--panel-overlay-text, #eff7ff);
+}
+
+.board-header-panel span,
+.board-header-chip span {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.board-header-panel span {
+  color: color-mix(in srgb, var(--widget-border-color, #285ea8) 62%, white);
+}
+
+.board-header-bar {
+  top: 30px;
+  left: 202px;
+  width: 146px;
+  height: 8px;
+  padding: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel-screen-bg-deep, #06111f) 82%, white);
+}
+
+.board-header-bar-fill {
+  display: block;
+  width: 72%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--panel-overlay-title, #ffd166), color-mix(in srgb, var(--panel-overlay-title, #ffd166) 36%, #4a88ff));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--panel-overlay-title, #ffd166) 30%, transparent);
+}
+
+.board-header-chip {
+  right: 18px;
+  width: 102px;
+  align-items: center;
+  text-align: center;
+}
+
+.board-header-chip strong {
+  color: var(--panel-overlay-title, #ffd166);
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.board-header-chip span {
+  color: var(--panel-overlay-text, #eff7ff);
+}
+
+.board-footer-line {
+  left: 158px;
+  bottom: 24px;
+  width: 164px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--widget-border-color, #285ea8) 82%, white), transparent);
+  opacity: 0.92;
+}
+
 .board-corner-stamp {
   position: absolute;
-  top: 18px;
+  top: 72px;
   right: 18px;
   z-index: 2;
   padding: 6px 10px;
@@ -693,6 +799,32 @@ h2 {
     0 20px 40px color-mix(in srgb, var(--widget-selected-color, #ffd166) 26%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     inset 0 -24px 32px rgba(0, 0, 0, 0.18);
+}
+
+.widget-card-clock,
+.widget-card-date {
+  background:
+    radial-gradient(circle at 88% 18%, color-mix(in srgb, var(--widget-accent-color, #ffd166) 18%, transparent), transparent 22%),
+    linear-gradient(180deg, color-mix(in srgb, var(--widget-bg-color, #0d1b33) 84%, white) 0%, var(--widget-bg-color, #0d1b33) 26%, color-mix(in srgb, var(--widget-bg-color, #0d1b33) 82%, black) 100%);
+}
+
+.widget-card-status {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--widget-accent-color, #ffd166) 16%, transparent) 0 4px, transparent 4px 100%),
+    linear-gradient(180deg, color-mix(in srgb, var(--widget-bg-color, #0d1b33) 88%, white) 0%, var(--widget-bg-color, #0d1b33) 24%, color-mix(in srgb, var(--widget-bg-color, #0d1b33) 82%, black) 100%);
+}
+
+.widget-card-button {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -20px 28px rgba(0, 0, 0, 0.15),
+    0 18px 34px rgba(0, 0, 0, 0.26);
+}
+
+.widget-card-media {
+  background:
+    radial-gradient(circle at 84% 22%, color-mix(in srgb, var(--widget-accent-color, #ffd166) 18%, transparent), transparent 24%),
+    linear-gradient(180deg, color-mix(in srgb, var(--widget-bg-color, #0d1b33) 82%, white) 0%, var(--widget-bg-color, #0d1b33) 22%, color-mix(in srgb, var(--widget-bg-color, #0d1b33) 80%, black) 100%);
 }
 
 .widget-sheen,
