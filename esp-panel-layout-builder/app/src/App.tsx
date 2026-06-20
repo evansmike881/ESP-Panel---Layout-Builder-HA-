@@ -195,17 +195,29 @@ function applyThemeToWidgets(widgets: WidgetConfig[], theme: PanelTheme) {
   }));
 }
 
+function alphaHex(color: string, alpha: string) {
+  return /^#[0-9a-fA-F]{6}$/.test(color) ? `${color}${alpha}` : color;
+}
+
 function previewThemeStyle(theme: PanelTheme): CSSProperties {
   return {
     ["--panel-screen-bg" as string]: theme.screenBg,
-    ["--panel-grid-line" as string]: `${theme.widgetBorder}33`,
-    ["--panel-grid-text" as string]: `${theme.labelColor}88`,
+    ["--panel-screen-bg-deep" as string]: `color-mix(in srgb, ${theme.screenBg} 82%, black)`,
+    ["--panel-screen-bg-soft" as string]: `color-mix(in srgb, ${theme.screenBg} 78%, white)`,
+    ["--panel-screen-sheen" as string]: `color-mix(in srgb, ${theme.accent} 26%, transparent)`,
+    ["--panel-grid-line" as string]: alphaHex(theme.widgetBorder, "2b"),
+    ["--panel-grid-text" as string]: alphaHex(theme.labelColor, "8f"),
     ["--widget-bg-color" as string]: theme.widgetBg,
     ["--widget-border-color" as string]: theme.widgetBorder,
     ["--button-on-bg-color" as string]: theme.buttonOnBg,
     ["--button-off-bg-color" as string]: theme.buttonOffBg,
     ["--widget-selected-color" as string]: theme.accent,
-    ["--widget-blank-color" as string]: theme.valueColor
+    ["--widget-blank-color" as string]: theme.valueColor,
+    ["--panel-overlay-bg" as string]: theme.overlayBg,
+    ["--panel-overlay-title" as string]: theme.overlayTitle,
+    ["--panel-overlay-text" as string]: theme.overlayText,
+    ["--panel-accent-soft" as string]: alphaHex(theme.accent, "2e"),
+    ["--panel-accent-strong" as string]: alphaHex(theme.accent, "66")
   };
 }
 
@@ -245,6 +257,7 @@ function widgetStyle(widget: WidgetConfig, theme: PanelTheme): CSSProperties {
     ["--button-off-bg-color" as string]: theme.buttonOffBg,
     ["--widget-selected-color" as string]: theme.accent,
     ["--widget-tone" as string]: tone,
+    ["--widget-accent-color" as string]: widget.iconColor,
     ["--widget-icon-color" as string]: widget.iconColor,
     ["--widget-label-color" as string]: widget.labelColor,
     ["--widget-value-color" as string]: widget.valueColor
@@ -865,9 +878,15 @@ export default function App() {
   return (
     <div className={`app-shell app-theme-${appTheme}`}>
       <header className="topbar">
-        <div>
+        <div className="topbar-copy">
+          <p className="eyebrow">LVGL-Inspired Builder</p>
           <h1>ESP Panel Layout Builder</h1>
-          <p className="topbar-subtitle">Cleaner panel editing with live preview, theme control, and room for multiple screens.</p>
+          <p className="topbar-subtitle">A richer control-surface editor with live preview styling that tracks the physical panel more closely.</p>
+          <div className="topbar-badges">
+            <span className="hero-badge">{theme.name} theme</span>
+            <span className="hero-badge">{visibleWidgets.length} visible widgets</span>
+            <span className="hero-badge">{warnings.length > 0 ? `${warnings.length} warnings` : "Layout clean"}</span>
+          </div>
         </div>
         <div className="topbar-actions">
           <div className="app-theme-toggle" aria-label="Builder theme">
@@ -954,7 +973,7 @@ export default function App() {
           <div className="preview-header">
             <div>
               <h2>Panel Preview</h2>
-              <p>Live 480x480 view of the physical screen layout.</p>
+              <p>Live 480x480 view of the physical screen with LVGL-style depth, contrast, and chrome.</p>
             </div>
             <div className="preview-header-tools">
               <label className="preview-zoom" aria-label="Preview zoom">
@@ -973,7 +992,22 @@ export default function App() {
               <div className="grid-key">
                 <span>Drag cards to move</span>
                 <span>Use the corner handle to resize</span>
+                <span>Long press opens media controls on device</span>
               </div>
+            </div>
+          </div>
+          <div className="preview-meta-strip">
+            <div className="preview-meta-pill">
+              <strong>Selected</strong>
+              <span>{selectedWidget?.id || "None"}</span>
+            </div>
+            <div className="preview-meta-pill">
+              <strong>Profile</strong>
+              <span>{theme.name}</span>
+            </div>
+            <div className="preview-meta-pill">
+              <strong>Surface</strong>
+              <span>{previewScale}%</span>
             </div>
           </div>
 
@@ -987,6 +1021,8 @@ export default function App() {
                   ref={boardRef}
                   style={{ transform: `scale(${previewScale / 100})` }}
                 >
+                  <div className="board-surface-glow" />
+                  <div className="board-corner-stamp">LVGL</div>
                   <div className="grid-overlay">
                     {GRID_LABELS.map((cell) => (
                       <div
@@ -1021,6 +1057,11 @@ export default function App() {
                         onClick={() => setSelectedId(widget.id)}
                         onPointerDown={(event) => handlePointerStart(event, widget, "drag")}
                       >
+                        <span className="widget-sheen" />
+                        <div className="widget-meta">
+                          <span className="widget-id-pill">{widget.id}</span>
+                          <span className="widget-type-pill">{widget.type}</span>
+                        </div>
                         {widget.type === "blank" ? (
                           <div className="widget-blank">Blank spacer</div>
                         ) : (
@@ -1072,6 +1113,9 @@ export default function App() {
                             )}
                           </>
                         )}
+                        <span className="widget-size">
+                          {widget.w}x{widget.h}
+                        </span>
                         <span className="resize-handle" onPointerDown={(event) => handlePointerStart(event, widget, "resize")} />
                       </button>
                     );
@@ -1079,6 +1123,7 @@ export default function App() {
                 </div>
               </div>
             </div>
+            <p className="preview-caption">Cards, borders, overlays, and accent treatment are styled to follow the same design language as the updated physical panel.</p>
         </section>
 
         <aside className="editor-panel">
@@ -1633,7 +1678,7 @@ export default function App() {
           <div className="workbench-header">
             <div>
               <h2>Screen Workspace</h2>
-              <p>Manage your themes, hidden widgets, and layout here.</p>
+              <p>Theme the dashboard, manage hidden cards, and keep the preview and panel visuals aligned.</p>
             </div>
             <div className="workbench-meta">
               <span>{visibleWidgets.length} visible widgets</span>

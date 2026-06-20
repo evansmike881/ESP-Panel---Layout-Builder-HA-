@@ -113,7 +113,6 @@ touchscreen:
           }
   on_release:
     then:
-      - script.execute: handle_touch_release
       - logger.log:
           level: WARN
           tag: touch_diag
@@ -424,6 +423,14 @@ script:
     then:
       - if:
           condition:
+            lambda: 'return entity.empty();'
+          then:
+            - logger.log:
+                level: WARN
+                tag: panel_action
+                format: "Ignoring tap because widget action is empty."
+      - if:
+          condition:
             lambda: 'return esp_panel_string_starts_with(entity, "light.");'
           then:
             - homeassistant.service:
@@ -569,228 +576,52 @@ script:
       label: string
       hold: bool
     then:
+      - logger.log:
+          level: WARN
+          tag: panel_action
+          format: "Widget action widget=%s type=%s hold=%s action=%s value=%s"
+          args:
+            - "widget_id.c_str()"
+            - "widget_type.c_str()"
+            - "hold ? \"true\" : \"false\""
+            - "action.c_str()"
+            - "value.c_str()"
       - homeassistant.event:
           event: esphome.esp_panel_widget_tap
           data:
             widget: !lambda "return widget_id;"
-            hold: !lambda "return hold ? std::string(\"true\") : std::string(\"false\");"
       - if:
           condition:
             lambda: 'return widget_type == "media";'
           then:
             - if:
                 condition:
-                  lambda: 'return hold;'
+                  lambda: 'return hold && esp_panel_is_media_action(action);'
                 then:
                   - script.execute:
                       id: open_media_controls
                       action: !lambda "return action;"
                       label: !lambda "return label;"
                 else:
-                  - script.execute:
-                      id: toggle_media_action
-                      action: !lambda "return action;"
-                      value: !lambda "return value;"
+                  - if:
+                      condition:
+                        lambda: 'return esp_panel_is_media_action(action);'
+                      then:
+                        - script.execute:
+                            id: toggle_media_action
+                            action: !lambda "return action;"
+                            value: !lambda "return value;"
+                      else:
+                        - logger.log:
+                            level: WARN
+                            tag: panel_action
+                            format: "Media widget %s has no valid media action payload."
+                            args:
+                              - "widget_id.c_str()"
           else:
             - script.execute:
                 id: dispatch_entity_action
                 entity: !lambda "return action;"
-
-  - id: handle_touch_release
-    mode: restart
-    then:
-      - if:
-          condition:
-            lambda: |-
-              const int x = id(last_touch_x);
-              const int y = id(last_touch_y);
-              return id(w01_visible).state &&
-                     esp_panel_touch_within_widget(x, y, (int) id(w01_x).state, (int) id(w01_y).state, (int) id(w01_w).state, (int) id(w01_h).state, id(slot_w), id(slot_h), id(slot_gap));
-          then:
-            - script.execute:
-                id: dispatch_widget_action
-                widget_id: "w01"
-                widget_type: !lambda "return id(w01_type).state;"
-                action: !lambda "return id(w01_action).state;"
-                value: !lambda "return id(w01_value).state;"
-                label: !lambda "return id(w01_label).state;"
-                hold: !lambda "return (millis() - id(touch_start_ms)) >= 700;"
-      - if:
-          condition:
-            lambda: |-
-              const int x = id(last_touch_x);
-              const int y = id(last_touch_y);
-              return id(w02_visible).state &&
-                     esp_panel_touch_within_widget(x, y, (int) id(w02_x).state, (int) id(w02_y).state, (int) id(w02_w).state, (int) id(w02_h).state, id(slot_w), id(slot_h), id(slot_gap));
-          then:
-            - script.execute:
-                id: dispatch_widget_action
-                widget_id: "w02"
-                widget_type: !lambda "return id(w02_type).state;"
-                action: !lambda "return id(w02_action).state;"
-                value: !lambda "return id(w02_value).state;"
-                label: !lambda "return id(w02_label).state;"
-                hold: !lambda "return (millis() - id(touch_start_ms)) >= 700;"
-      - if:
-          condition:
-            lambda: |-
-              const int x = id(last_touch_x);
-              const int y = id(last_touch_y);
-              return id(w03_visible).state &&
-                     esp_panel_touch_within_widget(x, y, (int) id(w03_x).state, (int) id(w03_y).state, (int) id(w03_w).state, (int) id(w03_h).state, id(slot_w), id(slot_h), id(slot_gap));
-          then:
-            - script.execute:
-                id: dispatch_widget_action
-                widget_id: "w03"
-                widget_type: !lambda "return id(w03_type).state;"
-                action: !lambda "return id(w03_action).state;"
-                value: !lambda "return id(w03_value).state;"
-                label: !lambda "return id(w03_label).state;"
-                hold: !lambda "return (millis() - id(touch_start_ms)) >= 700;"
-      - if:
-          condition:
-            lambda: |-
-              const int x = id(last_touch_x);
-              const int y = id(last_touch_y);
-              return id(w04_visible).state &&
-                     esp_panel_touch_within_widget(x, y, (int) id(w04_x).state, (int) id(w04_y).state, (int) id(w04_w).state, (int) id(w04_h).state, id(slot_w), id(slot_h), id(slot_gap));
-          then:
-            - script.execute:
-                id: dispatch_widget_action
-                widget_id: "w04"
-                widget_type: !lambda "return id(w04_type).state;"
-                action: !lambda "return id(w04_action).state;"
-                value: !lambda "return id(w04_value).state;"
-                label: !lambda "return id(w04_label).state;"
-                hold: !lambda "return (millis() - id(touch_start_ms)) >= 700;"
-      - if:
-          condition:
-            lambda: |-
-              const int x = id(last_touch_x);
-              const int y = id(last_touch_y);
-              return id(w05_visible).state &&
-                     esp_panel_touch_within_widget(x, y, (int) id(w05_x).state, (int) id(w05_y).state, (int) id(w05_w).state, (int) id(w05_h).state, id(slot_w), id(slot_h), id(slot_gap));
-          then:
-            - script.execute:
-                id: dispatch_widget_action
-                widget_id: "w05"
-                widget_type: !lambda "return id(w05_type).state;"
-                action: !lambda "return id(w05_action).state;"
-                value: !lambda "return id(w05_value).state;"
-                label: !lambda "return id(w05_label).state;"
-                hold: !lambda "return (millis() - id(touch_start_ms)) >= 700;"
-      - if:
-          condition:
-            lambda: |-
-              const int x = id(last_touch_x);
-              const int y = id(last_touch_y);
-              return id(w06_visible).state &&
-                     esp_panel_touch_within_widget(x, y, (int) id(w06_x).state, (int) id(w06_y).state, (int) id(w06_w).state, (int) id(w06_h).state, id(slot_w), id(slot_h), id(slot_gap));
-          then:
-            - script.execute:
-                id: dispatch_widget_action
-                widget_id: "w06"
-                widget_type: !lambda "return id(w06_type).state;"
-                action: !lambda "return id(w06_action).state;"
-                value: !lambda "return id(w06_value).state;"
-                label: !lambda "return id(w06_label).state;"
-                hold: !lambda "return (millis() - id(touch_start_ms)) >= 700;"
-      - if:
-          condition:
-            lambda: |-
-              const int x = id(last_touch_x);
-              const int y = id(last_touch_y);
-              return id(w07_visible).state &&
-                     esp_panel_touch_within_widget(x, y, (int) id(w07_x).state, (int) id(w07_y).state, (int) id(w07_w).state, (int) id(w07_h).state, id(slot_w), id(slot_h), id(slot_gap));
-          then:
-            - script.execute:
-                id: dispatch_widget_action
-                widget_id: "w07"
-                widget_type: !lambda "return id(w07_type).state;"
-                action: !lambda "return id(w07_action).state;"
-                value: !lambda "return id(w07_value).state;"
-                label: !lambda "return id(w07_label).state;"
-                hold: !lambda "return (millis() - id(touch_start_ms)) >= 700;"
-      - if:
-          condition:
-            lambda: |-
-              const int x = id(last_touch_x);
-              const int y = id(last_touch_y);
-              return id(w08_visible).state &&
-                     esp_panel_touch_within_widget(x, y, (int) id(w08_x).state, (int) id(w08_y).state, (int) id(w08_w).state, (int) id(w08_h).state, id(slot_w), id(slot_h), id(slot_gap));
-          then:
-            - script.execute:
-                id: dispatch_widget_action
-                widget_id: "w08"
-                widget_type: !lambda "return id(w08_type).state;"
-                action: !lambda "return id(w08_action).state;"
-                value: !lambda "return id(w08_value).state;"
-                label: !lambda "return id(w08_label).state;"
-                hold: !lambda "return (millis() - id(touch_start_ms)) >= 700;"
-      - if:
-          condition:
-            lambda: |-
-              const int x = id(last_touch_x);
-              const int y = id(last_touch_y);
-              return id(w09_visible).state &&
-                     esp_panel_touch_within_widget(x, y, (int) id(w09_x).state, (int) id(w09_y).state, (int) id(w09_w).state, (int) id(w09_h).state, id(slot_w), id(slot_h), id(slot_gap));
-          then:
-            - script.execute:
-                id: dispatch_widget_action
-                widget_id: "w09"
-                widget_type: !lambda "return id(w09_type).state;"
-                action: !lambda "return id(w09_action).state;"
-                value: !lambda "return id(w09_value).state;"
-                label: !lambda "return id(w09_label).state;"
-                hold: !lambda "return (millis() - id(touch_start_ms)) >= 700;"
-      - if:
-          condition:
-            lambda: |-
-              const int x = id(last_touch_x);
-              const int y = id(last_touch_y);
-              return id(w10_visible).state &&
-                     esp_panel_touch_within_widget(x, y, (int) id(w10_x).state, (int) id(w10_y).state, (int) id(w10_w).state, (int) id(w10_h).state, id(slot_w), id(slot_h), id(slot_gap));
-          then:
-            - script.execute:
-                id: dispatch_widget_action
-                widget_id: "w10"
-                widget_type: !lambda "return id(w10_type).state;"
-                action: !lambda "return id(w10_action).state;"
-                value: !lambda "return id(w10_value).state;"
-                label: !lambda "return id(w10_label).state;"
-                hold: !lambda "return (millis() - id(touch_start_ms)) >= 700;"
-      - if:
-          condition:
-            lambda: |-
-              const int x = id(last_touch_x);
-              const int y = id(last_touch_y);
-              return id(w11_visible).state &&
-                     esp_panel_touch_within_widget(x, y, (int) id(w11_x).state, (int) id(w11_y).state, (int) id(w11_w).state, (int) id(w11_h).state, id(slot_w), id(slot_h), id(slot_gap));
-          then:
-            - script.execute:
-                id: dispatch_widget_action
-                widget_id: "w11"
-                widget_type: !lambda "return id(w11_type).state;"
-                action: !lambda "return id(w11_action).state;"
-                value: !lambda "return id(w11_value).state;"
-                label: !lambda "return id(w11_label).state;"
-                hold: !lambda "return (millis() - id(touch_start_ms)) >= 700;"
-      - if:
-          condition:
-            lambda: |-
-              const int x = id(last_touch_x);
-              const int y = id(last_touch_y);
-              return id(w12_visible).state &&
-                     esp_panel_touch_within_widget(x, y, (int) id(w12_x).state, (int) id(w12_y).state, (int) id(w12_w).state, (int) id(w12_h).state, id(slot_w), id(slot_h), id(slot_gap));
-          then:
-            - script.execute:
-                id: dispatch_widget_action
-                widget_id: "w12"
-                widget_type: !lambda "return id(w12_type).state;"
-                action: !lambda "return id(w12_action).state;"
-                value: !lambda "return id(w12_value).state;"
-                label: !lambda "return id(w12_label).state;"
-                hold: !lambda "return (millis() - id(touch_start_ms)) >= 700;"
 
   - id: apply_theme
     mode: restart
@@ -802,74 +633,117 @@ script:
           id: screen_background
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D));'
       - lvgl.widget.update:
+          id: screen_glow_primary
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 32));'
+      - lvgl.widget.update:
+          id: screen_glow_secondary
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166), 24));'
+      - lvgl.widget.update:
           id: w01_card
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w01_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w01_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w02_card
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w02_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w02_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w03_card
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w03_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w03_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w04_card
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w04_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w04_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w05_card
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w05_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w05_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w06_card
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w06_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w06_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w07_card
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w07_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w07_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w08_card
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w08_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w08_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w09_card
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w09_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w09_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w10_card
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w10_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w10_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w11_card
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w11_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w11_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w12_card
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w12_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w12_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: notification_overlay
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F));'
+      - lvgl.widget.update:
+          id: notification_overlay_panel
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F), 18));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166), 10));'
       - lvgl.label.update:
           id: notification_title_label
           text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166));'
       - lvgl.label.update:
           id: notification_message_label
           text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_text_color).state, 0xF1F5F9));'
+      - lvgl.widget.update:
+          id: media_overlay
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F));'
+      - lvgl.widget.update:
+          id: media_overlay_panel
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F), 18));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166), 10));'
+      - lvgl.label.update:
+          id: media_overlay_title_label
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166));'
+      - lvgl.label.update:
+          id: media_overlay_target_label
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_text_color).state, 0xF1F5F9));'
+      - lvgl.widget.update:
+          id: media_btn_play_pause
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 8));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+      - lvgl.widget.update:
+          id: media_btn_stop
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 8));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+      - lvgl.widget.update:
+          id: media_btn_vol_down
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 8));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+      - lvgl.widget.update:
+          id: media_btn_vol_up
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 8));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+      - lvgl.widget.update:
+          id: media_btn_close
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F), 8));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
       - script.execute: render_all_widgets
       - lvgl.widget.redraw:
 
@@ -1216,7 +1090,7 @@ script:
           hidden: !lambda 'return !id(w01_visible).state || id(w01_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w01_type).state, id(w01_value).state, id(w01_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w01_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w01_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w01_icon_label
           hidden: !lambda 'return !id(w01_show_icon).state;'
@@ -1370,7 +1244,7 @@ script:
           hidden: !lambda 'return !id(w02_visible).state || id(w02_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w02_type).state, id(w02_value).state, id(w02_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w02_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w02_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w02_icon_label
           hidden: !lambda 'return !id(w02_show_icon).state;'
@@ -1508,7 +1382,7 @@ script:
           hidden: !lambda 'return !id(w03_visible).state || id(w03_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w03_type).state, id(w03_value).state, id(w03_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w03_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w03_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w03_icon_label
           hidden: !lambda 'return !id(w03_show_icon).state;'
@@ -1657,7 +1531,7 @@ script:
           hidden: !lambda 'return !id(w04_visible).state || id(w04_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w04_type).state, id(w04_value).state, id(w04_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w04_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w04_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w04_icon_label
           hidden: !lambda 'return !id(w04_show_icon).state;'
@@ -1806,7 +1680,7 @@ script:
           hidden: !lambda 'return !id(w05_visible).state || id(w05_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w05_type).state, id(w05_value).state, id(w05_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w05_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w05_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w05_icon_label
           hidden: !lambda 'return !id(w05_show_icon).state;'
@@ -1955,7 +1829,7 @@ script:
           hidden: !lambda 'return !id(w06_visible).state || id(w06_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w06_type).state, id(w06_value).state, id(w06_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w06_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w06_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w06_icon_label
           hidden: !lambda 'return !id(w06_show_icon).state;'
@@ -2104,7 +1978,7 @@ script:
           hidden: !lambda 'return !id(w07_visible).state || id(w07_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w07_type).state, id(w07_value).state, id(w07_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w07_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w07_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w07_icon_label
           hidden: !lambda 'return !id(w07_show_icon).state;'
@@ -2253,7 +2127,7 @@ script:
           hidden: !lambda 'return !id(w08_visible).state || id(w08_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w08_type).state, id(w08_value).state, id(w08_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w08_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w08_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w08_icon_label
           hidden: !lambda 'return !id(w08_show_icon).state;'
@@ -2402,7 +2276,7 @@ script:
           hidden: !lambda 'return !id(w09_visible).state || id(w09_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w09_type).state, id(w09_value).state, id(w09_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w09_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w09_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w09_icon_label
           hidden: !lambda 'return !id(w09_show_icon).state;'
@@ -2551,7 +2425,7 @@ script:
           hidden: !lambda 'return !id(w10_visible).state || id(w10_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w10_type).state, id(w10_value).state, id(w10_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w10_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w10_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w10_icon_label
           hidden: !lambda 'return !id(w10_show_icon).state;'
@@ -2700,7 +2574,7 @@ script:
           hidden: !lambda 'return !id(w11_visible).state || id(w11_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w11_type).state, id(w11_value).state, id(w11_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w11_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w11_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w11_icon_label
           hidden: !lambda 'return !id(w11_show_icon).state;'
@@ -2849,7 +2723,7 @@ script:
           hidden: !lambda 'return !id(w12_visible).state || id(w12_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w12_type).state, id(w12_value).state, id(w12_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
-          border_width: !lambda 'return id(w12_show_border).state ? 1 : 0;'
+          border_width: !lambda 'return id(w12_show_border).state ? 2 : 0;'
       - lvgl.widget.update:
           id: w12_icon_label
           hidden: !lambda 'return !id(w12_show_icon).state;'
@@ -4924,6 +4798,7 @@ lvgl:
     - id: main_page
       bg_color: 0x08142D
       pad_all: 0
+      scrollable: false
       scrollbar_mode: "OFF"
       widgets:
         - obj:
@@ -4935,9 +4810,34 @@ lvgl:
             bg_color: 0x08142D
             border_width: 0
             radius: 0
+            scrollable: false
             scrollbar_mode: "OFF"
             pad_all: 0
             widgets:
+              - obj:
+                  id: screen_glow_primary
+                  x: -48
+                  y: -42
+                  width: 228
+                  height: 228
+                  radius: 160
+                  bg_color: 0x4A88FF
+                  bg_opa: 10%
+                  border_width: 0
+                  clickable: false
+                  scrollable: false
+              - obj:
+                  id: screen_glow_secondary
+                  x: 304
+                  y: 320
+                  width: 196
+                  height: 196
+                  radius: 160
+                  bg_color: 0xFFD166
+                  bg_opa: 8%
+                  border_width: 0
+                  clickable: false
+                  scrollable: false
               - obj:
                   id: w01_card
                   x: 3
@@ -4945,12 +4845,35 @@ lvgl:
                   width: 234
                   height: 74
                   bg_color: 0x070E1B
-                  bg_opa: 95%
+                  bg_opa: 100%
                   border_width: 0
-                  radius: 10
-                  clickable: false
+                  radius: 20
+                  shadow_width: 18
+                  shadow_color: 0x000000
+                  shadow_opa: 18%
+                  clickable: true
                   scrollable: false
                   press_lock: true
+                  on_short_click:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w01"
+                          widget_type: !lambda "return id(w01_type).state;"
+                          action: !lambda "return id(w01_action).state;"
+                          value: !lambda "return id(w01_value).state;"
+                          label: !lambda "return id(w01_label).state;"
+                          hold: false
+                  on_long_press:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w01"
+                          widget_type: !lambda "return id(w01_type).state;"
+                          action: !lambda "return id(w01_action).state;"
+                          value: !lambda "return id(w01_value).state;"
+                          label: !lambda "return id(w01_label).state;"
+                          hold: true
                   scrollbar_mode: "OFF"
                   pad_all: 0
                   widgets:
@@ -4996,12 +4919,35 @@ lvgl:
                   width: 234
                   height: 74
                   bg_color: 0x070E1B
-                  bg_opa: 95%
+                  bg_opa: 100%
                   border_width: 0
-                  radius: 10
-                  clickable: false
+                  radius: 20
+                  shadow_width: 18
+                  shadow_color: 0x000000
+                  shadow_opa: 18%
+                  clickable: true
                   scrollable: false
                   press_lock: true
+                  on_short_click:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w02"
+                          widget_type: !lambda "return id(w02_type).state;"
+                          action: !lambda "return id(w02_action).state;"
+                          value: !lambda "return id(w02_value).state;"
+                          label: !lambda "return id(w02_label).state;"
+                          hold: false
+                  on_long_press:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w02"
+                          widget_type: !lambda "return id(w02_type).state;"
+                          action: !lambda "return id(w02_action).state;"
+                          value: !lambda "return id(w02_value).state;"
+                          label: !lambda "return id(w02_label).state;"
+                          hold: true
                   scrollbar_mode: "OFF"
                   pad_all: 0
                   widgets:
@@ -5047,12 +4993,35 @@ lvgl:
                   width: 234
                   height: 74
                   bg_color: 0x070E1B
-                  bg_opa: 95%
+                  bg_opa: 100%
                   border_width: 0
-                  radius: 10
-                  clickable: false
+                  radius: 20
+                  shadow_width: 18
+                  shadow_color: 0x000000
+                  shadow_opa: 18%
+                  clickable: true
                   scrollable: false
                   press_lock: true
+                  on_short_click:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w03"
+                          widget_type: !lambda "return id(w03_type).state;"
+                          action: !lambda "return id(w03_action).state;"
+                          value: !lambda "return id(w03_value).state;"
+                          label: !lambda "return id(w03_label).state;"
+                          hold: false
+                  on_long_press:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w03"
+                          widget_type: !lambda "return id(w03_type).state;"
+                          action: !lambda "return id(w03_action).state;"
+                          value: !lambda "return id(w03_value).state;"
+                          label: !lambda "return id(w03_label).state;"
+                          hold: true
                   scrollbar_mode: "OFF"
                   pad_all: 0
                   widgets:
@@ -5098,12 +5067,35 @@ lvgl:
                   width: 154
                   height: 74
                   bg_color: 0x070E1B
-                  bg_opa: 95%
+                  bg_opa: 100%
                   border_width: 0
-                  radius: 10
-                  clickable: false
+                  radius: 20
+                  shadow_width: 18
+                  shadow_color: 0x000000
+                  shadow_opa: 18%
+                  clickable: true
                   scrollable: false
                   press_lock: true
+                  on_short_click:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w04"
+                          widget_type: !lambda "return id(w04_type).state;"
+                          action: !lambda "return id(w04_action).state;"
+                          value: !lambda "return id(w04_value).state;"
+                          label: !lambda "return id(w04_label).state;"
+                          hold: false
+                  on_long_press:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w04"
+                          widget_type: !lambda "return id(w04_type).state;"
+                          action: !lambda "return id(w04_action).state;"
+                          value: !lambda "return id(w04_value).state;"
+                          label: !lambda "return id(w04_label).state;"
+                          hold: true
                   scrollbar_mode: "OFF"
                   pad_all: 0
                   widgets:
@@ -5149,12 +5141,35 @@ lvgl:
                   width: 74
                   height: 74
                   bg_color: 0x070E1B
-                  bg_opa: 95%
+                  bg_opa: 100%
                   border_width: 0
-                  radius: 10
-                  clickable: false
+                  radius: 20
+                  shadow_width: 18
+                  shadow_color: 0x000000
+                  shadow_opa: 18%
+                  clickable: true
                   scrollable: false
                   press_lock: true
+                  on_short_click:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w05"
+                          widget_type: !lambda "return id(w05_type).state;"
+                          action: !lambda "return id(w05_action).state;"
+                          value: !lambda "return id(w05_value).state;"
+                          label: !lambda "return id(w05_label).state;"
+                          hold: false
+                  on_long_press:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w05"
+                          widget_type: !lambda "return id(w05_type).state;"
+                          action: !lambda "return id(w05_action).state;"
+                          value: !lambda "return id(w05_value).state;"
+                          label: !lambda "return id(w05_label).state;"
+                          hold: true
                   scrollbar_mode: "OFF"
                   pad_all: 0
                   widgets:
@@ -5200,12 +5215,35 @@ lvgl:
                   width: 154
                   height: 154
                   bg_color: 0x070E1B
-                  bg_opa: 95%
+                  bg_opa: 100%
                   border_width: 0
-                  radius: 10
-                  clickable: false
+                  radius: 20
+                  shadow_width: 18
+                  shadow_color: 0x000000
+                  shadow_opa: 18%
+                  clickable: true
                   scrollable: false
                   press_lock: true
+                  on_short_click:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w06"
+                          widget_type: !lambda "return id(w06_type).state;"
+                          action: !lambda "return id(w06_action).state;"
+                          value: !lambda "return id(w06_value).state;"
+                          label: !lambda "return id(w06_label).state;"
+                          hold: false
+                  on_long_press:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w06"
+                          widget_type: !lambda "return id(w06_type).state;"
+                          action: !lambda "return id(w06_action).state;"
+                          value: !lambda "return id(w06_value).state;"
+                          label: !lambda "return id(w06_label).state;"
+                          hold: true
                   scrollbar_mode: "OFF"
                   pad_all: 0
                   widgets:
@@ -5252,12 +5290,35 @@ lvgl:
                   width: 154
                   height: 74
                   bg_color: 0x070E1B
-                  bg_opa: 95%
+                  bg_opa: 100%
                   border_width: 0
-                  radius: 10
-                  clickable: false
+                  radius: 20
+                  shadow_width: 18
+                  shadow_color: 0x000000
+                  shadow_opa: 18%
+                  clickable: true
                   scrollable: false
                   press_lock: true
+                  on_short_click:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w07"
+                          widget_type: !lambda "return id(w07_type).state;"
+                          action: !lambda "return id(w07_action).state;"
+                          value: !lambda "return id(w07_value).state;"
+                          label: !lambda "return id(w07_label).state;"
+                          hold: false
+                  on_long_press:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w07"
+                          widget_type: !lambda "return id(w07_type).state;"
+                          action: !lambda "return id(w07_action).state;"
+                          value: !lambda "return id(w07_value).state;"
+                          label: !lambda "return id(w07_label).state;"
+                          hold: true
                   scrollbar_mode: "OFF"
                   pad_all: 8
                   widgets:
@@ -5304,12 +5365,35 @@ lvgl:
                   width: 154
                   height: 74
                   bg_color: 0x070E1B
-                  bg_opa: 95%
+                  bg_opa: 100%
                   border_width: 0
-                  radius: 10
-                  clickable: false
+                  radius: 20
+                  shadow_width: 18
+                  shadow_color: 0x000000
+                  shadow_opa: 18%
+                  clickable: true
                   scrollable: false
                   press_lock: true
+                  on_short_click:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w08"
+                          widget_type: !lambda "return id(w08_type).state;"
+                          action: !lambda "return id(w08_action).state;"
+                          value: !lambda "return id(w08_value).state;"
+                          label: !lambda "return id(w08_label).state;"
+                          hold: false
+                  on_long_press:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w08"
+                          widget_type: !lambda "return id(w08_type).state;"
+                          action: !lambda "return id(w08_action).state;"
+                          value: !lambda "return id(w08_value).state;"
+                          label: !lambda "return id(w08_label).state;"
+                          hold: true
                   scrollbar_mode: "OFF"
                   pad_all: 8
                   widgets:
@@ -5356,12 +5440,35 @@ lvgl:
                   width: 154
                   height: 74
                   bg_color: 0x070E1B
-                  bg_opa: 95%
+                  bg_opa: 100%
                   border_width: 0
-                  radius: 10
-                  clickable: false
+                  radius: 20
+                  shadow_width: 18
+                  shadow_color: 0x000000
+                  shadow_opa: 18%
+                  clickable: true
                   scrollable: false
                   press_lock: true
+                  on_short_click:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w09"
+                          widget_type: !lambda "return id(w09_type).state;"
+                          action: !lambda "return id(w09_action).state;"
+                          value: !lambda "return id(w09_value).state;"
+                          label: !lambda "return id(w09_label).state;"
+                          hold: false
+                  on_long_press:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w09"
+                          widget_type: !lambda "return id(w09_type).state;"
+                          action: !lambda "return id(w09_action).state;"
+                          value: !lambda "return id(w09_value).state;"
+                          label: !lambda "return id(w09_label).state;"
+                          hold: true
                   scrollbar_mode: "OFF"
                   pad_all: 8
                   widgets:
@@ -5408,12 +5515,35 @@ lvgl:
                   width: 154
                   height: 74
                   bg_color: 0x070E1B
-                  bg_opa: 95%
+                  bg_opa: 100%
                   border_width: 0
-                  radius: 10
-                  clickable: false
+                  radius: 20
+                  shadow_width: 18
+                  shadow_color: 0x000000
+                  shadow_opa: 18%
+                  clickable: true
                   scrollable: false
                   press_lock: true
+                  on_short_click:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w10"
+                          widget_type: !lambda "return id(w10_type).state;"
+                          action: !lambda "return id(w10_action).state;"
+                          value: !lambda "return id(w10_value).state;"
+                          label: !lambda "return id(w10_label).state;"
+                          hold: false
+                  on_long_press:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w10"
+                          widget_type: !lambda "return id(w10_type).state;"
+                          action: !lambda "return id(w10_action).state;"
+                          value: !lambda "return id(w10_value).state;"
+                          label: !lambda "return id(w10_label).state;"
+                          hold: true
                   scrollbar_mode: "OFF"
                   pad_all: 8
                   widgets:
@@ -5460,12 +5590,35 @@ lvgl:
                   width: 154
                   height: 74
                   bg_color: 0x070E1B
-                  bg_opa: 95%
+                  bg_opa: 100%
                   border_width: 0
-                  radius: 10
-                  clickable: false
+                  radius: 20
+                  shadow_width: 18
+                  shadow_color: 0x000000
+                  shadow_opa: 18%
+                  clickable: true
                   scrollable: false
                   press_lock: true
+                  on_short_click:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w11"
+                          widget_type: !lambda "return id(w11_type).state;"
+                          action: !lambda "return id(w11_action).state;"
+                          value: !lambda "return id(w11_value).state;"
+                          label: !lambda "return id(w11_label).state;"
+                          hold: false
+                  on_long_press:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w11"
+                          widget_type: !lambda "return id(w11_type).state;"
+                          action: !lambda "return id(w11_action).state;"
+                          value: !lambda "return id(w11_value).state;"
+                          label: !lambda "return id(w11_label).state;"
+                          hold: true
                   scrollbar_mode: "OFF"
                   pad_all: 8
                   widgets:
@@ -5512,12 +5665,35 @@ lvgl:
                   width: 154
                   height: 74
                   bg_color: 0x070E1B
-                  bg_opa: 95%
+                  bg_opa: 100%
                   border_width: 0
-                  radius: 10
-                  clickable: false
+                  radius: 20
+                  shadow_width: 18
+                  shadow_color: 0x000000
+                  shadow_opa: 18%
+                  clickable: true
                   scrollable: false
                   press_lock: true
+                  on_short_click:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w12"
+                          widget_type: !lambda "return id(w12_type).state;"
+                          action: !lambda "return id(w12_action).state;"
+                          value: !lambda "return id(w12_value).state;"
+                          label: !lambda "return id(w12_label).state;"
+                          hold: false
+                  on_long_press:
+                    then:
+                      - script.execute:
+                          id: dispatch_widget_action
+                          widget_id: "w12"
+                          widget_type: !lambda "return id(w12_type).state;"
+                          action: !lambda "return id(w12_action).state;"
+                          value: !lambda "return id(w12_value).state;"
+                          label: !lambda "return id(w12_label).state;"
+                          hold: true
                   scrollbar_mode: "OFF"
                   pad_all: 8
                   widgets:
@@ -5567,9 +5743,26 @@ lvgl:
                   bg_color: 0x000000
                   bg_opa: 90%
                   border_width: 0
+                  scrollable: false
                   scrollbar_mode: "OFF"
                   pad_all: 20
                   widgets:
+                    - obj:
+                        id: notification_overlay_panel
+                        x: 28
+                        y: 118
+                        width: 424
+                        height: 242
+                        bg_color: 0x10213B
+                        bg_opa: 86%
+                        radius: 28
+                        border_width: 1
+                        border_color: 0xFFD166
+                        shadow_width: 20
+                        shadow_color: 0x000000
+                        shadow_opa: 22%
+                        clickable: false
+                        scrollable: false
                     - label:
                         id: notification_title_label
                         text: "Notification"
@@ -5596,9 +5789,26 @@ lvgl:
                   bg_color: 0x000000
                   bg_opa: 92%
                   border_width: 0
+                  scrollable: false
                   scrollbar_mode: "OFF"
                   pad_all: 20
                   widgets:
+                    - obj:
+                        id: media_overlay_panel
+                        x: 20
+                        y: 118
+                        width: 440
+                        height: 334
+                        bg_color: 0x10213B
+                        bg_opa: 88%
+                        radius: 30
+                        border_width: 1
+                        border_color: 0xFFD166
+                        shadow_width: 22
+                        shadow_color: 0x000000
+                        shadow_opa: 24%
+                        clickable: false
+                        scrollable: false
                     - label:
                         id: media_overlay_title_label
                         text: "Media Controls"
@@ -5624,12 +5834,16 @@ lvgl:
                         height: 80
                         bg_color: 0x0D1B33
                         bg_opa: 100%
-                        radius: 12
-                        border_width: 1
+                        radius: 20
+                        border_width: 2
                         border_color: 0x285EA8
+                        shadow_width: 16
+                        shadow_color: 0x000000
+                        shadow_opa: 20%
                         clickable: true
                         scrollable: false
-                        on_click:
+                        press_lock: true
+                        on_short_click:
                           then:
                             - homeassistant.service:
                                 service: media_player.media_play_pause
@@ -5653,12 +5867,16 @@ lvgl:
                         height: 80
                         bg_color: 0x0D1B33
                         bg_opa: 100%
-                        radius: 12
-                        border_width: 1
+                        radius: 20
+                        border_width: 2
                         border_color: 0x285EA8
+                        shadow_width: 16
+                        shadow_color: 0x000000
+                        shadow_opa: 20%
                         clickable: true
                         scrollable: false
-                        on_click:
+                        press_lock: true
+                        on_short_click:
                           then:
                             - homeassistant.service:
                                 service: media_player.media_stop
@@ -5682,12 +5900,16 @@ lvgl:
                         height: 80
                         bg_color: 0x0D1B33
                         bg_opa: 100%
-                        radius: 12
-                        border_width: 1
+                        radius: 20
+                        border_width: 2
                         border_color: 0x285EA8
+                        shadow_width: 16
+                        shadow_color: 0x000000
+                        shadow_opa: 20%
                         clickable: true
                         scrollable: false
-                        on_click:
+                        press_lock: true
+                        on_short_click:
                           then:
                             - homeassistant.service:
                                 service: media_player.volume_down
@@ -5711,12 +5933,16 @@ lvgl:
                         height: 80
                         bg_color: 0x0D1B33
                         bg_opa: 100%
-                        radius: 12
-                        border_width: 1
+                        radius: 20
+                        border_width: 2
                         border_color: 0x285EA8
+                        shadow_width: 16
+                        shadow_color: 0x000000
+                        shadow_opa: 20%
                         clickable: true
                         scrollable: false
-                        on_click:
+                        press_lock: true
+                        on_short_click:
                           then:
                             - homeassistant.service:
                                 service: media_player.volume_up
@@ -5740,12 +5966,16 @@ lvgl:
                         height: 72
                         bg_color: 0x1F2937
                         bg_opa: 100%
-                        radius: 12
-                        border_width: 1
+                        radius: 20
+                        border_width: 2
                         border_color: 0x285EA8
+                        shadow_width: 16
+                        shadow_color: 0x000000
+                        shadow_opa: 20%
                         clickable: true
                         scrollable: false
-                        on_click:
+                        press_lock: true
+                        on_short_click:
                           then:
                             - lvgl.widget.hide: media_overlay
                         widgets:
@@ -5758,6 +5988,8 @@ lvgl:
                               text_font: montserrat_18
                               text_color: 0xF1F5F9
                               text_align: CENTER
+
+
 
 
 

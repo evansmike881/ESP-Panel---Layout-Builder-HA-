@@ -234,23 +234,6 @@ static inline bool esp_panel_media_state_is_active(std::string value) {
   return value == "playing" || value == "buffering";
 }
 
-static inline bool esp_panel_touch_within_widget(
-    int touch_x,
-    int touch_y,
-    int grid_x,
-    int grid_y,
-    int grid_w,
-    int grid_h,
-    int slot_w,
-    int slot_h,
-    int slot_gap) {
-  const int left = grid_x * slot_w + 3;
-  const int top = grid_y * slot_h + 3;
-  const int right = left + grid_w * slot_w - slot_gap;
-  const int bottom = top + grid_h * slot_h - slot_gap;
-  return touch_x >= left && touch_x < right && touch_y >= top && touch_y < bottom;
-}
-
 static inline std::string esp_panel_media_target(const std::string &value) {
   if (!esp_panel_is_media_action(value)) {
     return "";
@@ -308,6 +291,30 @@ static inline uint32_t esp_panel_parse_color(const std::string &value, uint32_t 
   }
 
   return static_cast<uint32_t>(std::strtoul(value.c_str() + 1, nullptr, 16));
+}
+
+static inline uint32_t esp_panel_color_blend(uint32_t from, uint32_t to, uint8_t amount) {
+  const uint8_t inv = static_cast<uint8_t>(255 - amount);
+  const uint8_t from_r = static_cast<uint8_t>((from >> 16) & 0xFF);
+  const uint8_t from_g = static_cast<uint8_t>((from >> 8) & 0xFF);
+  const uint8_t from_b = static_cast<uint8_t>(from & 0xFF);
+  const uint8_t to_r = static_cast<uint8_t>((to >> 16) & 0xFF);
+  const uint8_t to_g = static_cast<uint8_t>((to >> 8) & 0xFF);
+  const uint8_t to_b = static_cast<uint8_t>(to & 0xFF);
+
+  const uint8_t out_r = static_cast<uint8_t>((from_r * inv + to_r * amount) / 255);
+  const uint8_t out_g = static_cast<uint8_t>((from_g * inv + to_g * amount) / 255);
+  const uint8_t out_b = static_cast<uint8_t>((from_b * inv + to_b * amount) / 255);
+
+  return (static_cast<uint32_t>(out_r) << 16) | (static_cast<uint32_t>(out_g) << 8) | out_b;
+}
+
+static inline uint32_t esp_panel_color_lighten(uint32_t color, uint8_t amount) {
+  return esp_panel_color_blend(color, 0xFFFFFF, amount);
+}
+
+static inline uint32_t esp_panel_color_darken(uint32_t color, uint8_t amount) {
+  return esp_panel_color_blend(color, 0x000000, amount);
 }
 
 static inline int esp_panel_estimate_text_width(std::string value, int font_px) {

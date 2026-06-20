@@ -79,7 +79,7 @@ input_text:
     initial: "OFF"
   esp_panel_runtime_w06_action:
     name: ESP Panel Runtime W06 Action
-    initial: ""
+    initial: "switch.office_main_light"
     max: 255
 
   esp_panel_runtime_w07_config:
