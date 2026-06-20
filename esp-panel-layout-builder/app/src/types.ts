@@ -65,6 +65,7 @@ export interface WidgetConfig {
 }
 
 export interface WidgetResponse {
+  error?: string;
   widgets: WidgetConfig[];
   warnings: string[];
   missingHelpers: string[];

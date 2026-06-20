@@ -5,27 +5,27 @@ Home Assistant add-on repository for visually editing ESPHome/LVGL widget helper
 ## File tree
 
 ```text
+repository.yaml
+README.md
+esp_panel_dynamic_v1_full.yaml
+esp_panel_widget_helpers.h
+household-panel-full-responsive.yaml
 esp-panel-layout-builder/
-  repository.yaml
-  README.md
-  esp-panel-layout-builder/
-    config.yaml
-    Dockerfile
-    run.sh
-    app/
-      package.json
-      tsconfig.json
-      vite.config.js
-      index.html
-      server.js
-      src/
-        main.tsx
-        App.tsx
-        api.ts
-        types.ts
-        styles.css
-  household-panel-responsive.yaml
-  household-panel-full-responsive.yaml
+  config.yaml
+  Dockerfile
+  run.sh
+  app/
+    package.json
+    tsconfig.json
+    vite.config.js
+    index.html
+    server.js
+    src/
+      main.tsx
+      App.tsx
+      api.ts
+      types.ts
+      styles.css
 ```
 
 ## Add repository to Home Assistant
@@ -64,11 +64,9 @@ esp-panel-layout-builder/
 3. Change its label to `Office Light`.
 4. Click **Apply all changes**.
 5. Confirm these helpers update in Home Assistant:
-   - `input_text.esp_panel_w06_label`
-   - `input_number.esp_panel_w06_x`
-   - `input_number.esp_panel_w06_y`
-   - `input_number.esp_panel_w06_w`
-   - `input_number.esp_panel_w06_h`
+   - `input_text.esp_panel_runtime_w06_config`
+   - `input_text.esp_panel_runtime_w06_value`
+   - `input_text.esp_panel_runtime_w06_action`
 
 ## Widget count
 
@@ -81,7 +79,8 @@ Widgets `w07` to `w12` start hidden by default so you can turn them on as needed
 The repository root includes:
 
 - [household-panel-full-responsive.yaml](/192.168.4.229/html/!HA Integrations/ESP Panel - Layout Builder/household-panel-full-responsive.yaml): full standalone ESPHome config based on your current panel file, updated for `w01` to `w12`.
-- [household-panel-responsive.yaml](/192.168.4.229/html/!HA Integrations/ESP Panel - Layout Builder/household-panel-responsive.yaml): the earlier merge-style extension file.
+- [esp_panel_dynamic_v1_full.yaml](/192.168.4.229/html/!HA Integrations/ESP Panel - Layout Builder/esp_panel_dynamic_v1_full.yaml): Home Assistant helper package for runtime widget and theme values.
+- [esp_panel_widget_helpers.h](/192.168.4.229/html/!HA Integrations/ESP Panel - Layout Builder/esp_panel_widget_helpers.h): shared ESPHome helper code for parsing runtime config and calculating widget geometry.
 
 ## Extend beyond 12 widgets later
 
@@ -95,4 +94,5 @@ The repository root includes:
 
 - The add-on uses `SUPERVISOR_TOKEN` or `HASSIO_TOKEN`.
 - Internal Home Assistant API calls go to `http://supervisor/core/api`.
+- Runtime value-source syncing defaults to every 15 seconds and can be changed with `VALUE_SOURCE_SYNC_INTERVAL_MS`.
 - This workspace did not have `node` or `npm` installed, so the files were not build-tested locally here.

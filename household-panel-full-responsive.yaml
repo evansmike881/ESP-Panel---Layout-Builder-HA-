@@ -456,6 +456,14 @@ script:
                   entity_id: !lambda "return entity;"
       - if:
           condition:
+            lambda: 'return esp_panel_string_starts_with(entity, "cover.");'
+          then:
+            - homeassistant.service:
+                service: cover.toggle
+                data:
+                  entity_id: !lambda "return entity;"
+      - if:
+          condition:
             lambda: 'return esp_panel_string_starts_with(entity, "scene.");'
           then:
             - homeassistant.service:
@@ -478,6 +486,30 @@ script:
                 service: button.press
                 data:
                   entity_id: !lambda "return entity;"
+      - if:
+          condition:
+            lambda: 'return esp_panel_string_starts_with(entity, "automation.");'
+          then:
+            - homeassistant.service:
+                service: automation.trigger
+                data:
+                  entity_id: !lambda "return entity;"
+      - if:
+          condition:
+            lambda: 'return esp_panel_string_starts_with(entity, "input_select.");'
+          then:
+            - homeassistant.service:
+                service: input_select.select_next
+                data:
+                  entity_id: !lambda "return entity;"
+      - if:
+          condition:
+            lambda: 'return esp_panel_string_starts_with(entity, "media_player.");'
+          then:
+            - homeassistant.service:
+                service: media_player.media_play_pause
+                data:
+                  entity_id: !lambda "return entity;"
 
   - id: toggle_media_action
     mode: queued
@@ -491,12 +523,7 @@ script:
           then:
             - if:
                 condition:
-                  lambda: |-
-                    std::string normalized = value;
-                    std::transform(normalized.begin(), normalized.end(), normalized.begin(), [](unsigned char c) {
-                      return static_cast<char>(std::tolower(c));
-                    });
-                    return normalized == "playing" || normalized == "buffering";
+                  lambda: 'return esp_panel_media_state_is_active(value);'
                 then:
                   - homeassistant.service:
                       service: media_player.media_stop
@@ -571,8 +598,8 @@ script:
             lambda: |-
               const int x = id(last_touch_x);
               const int y = id(last_touch_y);
-              return id(w01_visible).state && x >= (int) id(w01_x).state * id(slot_w) + 3 && x < ((int) id(w01_x).state * id(slot_w) + 3 + ((int) id(w01_w).state * id(slot_w)) - id(slot_gap)) &&
-                     y >= (int) id(w01_y).state * id(slot_h) + 3 && y < ((int) id(w01_y).state * id(slot_h) + 3 + ((int) id(w01_h).state * id(slot_h)) - id(slot_gap));
+              return id(w01_visible).state && id(w01_type).state == "media" &&
+                     esp_panel_touch_within_widget(x, y, (int) id(w01_x).state, (int) id(w01_y).state, (int) id(w01_w).state, (int) id(w01_h).state, id(slot_w), id(slot_h), id(slot_gap));
           then:
             - script.execute:
                 id: dispatch_widget_action
@@ -586,8 +613,8 @@ script:
             lambda: |-
               const int x = id(last_touch_x);
               const int y = id(last_touch_y);
-              return id(w02_visible).state && x >= (int) id(w02_x).state * id(slot_w) + 3 && x < ((int) id(w02_x).state * id(slot_w) + 3 + ((int) id(w02_w).state * id(slot_w)) - id(slot_gap)) &&
-                     y >= (int) id(w02_y).state * id(slot_h) + 3 && y < ((int) id(w02_y).state * id(slot_h) + 3 + ((int) id(w02_h).state * id(slot_h)) - id(slot_gap));
+              return id(w02_visible).state && id(w02_type).state == "media" &&
+                     esp_panel_touch_within_widget(x, y, (int) id(w02_x).state, (int) id(w02_y).state, (int) id(w02_w).state, (int) id(w02_h).state, id(slot_w), id(slot_h), id(slot_gap));
           then:
             - script.execute:
                 id: dispatch_widget_action
@@ -601,8 +628,8 @@ script:
             lambda: |-
               const int x = id(last_touch_x);
               const int y = id(last_touch_y);
-              return id(w03_visible).state && x >= (int) id(w03_x).state * id(slot_w) + 3 && x < ((int) id(w03_x).state * id(slot_w) + 3 + ((int) id(w03_w).state * id(slot_w)) - id(slot_gap)) &&
-                     y >= (int) id(w03_y).state * id(slot_h) + 3 && y < ((int) id(w03_y).state * id(slot_h) + 3 + ((int) id(w03_h).state * id(slot_h)) - id(slot_gap));
+              return id(w03_visible).state && id(w03_type).state == "media" &&
+                     esp_panel_touch_within_widget(x, y, (int) id(w03_x).state, (int) id(w03_y).state, (int) id(w03_w).state, (int) id(w03_h).state, id(slot_w), id(slot_h), id(slot_gap));
           then:
             - script.execute:
                 id: dispatch_widget_action
@@ -616,8 +643,8 @@ script:
             lambda: |-
               const int x = id(last_touch_x);
               const int y = id(last_touch_y);
-              return id(w04_visible).state && x >= (int) id(w04_x).state * id(slot_w) + 3 && x < ((int) id(w04_x).state * id(slot_w) + 3 + ((int) id(w04_w).state * id(slot_w)) - id(slot_gap)) &&
-                     y >= (int) id(w04_y).state * id(slot_h) + 3 && y < ((int) id(w04_y).state * id(slot_h) + 3 + ((int) id(w04_h).state * id(slot_h)) - id(slot_gap));
+              return id(w04_visible).state && id(w04_type).state == "media" &&
+                     esp_panel_touch_within_widget(x, y, (int) id(w04_x).state, (int) id(w04_y).state, (int) id(w04_w).state, (int) id(w04_h).state, id(slot_w), id(slot_h), id(slot_gap));
           then:
             - script.execute:
                 id: dispatch_widget_action
@@ -631,8 +658,8 @@ script:
             lambda: |-
               const int x = id(last_touch_x);
               const int y = id(last_touch_y);
-              return id(w05_visible).state && x >= (int) id(w05_x).state * id(slot_w) + 3 && x < ((int) id(w05_x).state * id(slot_w) + 3 + ((int) id(w05_w).state * id(slot_w)) - id(slot_gap)) &&
-                     y >= (int) id(w05_y).state * id(slot_h) + 3 && y < ((int) id(w05_y).state * id(slot_h) + 3 + ((int) id(w05_h).state * id(slot_h)) - id(slot_gap));
+              return id(w05_visible).state && id(w05_type).state == "media" &&
+                     esp_panel_touch_within_widget(x, y, (int) id(w05_x).state, (int) id(w05_y).state, (int) id(w05_w).state, (int) id(w05_h).state, id(slot_w), id(slot_h), id(slot_gap));
           then:
             - script.execute:
                 id: dispatch_widget_action
@@ -646,8 +673,8 @@ script:
             lambda: |-
               const int x = id(last_touch_x);
               const int y = id(last_touch_y);
-              return id(w06_visible).state && x >= (int) id(w06_x).state * id(slot_w) + 3 && x < ((int) id(w06_x).state * id(slot_w) + 3 + ((int) id(w06_w).state * id(slot_w)) - id(slot_gap)) &&
-                     y >= (int) id(w06_y).state * id(slot_h) + 3 && y < ((int) id(w06_y).state * id(slot_h) + 3 + ((int) id(w06_h).state * id(slot_h)) - id(slot_gap));
+              return id(w06_visible).state && id(w06_type).state == "media" &&
+                     esp_panel_touch_within_widget(x, y, (int) id(w06_x).state, (int) id(w06_y).state, (int) id(w06_w).state, (int) id(w06_h).state, id(slot_w), id(slot_h), id(slot_gap));
           then:
             - script.execute:
                 id: dispatch_widget_action
@@ -661,8 +688,8 @@ script:
             lambda: |-
               const int x = id(last_touch_x);
               const int y = id(last_touch_y);
-              return id(w07_visible).state && x >= (int) id(w07_x).state * id(slot_w) + 3 && x < ((int) id(w07_x).state * id(slot_w) + 3 + ((int) id(w07_w).state * id(slot_w)) - id(slot_gap)) &&
-                     y >= (int) id(w07_y).state * id(slot_h) + 3 && y < ((int) id(w07_y).state * id(slot_h) + 3 + ((int) id(w07_h).state * id(slot_h)) - id(slot_gap));
+              return id(w07_visible).state && id(w07_type).state == "media" &&
+                     esp_panel_touch_within_widget(x, y, (int) id(w07_x).state, (int) id(w07_y).state, (int) id(w07_w).state, (int) id(w07_h).state, id(slot_w), id(slot_h), id(slot_gap));
           then:
             - script.execute:
                 id: dispatch_widget_action
@@ -676,8 +703,8 @@ script:
             lambda: |-
               const int x = id(last_touch_x);
               const int y = id(last_touch_y);
-              return id(w08_visible).state && x >= (int) id(w08_x).state * id(slot_w) + 3 && x < ((int) id(w08_x).state * id(slot_w) + 3 + ((int) id(w08_w).state * id(slot_w)) - id(slot_gap)) &&
-                     y >= (int) id(w08_y).state * id(slot_h) + 3 && y < ((int) id(w08_y).state * id(slot_h) + 3 + ((int) id(w08_h).state * id(slot_h)) - id(slot_gap));
+              return id(w08_visible).state && id(w08_type).state == "media" &&
+                     esp_panel_touch_within_widget(x, y, (int) id(w08_x).state, (int) id(w08_y).state, (int) id(w08_w).state, (int) id(w08_h).state, id(slot_w), id(slot_h), id(slot_gap));
           then:
             - script.execute:
                 id: dispatch_widget_action
@@ -691,8 +718,8 @@ script:
             lambda: |-
               const int x = id(last_touch_x);
               const int y = id(last_touch_y);
-              return id(w09_visible).state && x >= (int) id(w09_x).state * id(slot_w) + 3 && x < ((int) id(w09_x).state * id(slot_w) + 3 + ((int) id(w09_w).state * id(slot_w)) - id(slot_gap)) &&
-                     y >= (int) id(w09_y).state * id(slot_h) + 3 && y < ((int) id(w09_y).state * id(slot_h) + 3 + ((int) id(w09_h).state * id(slot_h)) - id(slot_gap));
+              return id(w09_visible).state && id(w09_type).state == "media" &&
+                     esp_panel_touch_within_widget(x, y, (int) id(w09_x).state, (int) id(w09_y).state, (int) id(w09_w).state, (int) id(w09_h).state, id(slot_w), id(slot_h), id(slot_gap));
           then:
             - script.execute:
                 id: dispatch_widget_action
@@ -706,8 +733,8 @@ script:
             lambda: |-
               const int x = id(last_touch_x);
               const int y = id(last_touch_y);
-              return id(w10_visible).state && x >= (int) id(w10_x).state * id(slot_w) + 3 && x < ((int) id(w10_x).state * id(slot_w) + 3 + ((int) id(w10_w).state * id(slot_w)) - id(slot_gap)) &&
-                     y >= (int) id(w10_y).state * id(slot_h) + 3 && y < ((int) id(w10_y).state * id(slot_h) + 3 + ((int) id(w10_h).state * id(slot_h)) - id(slot_gap));
+              return id(w10_visible).state && id(w10_type).state == "media" &&
+                     esp_panel_touch_within_widget(x, y, (int) id(w10_x).state, (int) id(w10_y).state, (int) id(w10_w).state, (int) id(w10_h).state, id(slot_w), id(slot_h), id(slot_gap));
           then:
             - script.execute:
                 id: dispatch_widget_action
@@ -721,8 +748,8 @@ script:
             lambda: |-
               const int x = id(last_touch_x);
               const int y = id(last_touch_y);
-              return id(w11_visible).state && x >= (int) id(w11_x).state * id(slot_w) + 3 && x < ((int) id(w11_x).state * id(slot_w) + 3 + ((int) id(w11_w).state * id(slot_w)) - id(slot_gap)) &&
-                     y >= (int) id(w11_y).state * id(slot_h) + 3 && y < ((int) id(w11_y).state * id(slot_h) + 3 + ((int) id(w11_h).state * id(slot_h)) - id(slot_gap));
+              return id(w11_visible).state && id(w11_type).state == "media" &&
+                     esp_panel_touch_within_widget(x, y, (int) id(w11_x).state, (int) id(w11_y).state, (int) id(w11_w).state, (int) id(w11_h).state, id(slot_w), id(slot_h), id(slot_gap));
           then:
             - script.execute:
                 id: dispatch_widget_action
@@ -736,8 +763,8 @@ script:
             lambda: |-
               const int x = id(last_touch_x);
               const int y = id(last_touch_y);
-              return id(w12_visible).state && x >= (int) id(w12_x).state * id(slot_w) + 3 && x < ((int) id(w12_x).state * id(slot_w) + 3 + ((int) id(w12_w).state * id(slot_w)) - id(slot_gap)) &&
-                     y >= (int) id(w12_y).state * id(slot_h) + 3 && y < ((int) id(w12_y).state * id(slot_h) + 3 + ((int) id(w12_h).state * id(slot_h)) - id(slot_gap));
+              return id(w12_visible).state && id(w12_type).state == "media" &&
+                     esp_panel_touch_within_widget(x, y, (int) id(w12_x).state, (int) id(w12_y).state, (int) id(w12_w).state, (int) id(w12_h).state, id(slot_w), id(slot_h), id(slot_gap));
           then:
             - script.execute:
                 id: dispatch_widget_action
@@ -4291,7 +4318,7 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w01_value
     on_value:
       - lambda: |-
-          if (x.empty() || x == "unknown" || x == "unavailable") return;
+          if (esp_panel_runtime_text_unavailable(x)) return;
           if (id(w01_type).state != "clock" && id(w01_type).state != "date") {
             id(w01_value).publish_state(x);
           }
@@ -4301,7 +4328,7 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w01_action
     on_value:
       - lambda: |-
-          if (x.empty() || x == "unknown" || x == "unavailable") return;
+          if (esp_panel_runtime_text_unavailable(x)) return;
           id(w01_action).publish_state(x);
   - platform: homeassistant
     id: w02_runtime_config_source
@@ -4342,7 +4369,7 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w02_value
     on_value:
       - lambda: |-
-          if (x.empty() || x == "unknown" || x == "unavailable") return;
+          if (esp_panel_runtime_text_unavailable(x)) return;
           if (id(w02_type).state != "clock" && id(w02_type).state != "date") {
             id(w02_value).publish_state(x);
           }
@@ -4352,13 +4379,14 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w02_action
     on_value:
       - lambda: |-
-          if (x.empty() || x == "unknown" || x == "unavailable") return;
+          if (esp_panel_runtime_text_unavailable(x)) return;
           id(w02_action).publish_state(x);
   - platform: homeassistant
     id: w03_runtime_config_source
     entity_id: input_text.esp_panel_runtime_w03_config
     on_value:
       - lambda: |-
+          if (x.empty() || esp_panel_runtime_text_unavailable(x)) return;
           auto config = esp_panel_parse_widget_runtime(x);
           id(w03_type).publish_state(config.type);
           id(w03_visible).publish_state(config.visible);
@@ -4392,6 +4420,7 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w03_value
     on_value:
       - lambda: |-
+          if (esp_panel_runtime_text_unavailable(x)) return;
           if (id(w03_type).state != "clock" && id(w03_type).state != "date") {
             id(w03_value).publish_state(x);
           }
@@ -4401,13 +4430,14 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w03_action
     on_value:
       - lambda: |-
-          if (x.empty() || x == "unknown" || x == "unavailable") return;
+          if (esp_panel_runtime_text_unavailable(x)) return;
           id(w03_action).publish_state(x);
   - platform: homeassistant
     id: w04_runtime_config_source
     entity_id: input_text.esp_panel_runtime_w04_config
     on_value:
       - lambda: |-
+          if (x.empty() || esp_panel_runtime_text_unavailable(x)) return;
           auto config = esp_panel_parse_widget_runtime(x);
           id(w04_type).publish_state(config.type);
           id(w04_visible).publish_state(config.visible);
@@ -4441,6 +4471,7 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w04_value
     on_value:
       - lambda: |-
+          if (esp_panel_runtime_text_unavailable(x)) return;
           if (id(w04_type).state != "clock" && id(w04_type).state != "date") {
             id(w04_value).publish_state(x);
           }
@@ -4450,13 +4481,14 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w04_action
     on_value:
       - lambda: |-
-          if (x.empty() || x == "unknown" || x == "unavailable") return;
+          if (esp_panel_runtime_text_unavailable(x)) return;
           id(w04_action).publish_state(x);
   - platform: homeassistant
     id: w05_runtime_config_source
     entity_id: input_text.esp_panel_runtime_w05_config
     on_value:
       - lambda: |-
+          if (x.empty() || esp_panel_runtime_text_unavailable(x)) return;
           auto config = esp_panel_parse_widget_runtime(x);
           id(w05_type).publish_state(config.type);
           id(w05_visible).publish_state(config.visible);
@@ -4490,6 +4522,7 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w05_value
     on_value:
       - lambda: |-
+          if (esp_panel_runtime_text_unavailable(x)) return;
           if (id(w05_type).state != "clock" && id(w05_type).state != "date") {
             id(w05_value).publish_state(x);
           }
@@ -4499,13 +4532,14 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w05_action
     on_value:
       - lambda: |-
-          if (x.empty() || x == "unknown" || x == "unavailable") return;
+          if (esp_panel_runtime_text_unavailable(x)) return;
           id(w05_action).publish_state(x);
   - platform: homeassistant
     id: w06_runtime_config_source
     entity_id: input_text.esp_panel_runtime_w06_config
     on_value:
       - lambda: |-
+          if (x.empty() || esp_panel_runtime_text_unavailable(x)) return;
           auto config = esp_panel_parse_widget_runtime(x);
           id(w06_type).publish_state(config.type);
           id(w06_visible).publish_state(config.visible);
@@ -4539,6 +4573,7 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w06_value
     on_value:
       - lambda: |-
+          if (esp_panel_runtime_text_unavailable(x)) return;
           if (id(w06_type).state != "clock" && id(w06_type).state != "date") {
             id(w06_value).publish_state(x);
           }
@@ -4548,13 +4583,14 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w06_action
     on_value:
       - lambda: |-
-          if (x.empty() || x == "unknown" || x == "unavailable") return;
+          if (esp_panel_runtime_text_unavailable(x)) return;
           id(w06_action).publish_state(x);
   - platform: homeassistant
     id: w07_runtime_config_source
     entity_id: input_text.esp_panel_runtime_w07_config
     on_value:
       - lambda: |-
+          if (x.empty() || esp_panel_runtime_text_unavailable(x)) return;
           auto config = esp_panel_parse_widget_runtime(x);
           id(w07_type).publish_state(config.type);
           id(w07_visible).publish_state(config.visible);
@@ -4588,6 +4624,7 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w07_value
     on_value:
       - lambda: |-
+          if (esp_panel_runtime_text_unavailable(x)) return;
           if (id(w07_type).state != "clock" && id(w07_type).state != "date") {
             id(w07_value).publish_state(x);
           }
@@ -4597,13 +4634,14 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w07_action
     on_value:
       - lambda: |-
-          if (x.empty() || x == "unknown" || x == "unavailable") return;
+          if (esp_panel_runtime_text_unavailable(x)) return;
           id(w07_action).publish_state(x);
   - platform: homeassistant
     id: w08_runtime_config_source
     entity_id: input_text.esp_panel_runtime_w08_config
     on_value:
       - lambda: |-
+          if (x.empty() || esp_panel_runtime_text_unavailable(x)) return;
           auto config = esp_panel_parse_widget_runtime(x);
           id(w08_type).publish_state(config.type);
           id(w08_visible).publish_state(config.visible);
@@ -4637,6 +4675,7 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w08_value
     on_value:
       - lambda: |-
+          if (esp_panel_runtime_text_unavailable(x)) return;
           if (id(w08_type).state != "clock" && id(w08_type).state != "date") {
             id(w08_value).publish_state(x);
           }
@@ -4646,13 +4685,14 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w08_action
     on_value:
       - lambda: |-
-          if (x.empty() || x == "unknown" || x == "unavailable") return;
+          if (esp_panel_runtime_text_unavailable(x)) return;
           id(w08_action).publish_state(x);
   - platform: homeassistant
     id: w09_runtime_config_source
     entity_id: input_text.esp_panel_runtime_w09_config
     on_value:
       - lambda: |-
+          if (x.empty() || esp_panel_runtime_text_unavailable(x)) return;
           auto config = esp_panel_parse_widget_runtime(x);
           id(w09_type).publish_state(config.type);
           id(w09_visible).publish_state(config.visible);
@@ -4686,6 +4726,7 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w09_value
     on_value:
       - lambda: |-
+          if (esp_panel_runtime_text_unavailable(x)) return;
           if (id(w09_type).state != "clock" && id(w09_type).state != "date") {
             id(w09_value).publish_state(x);
           }
@@ -4695,13 +4736,14 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w09_action
     on_value:
       - lambda: |-
-          if (x.empty() || x == "unknown" || x == "unavailable") return;
+          if (esp_panel_runtime_text_unavailable(x)) return;
           id(w09_action).publish_state(x);
   - platform: homeassistant
     id: w10_runtime_config_source
     entity_id: input_text.esp_panel_runtime_w10_config
     on_value:
       - lambda: |-
+          if (x.empty() || esp_panel_runtime_text_unavailable(x)) return;
           auto config = esp_panel_parse_widget_runtime(x);
           id(w10_type).publish_state(config.type);
           id(w10_visible).publish_state(config.visible);
@@ -4735,6 +4777,7 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w10_value
     on_value:
       - lambda: |-
+          if (esp_panel_runtime_text_unavailable(x)) return;
           if (id(w10_type).state != "clock" && id(w10_type).state != "date") {
             id(w10_value).publish_state(x);
           }
@@ -4744,13 +4787,14 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w10_action
     on_value:
       - lambda: |-
-          if (x.empty() || x == "unknown" || x == "unavailable") return;
+          if (esp_panel_runtime_text_unavailable(x)) return;
           id(w10_action).publish_state(x);
   - platform: homeassistant
     id: w11_runtime_config_source
     entity_id: input_text.esp_panel_runtime_w11_config
     on_value:
       - lambda: |-
+          if (x.empty() || esp_panel_runtime_text_unavailable(x)) return;
           auto config = esp_panel_parse_widget_runtime(x);
           id(w11_type).publish_state(config.type);
           id(w11_visible).publish_state(config.visible);
@@ -4784,6 +4828,7 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w11_value
     on_value:
       - lambda: |-
+          if (esp_panel_runtime_text_unavailable(x)) return;
           if (id(w11_type).state != "clock" && id(w11_type).state != "date") {
             id(w11_value).publish_state(x);
           }
@@ -4793,13 +4838,14 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w11_action
     on_value:
       - lambda: |-
-          if (x.empty() || x == "unknown" || x == "unavailable") return;
+          if (esp_panel_runtime_text_unavailable(x)) return;
           id(w11_action).publish_state(x);
   - platform: homeassistant
     id: w12_runtime_config_source
     entity_id: input_text.esp_panel_runtime_w12_config
     on_value:
       - lambda: |-
+          if (x.empty() || esp_panel_runtime_text_unavailable(x)) return;
           auto config = esp_panel_parse_widget_runtime(x);
           id(w12_type).publish_state(config.type);
           id(w12_visible).publish_state(config.visible);
@@ -4833,6 +4879,7 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w12_value
     on_value:
       - lambda: |-
+          if (esp_panel_runtime_text_unavailable(x)) return;
           if (id(w12_type).state != "clock" && id(w12_type).state != "date") {
             id(w12_value).publish_state(x);
           }
@@ -4842,7 +4889,7 @@ text_sensor:
     entity_id: input_text.esp_panel_runtime_w12_action
     on_value:
       - lambda: |-
-          if (x.empty() || x == "unknown" || x == "unavailable") return;
+          if (esp_panel_runtime_text_unavailable(x)) return;
           id(w12_action).publish_state(x);
 
 interval:

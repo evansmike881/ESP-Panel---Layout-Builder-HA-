@@ -17,6 +17,10 @@ input_text:
   esp_panel_runtime_w01_value:
     name: ESP Panel Runtime W01 Value
     initial: "--:--"
+  esp_panel_runtime_w01_action:
+    name: ESP Panel Runtime W01 Action
+    initial: ""
+    max: 255
 
   esp_panel_runtime_w02_config:
     name: ESP Panel Runtime W02 Config
@@ -25,6 +29,10 @@ input_text:
   esp_panel_runtime_w02_value:
     name: ESP Panel Runtime W02 Value
     initial: "--"
+  esp_panel_runtime_w02_action:
+    name: ESP Panel Runtime W02 Action
+    initial: ""
+    max: 255
 
   esp_panel_runtime_w03_config:
     name: ESP Panel Runtime W03 Config
@@ -33,6 +41,10 @@ input_text:
   esp_panel_runtime_w03_value:
     name: ESP Panel Runtime W03 Value
     initial: "Partly Cloudy"
+  esp_panel_runtime_w03_action:
+    name: ESP Panel Runtime W03 Action
+    initial: ""
+    max: 255
 
   esp_panel_runtime_w04_config:
     name: ESP Panel Runtime W04 Config
@@ -41,6 +53,10 @@ input_text:
   esp_panel_runtime_w04_value:
     name: ESP Panel Runtime W04 Value
     initial: "12.5"
+  esp_panel_runtime_w04_action:
+    name: ESP Panel Runtime W04 Action
+    initial: ""
+    max: 255
 
   esp_panel_runtime_w05_config:
     name: ESP Panel Runtime W05 Config
@@ -49,6 +65,10 @@ input_text:
   esp_panel_runtime_w05_value:
     name: ESP Panel Runtime W05 Value
     initial: "80"
+  esp_panel_runtime_w05_action:
+    name: ESP Panel Runtime W05 Action
+    initial: ""
+    max: 255
 
   esp_panel_runtime_w06_config:
     name: ESP Panel Runtime W06 Config
@@ -57,6 +77,10 @@ input_text:
   esp_panel_runtime_w06_value:
     name: ESP Panel Runtime W06 Value
     initial: "OFF"
+  esp_panel_runtime_w06_action:
+    name: ESP Panel Runtime W06 Action
+    initial: ""
+    max: 255
 
   esp_panel_runtime_w07_config:
     name: ESP Panel Runtime W07 Config
@@ -65,6 +89,10 @@ input_text:
   esp_panel_runtime_w07_value:
     name: ESP Panel Runtime W07 Value
     initial: "Online"
+  esp_panel_runtime_w07_action:
+    name: ESP Panel Runtime W07 Action
+    initial: ""
+    max: 255
 
   esp_panel_runtime_w08_config:
     name: ESP Panel Runtime W08 Config
@@ -73,6 +101,10 @@ input_text:
   esp_panel_runtime_w08_value:
     name: ESP Panel Runtime W08 Value
     initial: "Home"
+  esp_panel_runtime_w08_action:
+    name: ESP Panel Runtime W08 Action
+    initial: ""
+    max: 255
 
   esp_panel_runtime_w09_config:
     name: ESP Panel Runtime W09 Config
@@ -81,6 +113,10 @@ input_text:
   esp_panel_runtime_w09_value:
     name: ESP Panel Runtime W09 Value
     initial: "Closed"
+  esp_panel_runtime_w09_action:
+    name: ESP Panel Runtime W09 Action
+    initial: ""
+    max: 255
 
   esp_panel_runtime_w10_config:
     name: ESP Panel Runtime W10 Config
@@ -89,6 +125,10 @@ input_text:
   esp_panel_runtime_w10_value:
     name: ESP Panel Runtime W10 Value
     initial: "Ready"
+  esp_panel_runtime_w10_action:
+    name: ESP Panel Runtime W10 Action
+    initial: ""
+    max: 255
 
   esp_panel_runtime_w11_config:
     name: ESP Panel Runtime W11 Config
@@ -97,6 +137,10 @@ input_text:
   esp_panel_runtime_w11_value:
     name: ESP Panel Runtime W11 Value
     initial: ""
+  esp_panel_runtime_w11_action:
+    name: ESP Panel Runtime W11 Action
+    initial: ""
+    max: 255
 
   esp_panel_runtime_w12_config:
     name: ESP Panel Runtime W12 Config
@@ -105,3 +149,7 @@ input_text:
   esp_panel_runtime_w12_value:
     name: ESP Panel Runtime W12 Value
     initial: ""
+  esp_panel_runtime_w12_action:
+    name: ESP Panel Runtime W12 Action
+    initial: ""
+    max: 255

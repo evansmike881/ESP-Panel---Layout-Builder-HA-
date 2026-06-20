@@ -50,13 +50,6 @@ export function applyWidgets(widgets: WidgetConfig[], theme: PanelTheme) {
   });
 }
 
-export function applyWidget(widget: WidgetConfig, theme?: PanelTheme) {
-  return request<{ ok: boolean; widget: WidgetConfig; warnings: string[] }>(`api/widgets/${widget.id}`, {
-    method: "POST",
-    body: JSON.stringify({ ...widget, theme })
-  });
-}
-
 export function fetchEntities() {
   return request<{ entities: EntityOption[] }>("api/entities");
 }

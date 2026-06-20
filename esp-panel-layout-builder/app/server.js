@@ -13,7 +13,7 @@ const HASS_URL = process.env.HASS_URL || "http://supervisor/core/api";
 const TOKEN = process.env.SUPERVISOR_TOKEN || process.env.HASSIO_TOKEN || "";
 const VALUE_SOURCE_SYNC_INTERVAL_MS = Math.max(
   1000,
-  Number.parseInt(process.env.VALUE_SOURCE_SYNC_INTERVAL_MS || "2000", 10) || 2000
+  Number.parseInt(process.env.VALUE_SOURCE_SYNC_INTERVAL_MS || "15000", 10) || 15000
 );
 const GRID_SIZE = 6;
 const WIDGET_IDS = ["w01", "w02", "w03", "w04", "w05", "w06", "w07", "w08", "w09", "w10", "w11", "w12"];
@@ -162,6 +162,7 @@ const DEFAULT_STYLE = {
   showIcon: true,
   showLabel: true,
   showValue: true,
+  widgetBgColor: "",
   contentAlign: "start",
   labelTransform: "none",
   labelWeight: "bold",
@@ -187,6 +188,8 @@ const DEFAULT_LAYOUT = [
   { id: "w11", type: "blank", visible: false, label: "Blank", value: "", valueSource: "", icon: "shape", action: "", x: 0, y: 2, w: 2, h: 1, ...DEFAULT_STYLE },
   { id: "w12", type: "blank", visible: false, label: "Blank", value: "", valueSource: "", icon: "shape", action: "", x: 2, y: 2, w: 2, h: 1, ...DEFAULT_STYLE }
 ];
+const DEFAULT_WIDGETS_BY_ID = new Map(DEFAULT_LAYOUT.map((widget) => [widget.id, widget]));
+const HELPER_YAML = helperPackageYaml();
 
 const app = express();
 app.use(express.json({ limit: "1mb" }));
@@ -245,7 +248,7 @@ function themeHelperMap() {
 }
 
 function copyDefaultWidget(id) {
-  const widget = DEFAULT_LAYOUT.find((item) => item.id === id);
+  const widget = DEFAULT_WIDGETS_BY_ID.get(id);
   if (!widget) {
     throw new Error(`Default widget definition missing for ${id}`);
   }
@@ -539,18 +542,12 @@ function sanitizeWidget(input, fallback) {
   return widget;
 }
 
-function compareWidgetValues(expected, actual) {
-  const mismatches = [];
-
-  for (const field of ["type", "visible", "showBorder", "showIcon", "showLabel", "showValue", "widgetBgColor", "label", "value", "valueSource", "icon", "action", "contentAlign", "labelTransform", "labelWeight", "valueWeight", "iconColor", "labelColor", "valueColor", "iconScale", "labelScale", "valueScale", "x", "y", "w", "h"]) {
-    if (expected[field] !== actual[field]) {
-      mismatches.push(
-        `${expected.id} ${field} expected "${expected[field]}" but Home Assistant has "${actual[field]}"`
-      );
-    }
-  }
-
-  return mismatches;
+function sanitizeWidgetCollection(inputWidgets) {
+  return WIDGET_IDS.map((id) => {
+    const fallback = copyDefaultWidget(id);
+    const rawWidget = Array.isArray(inputWidgets) ? inputWidgets.find((widget) => widget?.id === id) || { id } : { id };
+    return sanitizeWidget(rawWidget, fallback);
+  });
 }
 
 async function hassFetch(endpoint, options = {}) {
@@ -640,35 +637,35 @@ function widgetFromStates(id, statesMap) {
   const h = readState(helpers.h);
 
   return {
-    widget: {
+    widget: sanitizeWidget({
       id,
-      type: normalizeWidgetType(type, fallback.type),
+      type,
       visible: visible === undefined ? fallback.visible : visible === "on",
       showBorder: showBorder === undefined ? fallback.showBorder : showBorder === "on",
       showIcon: showIcon === undefined ? fallback.showIcon : showIcon === "on",
       showLabel: showLabel === undefined ? fallback.showLabel : showLabel === "on",
       showValue: showValue === undefined ? fallback.showValue : showValue === "on",
-      widgetBgColor: normalizeWidgetBgColor(widgetBgColor, fallback.widgetBgColor),
-      label: normalizeText(label ?? fallback.label),
-      value: normalizeText(value ?? fallback.value),
-      valueSource: normalizeText(valueSource ?? fallback.valueSource),
-      icon: normalizeText(icon ?? fallback.icon),
-      action: normalizeText(action ?? fallback.action),
-      contentAlign: normalizeOption(contentAlign, CONTENT_ALIGN_OPTIONS, fallback.contentAlign),
-      labelTransform: normalizeOption(labelTransform, TEXT_TRANSFORM_OPTIONS, fallback.labelTransform),
-      labelWeight: normalizeOption(labelWeight, FONT_WEIGHT_OPTIONS, fallback.labelWeight),
-      valueWeight: normalizeOption(valueWeight, FONT_WEIGHT_OPTIONS, fallback.valueWeight),
-      iconColor: normalizeColor(iconColor, fallback.iconColor),
-      labelColor: normalizeColor(labelColor, fallback.labelColor),
-      valueColor: normalizeColor(valueColor, fallback.valueColor),
-      iconScale: normalizeNumber(iconScale, fallback.iconScale),
-      labelScale: normalizeNumber(labelScale, fallback.labelScale),
-      valueScale: normalizeNumber(valueScale, fallback.valueScale),
-      x: normalizeNumber(x, fallback.x),
-      y: normalizeNumber(y, fallback.y),
-      w: normalizeNumber(w, fallback.w),
-      h: normalizeNumber(h, fallback.h)
-    },
+      widgetBgColor,
+      label,
+      value,
+      valueSource,
+      icon,
+      action,
+      contentAlign,
+      labelTransform,
+      labelWeight,
+      valueWeight,
+      iconColor,
+      labelColor,
+      valueColor,
+      iconScale,
+      labelScale,
+      valueScale,
+      x,
+      y,
+      w,
+      h
+    }, fallback),
     missing
   };
 }
@@ -745,11 +742,7 @@ async function loadStoredConfig() {
   const fileConfig = await readStoredConfigFile();
   if (fileConfig) {
     const theme = sanitizeTheme(fileConfig.theme);
-    const widgets = WIDGET_IDS.map((id) => {
-      const fallback = copyDefaultWidget(id);
-      const rawWidget = Array.isArray(fileConfig.widgets) ? fileConfig.widgets.find((widget) => widget?.id === id) || { id } : { id };
-      return sanitizeWidget(rawWidget, fallback);
-    });
+    const widgets = sanitizeWidgetCollection(fileConfig.widgets);
     return { widgets, theme };
   }
 
@@ -768,18 +761,14 @@ async function loadStoredConfig() {
 
 async function saveStoredConfig(widgets, theme) {
   const config = {
-    widgets: WIDGET_IDS.map((id) => {
-      const fallback = copyDefaultWidget(id);
-      const widget = widgets.find((item) => item.id === id) || fallback;
-      return sanitizeWidget(widget, fallback);
-    }),
+    widgets: sanitizeWidgetCollection(widgets),
     theme: sanitizeTheme(theme)
   };
   await writeStoredConfigFile(config);
   return config;
 }
 
-async function writeRuntimeText(entityId, value, warnings, warningLabel) {
+async function writeRuntimeText(entityId, value, warningLabel) {
   try {
     await hassFetch("/services/input_text/set_value", {
       method: "POST",
@@ -788,33 +777,34 @@ async function writeRuntimeText(entityId, value, warnings, warningLabel) {
         value
       })
     });
+    return null;
   } catch (error) {
     const message = error instanceof Error ? error.message : `Unknown error while updating ${warningLabel}.`;
-    warnings.push(`${warningLabel} was not updated: ${message}`);
+    return `${warningLabel} was not updated: ${message}`;
   }
 }
 
 async function syncRuntimeTheme(theme) {
-  const warnings = [];
-  await writeRuntimeText(runtimeThemeHelper(), runtimeThemeConfigValue(theme), warnings, "Theme runtime helper");
-  return warnings;
+  const warning = await writeRuntimeText(runtimeThemeHelper(), runtimeThemeConfigValue(theme), "Theme runtime helper");
+  return warning ? [warning] : [];
 }
 
 async function syncRuntimeWidget(widget) {
-  const warnings = [];
   const helpers = runtimeHelperMap(widget.id);
-  await writeRuntimeText(helpers.config, runtimeWidgetConfigValue(widget), warnings, `${widget.id} config helper`);
-  await writeRuntimeText(helpers.value, widget.value, warnings, `${widget.id} value helper`);
-  await writeRuntimeText(helpers.action, runtimeActionValue(widget), warnings, `${widget.id} action helper`);
-  return warnings;
+  const warnings = await Promise.all([
+    writeRuntimeText(helpers.config, runtimeWidgetConfigValue(widget), `${widget.id} config helper`),
+    writeRuntimeText(helpers.value, widget.value, `${widget.id} value helper`),
+    writeRuntimeText(helpers.action, runtimeActionValue(widget), `${widget.id} action helper`)
+  ]);
+  return warnings.filter(Boolean);
 }
 
 async function syncRuntimeConfig(widgets, theme) {
-  const warnings = [...await syncRuntimeTheme(theme)];
-  for (const widget of widgets) {
-    warnings.push(...await syncRuntimeWidget(widget));
-  }
-  return warnings;
+  const warningGroups = await Promise.all([
+    syncRuntimeTheme(theme),
+    ...widgets.map((widget) => syncRuntimeWidget(widget))
+  ]);
+  return warningGroups.flat();
 }
 
 async function findMissingRuntimeHelpers() {
@@ -830,24 +820,6 @@ async function findMissingRuntimeHelpers() {
     return required.filter((entityId) => !statesMap.has(entityId));
   } catch {
     return [];
-  }
-}
-
-async function writeWidget(widget) {
-  return syncRuntimeWidget(widget);
-}
-
-async function writeTheme(theme) {
-  return syncRuntimeTheme(theme);
-}
-
-async function tryWriteTheme(theme) {
-  try {
-    return await writeTheme(theme);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error while updating panel runtime theme helper.";
-    log("Theme helper update skipped", message);
-    return [`Theme helpers were not updated: ${message}`];
   }
 }
 
@@ -871,6 +843,7 @@ async function syncValueSources() {
   const statesMap = new Map(states.map((state) => [state.entity_id, state]));
   const stored = await loadStoredConfig();
   let changed = false;
+  const runtimeUpdates = [];
 
   for (const widget of stored.widgets) {
     if (!widget.valueSource) {
@@ -886,11 +859,12 @@ async function syncValueSources() {
     if (nextValue && nextValue !== widget.value) {
       widget.value = nextValue;
       changed = true;
-      const warnings = [];
-      await writeRuntimeText(runtimeHelperMap(widget.id).value, nextValue, warnings, `${widget.id} value helper`);
-      warnings.forEach((warning) => log(warning));
+      runtimeUpdates.push(writeRuntimeText(runtimeHelperMap(widget.id).value, nextValue, `${widget.id} value helper`));
     }
   }
+
+  const runtimeWarnings = await Promise.all(runtimeUpdates);
+  runtimeWarnings.filter(Boolean).forEach((warning) => log(warning));
 
   if (changed) {
     await saveStoredConfig(stored.widgets, stored.theme);
@@ -910,25 +884,21 @@ async function buildWidgetResponse() {
         : [])
     ],
     missingHelpers,
-    helperYaml: helperPackageYaml(),
+    helperYaml: HELPER_YAML,
     defaults: DEFAULT_LAYOUT,
     theme: stored.theme
   };
 }
 
-async function verifyWrittenWidgets(expectedWidgets) {
-  const current = await buildWidgetResponse();
-  const mismatches = expectedWidgets.flatMap((expected) => {
-    const actual = current.widgets.find((widget) => widget.id === expected.id);
-    if (!actual) {
-      return [`${expected.id} could not be read back from Home Assistant after apply.`];
-    }
-    return compareWidgetValues(expected, actual);
-  });
-
+function defaultWidgetResponse(errorMessage) {
   return {
-    current,
-    mismatches
+    error: errorMessage,
+    widgets: DEFAULT_LAYOUT,
+    warnings: ["Falling back to the built-in default layout."],
+    missingHelpers: [],
+    helperYaml: HELPER_YAML,
+    defaults: DEFAULT_LAYOUT,
+    theme: copyDefaultTheme()
   };
 }
 
@@ -937,20 +907,12 @@ app.get("/api/widgets", async (_request, response) => {
     response.json(await buildWidgetResponse());
   } catch (error) {
     log("Failed to load widgets", error);
-    response.status(500).json({
-      error: error instanceof Error ? error.message : "Unknown error while loading widgets.",
-      widgets: DEFAULT_LAYOUT,
-      warnings: ["Falling back to the built-in default layout."],
-      missingHelpers: [],
-      helperYaml: helperPackageYaml(),
-      defaults: DEFAULT_LAYOUT,
-      theme: copyDefaultTheme()
-    });
+    response.json(defaultWidgetResponse(error instanceof Error ? error.message : "Unknown error while loading widgets."));
   }
 });
 
 app.get("/api/helper-yaml", (_request, response) => {
-  response.type("text/plain").send(helperPackageYaml());
+  response.type("text/plain").send(HELPER_YAML);
 });
 
 app.get("/api/entities", async (_request, response) => {
@@ -979,40 +941,6 @@ app.get("/api/value-sources", async (_request, response) => {
   }
 });
 
-app.post("/api/widgets/:id", async (request, response) => {
-  try {
-    const id = request.params.id;
-    if (!WIDGET_IDS.includes(id)) {
-      response.status(400).json({ error: `Unsupported widget id: ${id}` });
-      return;
-    }
-
-    const fallback = copyDefaultWidget(id);
-    const widget = sanitizeWidget({ ...request.body, id }, fallback);
-    const theme = sanitizeTheme(request.body?.theme);
-    const errors = validateWidget(widget);
-
-    if (errors.length > 0) {
-      response.status(400).json({ error: errors.join(" ") });
-      return;
-    }
-
-    const stored = await loadStoredConfig();
-    const nextWidgets = stored.widgets.map((item) => (item.id === widget.id ? widget : item));
-    await saveStoredConfig(nextWidgets, theme);
-    const runtimeWarnings = [...await tryWriteTheme(theme), ...await writeWidget(widget)];
-    const { current, mismatches } = await verifyWrittenWidgets([widget]);
-    const storedWidget = current.widgets.find((item) => item.id === widget.id) || widget;
-    const warnings = [...current.warnings, ...mismatches, ...runtimeWarnings];
-    response.json({ ok: true, widget: storedWidget, warnings });
-  } catch (error) {
-    log("Failed to update widget", error);
-    response.status(500).json({
-      error: error instanceof Error ? error.message : "Unknown error while updating widget."
-    });
-  }
-});
-
 app.post("/api/apply", async (request, response) => {
   try {
     const inputWidgets = Array.isArray(request.body?.widgets) ? request.body.widgets : [];
@@ -1022,11 +950,7 @@ app.post("/api/apply", async (request, response) => {
       return;
     }
 
-    const widgets = WIDGET_IDS.map((id) => {
-      const fallback = copyDefaultWidget(id);
-      const rawWidget = inputWidgets.find((widget) => widget?.id === id) || { id };
-      return sanitizeWidget(rawWidget, fallback);
-    });
+    const widgets = sanitizeWidgetCollection(inputWidgets);
 
     const errors = widgets.flatMap((widget) => validateWidget(widget));
     if (errors.length > 0) {
@@ -1036,13 +960,12 @@ app.post("/api/apply", async (request, response) => {
 
     await saveStoredConfig(widgets, theme);
     const runtimeWarnings = await syncRuntimeConfig(widgets, theme);
-
-    const { current, mismatches } = await verifyWrittenWidgets(widgets);
+    const current = await buildWidgetResponse();
 
     response.json({
       ok: true,
       widgets: current.widgets,
-      warnings: [...current.warnings, ...mismatches, ...runtimeWarnings]
+      warnings: [...current.warnings, ...runtimeWarnings]
     });
   } catch (error) {
     log("Failed to apply widget layout", error);

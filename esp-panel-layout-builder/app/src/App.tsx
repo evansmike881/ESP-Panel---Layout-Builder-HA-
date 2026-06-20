@@ -81,7 +81,6 @@ const WIDGET_TYPE_LABELS: Record<WidgetConfig["type"], string> = {
   media: "Media button",
   status: "Sensor / status"
 };
-const SCREEN_TABS = [{ id: "screen-1", label: "Screen 1" }] as const;
 const VALUE_PRESETS: Partial<Record<WidgetConfig["type"], string[]>> = {
   button: ["ON", "OFF", "Tap"],
   media: ["idle", "playing", "paused", "stopped"],
@@ -187,13 +186,6 @@ function getMdiIcon(icon: string) {
   return mdiIcons.icons[alias.parent as keyof typeof mdiIcons.icons] || null;
 }
 
-function widgetScale(widget: WidgetConfig) {
-  const area = widget.w * widget.h;
-  const widthBoost = widget.w * 0.08;
-  const heightBoost = widget.h * 0.12;
-  return clamp(0.86 + Math.sqrt(area) * 0.3 + widthBoost + heightBoost, 0.9, 2.6);
-}
-
 function applyThemeToWidgets(widgets: WidgetConfig[], theme: PanelTheme) {
   return widgets.map((widget) => ({
     ...widget,
@@ -224,6 +216,19 @@ function customThemeFrom(theme: PanelTheme, patch: Partial<PanelTheme> = {}): Pa
     id: "custom",
     name: "Custom"
   };
+}
+
+function clampWidgetToGrid(widget: WidgetConfig): WidgetConfig {
+  const w = clamp(widget.w, 1, GRID_SIZE);
+  const h = clamp(widget.h, 1, GRID_SIZE);
+  const x = clamp(widget.x, 0, GRID_SIZE - w);
+  const y = clamp(widget.y, 0, GRID_SIZE - h);
+
+  if (x === widget.x && y === widget.y && w === widget.w && h === widget.h) {
+    return widget;
+  }
+
+  return { ...widget, x, y, w, h };
 }
 
 function widgetStyle(widget: WidgetConfig, theme: PanelTheme): CSSProperties {
@@ -461,7 +466,7 @@ function actionPlaceholder(type: WidgetConfig["type"]) {
     case "status":
       return "Example: binary_sensor.front_door";
     default:
-      return "Automation key used by your panel tap handler";
+      return "Example: light.kitchen or automation.goodnight";
   }
 }
 
@@ -534,7 +539,7 @@ export default function App() {
   });
   const [status, setStatus] = useState("Loading from Home Assistant...");
   const [statusTone, setStatusTone] = useState<"ok" | "warn" | "error">("warn");
-  const [warnings, setWarnings] = useState<string[]>([]);
+  const [serverWarnings, setServerWarnings] = useState<string[]>([]);
   const [missingHelpers, setMissingHelpers] = useState<string[]>([]);
   const [helperYaml, setHelperYaml] = useState("");
   const [showHelperYaml, setShowHelperYaml] = useState(false);
@@ -625,11 +630,13 @@ export default function App() {
   );
   const visibleWidgets = useMemo(() => widgets.filter((widget) => widget.visible), [widgets]);
   const hiddenWidgets = useMemo(() => widgets.filter((widget) => !widget.visible), [widgets]);
+  const layoutWarnings = useMemo(() => detectWarnings(widgets), [widgets]);
+  const warnings = useMemo(() => Array.from(new Set([...serverWarnings, ...layoutWarnings])), [layoutWarnings, serverWarnings]);
 
   useEffect(() => {
     void loadWidgets();
-    void loadEntities();
-    void loadValueSources();
+    void loadEntityOptions(fetchEntities, setEntities);
+    void loadEntityOptions(fetchValueSources, setValueSourceEntities);
   }, []);
 
   useEffect(() => {
@@ -690,6 +697,9 @@ export default function App() {
               0,
               GRID_SIZE - interaction.startWidget.h
             );
+            if (widget.x === nextX && widget.y === nextY) {
+              return widget;
+            }
             return { ...widget, x: nextX, y: nextY };
           }
 
@@ -703,6 +713,9 @@ export default function App() {
             1,
             GRID_SIZE - interaction.startWidget.y
           );
+          if (widget.w === nextW && widget.h === nextH) {
+            return widget;
+          }
           return { ...widget, w: nextW, h: nextH };
         })
       );
@@ -711,7 +724,6 @@ export default function App() {
     const onPointerUp = (event: PointerEvent) => {
       if (interactionRef.current && event.pointerId === interactionRef.current.pointerId) {
         interactionRef.current = null;
-        setWarnings(detectWarnings(widgets));
       }
     };
 
@@ -721,36 +733,31 @@ export default function App() {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
     };
-  }, [widgets]);
+  }, []);
 
   async function loadWidgets() {
     setBusy(true);
     try {
       const data = await fetchWidgets();
-      hydrateResponse(data, "Connected to Home Assistant");
-      setStatusTone(data.missingHelpers.length > 0 ? "warn" : "ok");
+      const loadedFromFallback = Boolean(data.error);
+      hydrateResponse(data, loadedFromFallback ? "Loaded fallback layout" : "Connected to Home Assistant");
+      setStatusTone(loadedFromFallback || data.missingHelpers.length > 0 ? "warn" : "ok");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to load widgets");
       setStatusTone("error");
-      setWarnings(["Using local defaults until Home Assistant responds."]);
+      setServerWarnings(["Using local defaults until Home Assistant responds."]);
     } finally {
       setBusy(false);
     }
   }
 
-  async function loadEntities() {
+  async function loadEntityOptions(
+    loader: () => Promise<{ entities: EntityOption[] }>,
+    assign: (entities: EntityOption[]) => void
+  ) {
     try {
-      const data = await fetchEntities();
-      setEntities(data.entities);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  async function loadValueSources() {
-    try {
-      const data = await fetchValueSources();
-      setValueSourceEntities(data.entities);
+      const data = await loader();
+      assign(data.entities);
     } catch (error) {
       console.error(error);
     }
@@ -761,7 +768,7 @@ export default function App() {
     setDefaults(data.defaults);
     setTheme(data.theme || PANEL_THEMES.blue);
     setHelperYaml(data.helperYaml);
-    setWarnings(data.warnings);
+    setServerWarnings(data.warnings);
     setMissingHelpers(data.missingHelpers);
     setSelectedId((current) => (data.widgets.some((widget) => widget.id === current) ? current : data.widgets[0]?.id || "w01"));
     setStatus(message);
@@ -769,9 +776,7 @@ export default function App() {
 
   function updateWidget(id: string, patch: Partial<WidgetConfig>) {
     setWidgets((current) => {
-      const next = current.map((widget) => (widget.id === id ? { ...widget, ...patch } : widget));
-      setWarnings(detectWarnings(next));
-      return next;
+      return current.map((widget) => (widget.id === id ? clampWidgetToGrid({ ...widget, ...patch }) : widget));
     });
   }
 
@@ -780,7 +785,7 @@ export default function App() {
     try {
       const result = await applyWidgets(widgets, theme);
       setWidgets(result.widgets);
-      setWarnings(result.warnings);
+      setServerWarnings(result.warnings);
       setStatus("All widget helpers updated");
       setStatusTone(result.warnings.length > 0 ? "warn" : "ok");
     } catch (error) {
@@ -808,7 +813,7 @@ export default function App() {
   function handleReset() {
     const nextDefaults = applyThemeToWidgets(defaults, theme);
     setWidgets(nextDefaults);
-    setWarnings(detectWarnings(nextDefaults));
+    setServerWarnings([]);
     setStatus("Reset to default layout in the editor");
     setStatusTone("warn");
   }
@@ -816,11 +821,7 @@ export default function App() {
   function handleThemeChange(nextThemeId: PanelThemeId) {
     const nextTheme = nextThemeId === "custom" ? customThemeFrom(theme) : PANEL_THEMES[nextThemeId];
     setTheme(nextTheme);
-    setWidgets((current) => {
-      const next = applyThemeToWidgets(current, nextTheme);
-      setWarnings(detectWarnings(next));
-      return next;
-    });
+    setWidgets((current) => applyThemeToWidgets(current, nextTheme));
     setStatus(`${nextTheme.name} theme ready. Apply all widgets to sync Home Assistant and the panel.`);
     setStatusTone("warn");
   }
@@ -828,17 +829,16 @@ export default function App() {
   function updateTheme(patch: Partial<PanelTheme>) {
     const nextTheme = customThemeFrom(theme, patch);
     setTheme(nextTheme);
-    setWidgets((current) => {
-      const next = applyThemeToWidgets(current, nextTheme);
-      setWarnings(detectWarnings(next));
-      return next;
-    });
+    setWidgets((current) => applyThemeToWidgets(current, nextTheme));
     setStatus("Custom theme updated. Apply all widgets to sync Home Assistant and the panel.");
     setStatusTone("warn");
   }
 
   async function handleCopyYaml() {
     try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard API unavailable");
+      }
       await navigator.clipboard.writeText(helperYaml);
       setStatus("Helper YAML copied to clipboard");
       setStatusTone("ok");
@@ -939,16 +939,6 @@ export default function App() {
         </div>
       </header>
 
-      {SCREEN_TABS.length > 1 && (
-        <section className="screen-tabs" aria-label="Screen selection">
-          {SCREEN_TABS.map((screen) => (
-            <button key={screen.id} type="button" className="screen-tab screen-tab-active">
-              {screen.label}
-            </button>
-          ))}
-        </section>
-      )}
-
       {(warnings.length > 0 || missingHelpers.length > 0) && (
         <section className="notice-panel">
           {warnings.map((warning) => (
@@ -964,7 +954,7 @@ export default function App() {
           <div className="preview-header">
             <div>
               <h2>Panel Preview</h2>
-              <p>Live 480x480 view of the selected screen.</p>
+              <p>Live 480x480 view of the physical screen layout.</p>
             </div>
             <div className="preview-header-tools">
               <label className="preview-zoom" aria-label="Preview zoom">
@@ -1503,7 +1493,7 @@ export default function App() {
                             ? `Tap will control ${selectedValueEntity.name} and use the stream URL below.`
                             : "Pick the Home Assistant media_player entity this button should control on the physical panel."
                           : selectedValueEntity
-                            ? `The add-on will copy ${selectedValueEntity.name} into this widget every 15 seconds.`
+                            ? `The add-on will copy ${selectedValueEntity.name} into this widget roughly every 15 seconds.`
                             : "Pick an entity here if you want the widget content to follow a sensor, switch, binary sensor, or similar entity."}
                       </p>
                     </>
@@ -1512,7 +1502,7 @@ export default function App() {
                   {capabilities.showAction && (
                     <>
                       <label className="field">
-                        <span>{selectedWidget.type === "media" ? "Stream URL" : "Action Key"}</span>
+                        <span>{selectedWidget.type === "media" ? "Stream URL" : "Action / Entity ID"}</span>
                         <input
                           type="text"
                           list="action-keys"
@@ -1527,7 +1517,7 @@ export default function App() {
                         ))}
                       </datalist>
                       <label className="field">
-                        <span>{selectedWidget.type === "media" ? "Browse Player Entity" : "Target Entity"}</span>
+                        <span>{selectedWidget.type === "media" ? "Browse Player Entity" : "Browse Home Assistant entities"}</span>
                         <input
                           type="text"
                           list="entity-options"
@@ -1576,7 +1566,7 @@ export default function App() {
                       {actionSuggestions.length > 0 && (
                         <div className="suggestion-block">
                           <div className="suggestion-header">
-                            <span>Suggested action keys</span>
+                            <span>Suggested actions</span>
                           </div>
                           <div className="suggestion-chips">
                             {actionSuggestions.map((action) => (
@@ -1600,7 +1590,14 @@ export default function App() {
               <EditorGroup title="Layout" subtitle="Grid position and size" defaultOpen={false}>
                 <div className="field-grid">
                   {(["x", "y", "w", "h"] as const).map((field) => {
-                    const max = field === "x" || field === "y" ? GRID_SIZE - 1 : GRID_SIZE;
+                    const max =
+                      field === "x"
+                        ? GRID_SIZE - selectedWidget.w
+                        : field === "y"
+                          ? GRID_SIZE - selectedWidget.h
+                          : field === "w"
+                            ? GRID_SIZE - selectedWidget.x
+                            : GRID_SIZE - selectedWidget.y;
                     const min = field === "w" || field === "h" ? 1 : 0;
                     return (
                       <label key={field} className="field">

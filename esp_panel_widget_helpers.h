@@ -223,6 +223,34 @@ static inline bool esp_panel_is_media_action(const std::string &value) {
   return esp_panel_string_starts_with(value, "media|");
 }
 
+static inline bool esp_panel_runtime_text_unavailable(const std::string &value) {
+  return value == "unknown" || value == "unavailable";
+}
+
+static inline bool esp_panel_media_state_is_active(std::string value) {
+  std::transform(value.begin(), value.end(), value.begin(), [](unsigned char character) {
+    return static_cast<char>(std::tolower(character));
+  });
+  return value == "playing" || value == "buffering";
+}
+
+static inline bool esp_panel_touch_within_widget(
+    int touch_x,
+    int touch_y,
+    int grid_x,
+    int grid_y,
+    int grid_w,
+    int grid_h,
+    int slot_w,
+    int slot_h,
+    int slot_gap) {
+  const int left = grid_x * slot_w + 3;
+  const int top = grid_y * slot_h + 3;
+  const int right = left + grid_w * slot_w - slot_gap;
+  const int bottom = top + grid_h * slot_h - slot_gap;
+  return touch_x >= left && touch_x < right && touch_y >= top && touch_y < bottom;
+}
+
 static inline std::string esp_panel_media_target(const std::string &value) {
   if (!esp_panel_is_media_action(value)) {
     return "";
