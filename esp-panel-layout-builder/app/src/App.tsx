@@ -65,6 +65,11 @@ const CONTENT_ALIGN_OPTIONS = [
   { value: "center", label: "Center" },
   { value: "end", label: "Right" }
 ] as const;
+const LAYOUT_MODE_OPTIONS = [
+  { value: "auto", label: "Auto" },
+  { value: "stacked", label: "Stacked" },
+  { value: "icon_right", label: "Icon right" }
+] as const;
 const TEXT_TRANSFORM_OPTIONS = [
   { value: "none", label: "Normal case" },
   { value: "uppercase", label: "Uppercase" }
@@ -199,25 +204,30 @@ function alphaHex(color: string, alpha: string) {
   return /^#[0-9a-fA-F]{6}$/.test(color) ? `${color}${alpha}` : color;
 }
 
+function previewAccent(theme: PanelTheme) {
+  return theme.overlayTitle;
+}
+
 function previewThemeStyle(theme: PanelTheme): CSSProperties {
+  const accent = previewAccent(theme);
   return {
     ["--panel-screen-bg" as string]: theme.screenBg,
     ["--panel-screen-bg-deep" as string]: `color-mix(in srgb, ${theme.screenBg} 82%, black)`,
     ["--panel-screen-bg-soft" as string]: `color-mix(in srgb, ${theme.screenBg} 78%, white)`,
-    ["--panel-screen-sheen" as string]: `color-mix(in srgb, ${theme.accent} 26%, transparent)`,
+    ["--panel-screen-sheen" as string]: `color-mix(in srgb, ${accent} 26%, transparent)`,
     ["--panel-grid-line" as string]: alphaHex(theme.widgetBorder, "2b"),
     ["--panel-grid-text" as string]: alphaHex(theme.labelColor, "8f"),
     ["--widget-bg-color" as string]: theme.widgetBg,
     ["--widget-border-color" as string]: theme.widgetBorder,
     ["--button-on-bg-color" as string]: theme.buttonOnBg,
     ["--button-off-bg-color" as string]: theme.buttonOffBg,
-    ["--widget-selected-color" as string]: theme.accent,
+    ["--widget-selected-color" as string]: accent,
     ["--widget-blank-color" as string]: theme.valueColor,
     ["--panel-overlay-bg" as string]: theme.overlayBg,
     ["--panel-overlay-title" as string]: theme.overlayTitle,
     ["--panel-overlay-text" as string]: theme.overlayText,
-    ["--panel-accent-soft" as string]: alphaHex(theme.accent, "2e"),
-    ["--panel-accent-strong" as string]: alphaHex(theme.accent, "66")
+    ["--panel-accent-soft" as string]: alphaHex(accent, "2e"),
+    ["--panel-accent-strong" as string]: alphaHex(accent, "66")
   };
 }
 
@@ -245,6 +255,7 @@ function clampWidgetToGrid(widget: WidgetConfig): WidgetConfig {
 
 function widgetStyle(widget: WidgetConfig, theme: PanelTheme): CSSProperties {
   const tone = widgetStateTone(widget);
+  const accent = previewAccent(theme);
   return {
     left: `calc(${(widget.x / GRID_SIZE) * 100}% + 2px)`,
     top: `calc(${(widget.y / GRID_SIZE) * 100}% + 2px)`,
@@ -255,7 +266,7 @@ function widgetStyle(widget: WidgetConfig, theme: PanelTheme): CSSProperties {
     ["--widget-border-width" as string]: widget.showBorder ? "2px" : "0px",
     ["--button-on-bg-color" as string]: theme.buttonOnBg,
     ["--button-off-bg-color" as string]: theme.buttonOffBg,
-    ["--widget-selected-color" as string]: theme.accent,
+    ["--widget-selected-color" as string]: accent,
     ["--widget-tone" as string]: tone,
     ["--widget-accent-color" as string]: widget.iconColor,
     ["--widget-icon-color" as string]: widget.iconColor,
@@ -279,13 +290,21 @@ function previewGeometry(widget: WidgetConfig): PreviewGeometry {
   const cardH = Math.max(1, widget.h) * 80 - 6;
   const minSide = Math.min(cardW, cardH);
   const autoValue = widget.type === "clock" || widget.type === "date";
+  const timeLike = widget.type === "clock" || widget.type === "date";
+  const mediaLike = widget.type === "media";
+  const buttonLike = widget.type === "button";
+  const statusLike = widget.type === "status";
   const tall = cardH >= 148;
   const wide = cardW >= 228;
   const centerAligned = widget.contentAlign === "center";
   const endAligned = widget.contentAlign === "end";
+  const forceStacked = widget.layoutMode === "stacked";
+  const forceIconRight = widget.layoutMode === "icon_right";
+  const autoLayout = !widget.layoutMode || widget.layoutMode === "auto";
   const squareish = cardH >= cardW - 12;
   const tiny = cardW <= 96;
-  const stacked = tall || tiny || squareish;
+  const stacked = forceStacked || (autoLayout && (tall || tiny || squareish));
+  const iconRight = forceIconRight;
   const padding = clamp(Math.round(minSide / 10), 6, 16);
   const gap = clamp(Math.round(minSide / 18), 4, 12);
   const textAlign: CSSProperties["textAlign"] = centerAligned ? "center" : endAligned ? "right" : "left";
@@ -351,6 +370,21 @@ function previewGeometry(widget: WidgetConfig): PreviewGeometry {
     );
     let labelFont = clamp(Math.round(((tall ? 14 : 12) * widget.labelScale) / 100), 9, 24);
     let valueFont = clamp(Math.round((((autoValue ? cardH / 4 : showIcon && showLabel ? cardH / 6 : cardH / 5) * widget.valueScale) / 100)), 12, 34);
+
+    if (timeLike) {
+      iconFont = clamp(iconFont - 2, 16, 48);
+      labelFont = clamp(labelFont - 1, 9, 20);
+      valueFont = clamp(valueFont + 4, 16, 38);
+    } else if (mediaLike || buttonLike) {
+      iconFont = clamp(iconFont + 2, 18, 58);
+      labelFont = clamp(labelFont - 1, 9, 22);
+      valueFont = clamp(valueFont + 2, 14, 38);
+    } else if (statusLike) {
+      iconFont = clamp(iconFont - 1, 16, 52);
+      labelFont = clamp(labelFont - 1, 9, 21);
+      valueFont = clamp(valueFont + 1, 13, 36);
+    }
+
     let stackGap = gap;
 
     let iconH = showIcon ? iconFont + 6 : 0;
@@ -396,15 +430,30 @@ function previewGeometry(widget: WidgetConfig): PreviewGeometry {
   }
 
   const baseIconFont = clamp(cardH - padding * 2 - (widget.h > 1 ? 18 : 12), 22, 52);
-  const iconFont = clamp(Math.round((baseIconFont * widget.iconScale) / 100), 18, 64);
-  const labelFont = clamp(Math.round(((cardH / 6) * widget.labelScale) / 100), 10, wide ? 22 : 18);
+  let iconFont = clamp(Math.round((baseIconFont * widget.iconScale) / 100), 18, 64);
+  let labelFont = clamp(Math.round(((cardH / 6) * widget.labelScale) / 100), 10, wide ? 22 : 18);
   const valueBase = autoValue ? cardH / 2 : cardH / 3;
-  const valueFont = clamp(Math.round((valueBase * widget.valueScale) / 100), 14, wide ? 40 : 32);
+  let valueFont = clamp(Math.round((valueBase * widget.valueScale) / 100), 14, wide ? 40 : 32);
+
+  if (timeLike) {
+    iconFont = clamp(iconFont - 4, 16, 54);
+    labelFont = clamp(labelFont - 1, 10, 18);
+    valueFont = clamp(valueFont + 6, 18, wide ? 44 : 36);
+  } else if (mediaLike || buttonLike) {
+    iconFont = clamp(iconFont + 2, 18, 64);
+    labelFont = clamp(labelFont - 1, 10, wide ? 20 : 17);
+    valueFont = clamp(valueFont + 3, 16, wide ? 42 : 34);
+  } else if (statusLike) {
+    iconFont = clamp(iconFont - 2, 18, 58);
+    labelFont = clamp(labelFont - 1, 10, wide ? 20 : 17);
+    valueFont = clamp(valueFont + 2, 15, wide ? 38 : 32);
+  }
+
   const iconW = showIcon ? Math.min(iconFont + 12, Math.max(28, Math.round(cardW / 3))) : 0;
   const iconH = showIcon ? iconFont + 8 : 0;
   const textGap = gap + 2;
   const textW = Math.max(24, cardW - padding * 2 - (showIcon ? iconW + textGap : 0));
-  const labelX = padding + (showIcon ? iconW + textGap : 0);
+  const labelX = iconRight ? padding : padding + (showIcon ? iconW + textGap : 0);
   const labelH = showLabel ? labelFont + 8 : 0;
   const textBlockH = labelH + (showLabel && showValue ? gap : 0) + (showValue ? valueFont + 8 : 0);
   const contentH = Math.max(iconH, textBlockH);
@@ -413,7 +462,13 @@ function previewGeometry(widget: WidgetConfig): PreviewGeometry {
   const valueY = labelY + (showLabel ? labelH + gap : 0);
 
   return {
-    icon: { x: padding, y: showIcon ? contentY + Math.max(0, Math.floor((contentH - iconH) / 2)) : 0, w: iconW, h: iconH, font: showIcon ? iconFont : 0 },
+    icon: {
+      x: showIcon ? (iconRight ? cardW - padding - iconW : padding) : 0,
+      y: showIcon ? contentY + Math.max(0, Math.floor((contentH - iconH) / 2)) : 0,
+      w: iconW,
+      h: iconH,
+      font: showIcon ? iconFont : 0
+    },
     label: { x: labelX, y: labelY, w: textW, h: labelH, font: showLabel ? labelFont : 0 },
     value: {
       x: labelX,
@@ -1123,7 +1178,7 @@ export default function App() {
                 </div>
               </div>
             </div>
-            <p className="preview-caption">Cards, borders, overlays, and accent treatment are styled to follow the same design language as the updated physical panel.</p>
+            <p className="preview-caption">Cards, borders, overlays, and layout modes are previewed using the same runtime options the physical panel reads.</p>
         </section>
 
         <aside className="editor-panel">
@@ -1219,23 +1274,42 @@ export default function App() {
 
               {capabilities.showAppearance && (
                 <EditorGroup title="Appearance" subtitle="Alignment, colours, and icon style" defaultOpen={false}>
-                  <label className="field">
-                    <span>Content alignment</span>
-                    <select
-                      value={selectedWidget.contentAlign}
-                      onChange={(event) =>
-                        updateWidget(selectedWidget.id, {
-                          contentAlign: event.target.value as WidgetConfig["contentAlign"]
-                        })
-                      }
-                    >
-                      {CONTENT_ALIGN_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  <div className="field-grid">
+                    <label className="field">
+                      <span>Content alignment</span>
+                      <select
+                        value={selectedWidget.contentAlign}
+                        onChange={(event) =>
+                          updateWidget(selectedWidget.id, {
+                            contentAlign: event.target.value as WidgetConfig["contentAlign"]
+                          })
+                        }
+                      >
+                        {CONTENT_ALIGN_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="field">
+                      <span>Layout mode</span>
+                      <select
+                        value={selectedWidget.layoutMode}
+                        onChange={(event) =>
+                          updateWidget(selectedWidget.id, {
+                            layoutMode: event.target.value as WidgetConfig["layoutMode"]
+                          })
+                        }
+                      >
+                        {LAYOUT_MODE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
 
                   <div className="field-grid">
                     <label className="field checkbox-field">
@@ -1725,7 +1799,6 @@ export default function App() {
                 <ColorField label="Widget border" value={theme.widgetBorder} onChange={(value) => updateTheme({ widgetBorder: value })} />
                 <ColorField label="Button on background" value={theme.buttonOnBg} onChange={(value) => updateTheme({ buttonOnBg: value })} />
                 <ColorField label="Button off background" value={theme.buttonOffBg} onChange={(value) => updateTheme({ buttonOffBg: value })} />
-                <ColorField label="Accent" value={theme.accent} onChange={(value) => updateTheme({ accent: value })} />
                 <ColorField label="Icon color" value={theme.iconColor} onChange={(value) => updateTheme({ iconColor: value })} />
                 <ColorField label="Label color" value={theme.labelColor} onChange={(value) => updateTheme({ labelColor: value })} />
                 <ColorField label="Value color" value={theme.valueColor} onChange={(value) => updateTheme({ valueColor: value })} />

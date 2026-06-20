@@ -57,6 +57,7 @@ const LEGACY_WIDGET_TYPE_MAP = {
   humidity: "status"
 };
 const CONTENT_ALIGN_OPTIONS = ["start", "center", "end"];
+const LAYOUT_MODE_OPTIONS = ["auto", "stacked", "icon_right"];
 const TEXT_TRANSFORM_OPTIONS = ["none", "uppercase"];
 const FONT_WEIGHT_OPTIONS = ["normal", "bold"];
 const PANEL_THEMES = {
@@ -164,6 +165,7 @@ const DEFAULT_STYLE = {
   showValue: true,
   widgetBgColor: "",
   contentAlign: "start",
+  layoutMode: "auto",
   labelTransform: "none",
   labelWeight: "bold",
   valueWeight: "normal",
@@ -217,6 +219,7 @@ function helperMap(id) {
     icon: `input_text.esp_panel_${id}_icon`,
     action: `input_text.esp_panel_${id}_action`,
     contentAlign: `input_select.esp_panel_${id}_content_align`,
+    layoutMode: `input_select.esp_panel_${id}_layout_mode`,
     labelTransform: `input_select.esp_panel_${id}_label_transform`,
     labelWeight: `input_select.esp_panel_${id}_label_weight`,
     valueWeight: `input_select.esp_panel_${id}_value_weight`,
@@ -302,7 +305,7 @@ function runtimeWidgetConfigValue(widget) {
     widget.label,
     widget.icon,
     widget.contentAlign,
-    "auto",
+    widget.layoutMode,
     widget.labelTransform,
     widget.labelWeight,
     widget.valueWeight,
@@ -437,6 +440,9 @@ function validateWidget(widget) {
   if (!CONTENT_ALIGN_OPTIONS.includes(widget.contentAlign)) {
     errors.push(`${widget.id} contentAlign must be start, center, or end`);
   }
+  if (!LAYOUT_MODE_OPTIONS.includes(widget.layoutMode)) {
+    errors.push(`${widget.id} layoutMode must be auto, stacked, or icon_right`);
+  }
   if (!TEXT_TRANSFORM_OPTIONS.includes(widget.labelTransform)) {
     errors.push(`${widget.id} labelTransform must be none or uppercase`);
   }
@@ -524,6 +530,7 @@ function sanitizeWidget(input, fallback) {
     icon: normalizeText(input?.icon ?? fallback.icon),
     action: normalizeText(input?.action ?? fallback.action),
     contentAlign: normalizeOption(input?.contentAlign, CONTENT_ALIGN_OPTIONS, fallback.contentAlign),
+    layoutMode: normalizeOption(input?.layoutMode, LAYOUT_MODE_OPTIONS, fallback.layoutMode),
     labelTransform: normalizeOption(input?.labelTransform, TEXT_TRANSFORM_OPTIONS, fallback.labelTransform),
     labelWeight: normalizeOption(input?.labelWeight, FONT_WEIGHT_OPTIONS, fallback.labelWeight),
     valueWeight: normalizeOption(input?.valueWeight, FONT_WEIGHT_OPTIONS, fallback.valueWeight),
@@ -622,6 +629,7 @@ function widgetFromStates(id, statesMap) {
   const icon = readState(helpers.icon);
   const action = readState(helpers.action);
   const contentAlign = readState(helpers.contentAlign);
+  const layoutMode = readState(helpers.layoutMode);
   const labelTransform = readState(helpers.labelTransform);
   const labelWeight = readState(helpers.labelWeight);
   const valueWeight = readState(helpers.valueWeight);
@@ -652,6 +660,7 @@ function widgetFromStates(id, statesMap) {
       icon,
       action,
       contentAlign,
+      layoutMode,
       labelTransform,
       labelWeight,
       valueWeight,

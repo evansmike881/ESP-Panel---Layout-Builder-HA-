@@ -94,6 +94,10 @@ touchscreen:
   id: my_touchscreen
   display: my_display
   i2c_id: bus_a
+  transform:
+    mirror_x: true
+    mirror_y: true
+    swap_xy: false
   on_touch:
     then:
       - lambda: |-
@@ -391,6 +395,14 @@ globals:
     type: std::string
     restore_value: no
     initial_value: '""'
+  - id: suppress_click_widget
+    type: std::string
+    restore_value: no
+    initial_value: '""'
+  - id: suppress_click_until_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: "0"
 
 script:
   - id: show_notification
@@ -566,6 +578,38 @@ script:
                 text: !lambda 'return id(active_media_target);'
             - lvgl.widget.show: media_overlay
 
+  - id: dispatch_widget_click
+    mode: queued
+    parameters:
+      widget_id: string
+      widget_type: string
+      action: string
+      value: string
+      label: string
+    then:
+      - if:
+          condition:
+            lambda: 'return id(suppress_click_widget) == widget_id && millis() <= id(suppress_click_until_ms);'
+          then:
+            - lambda: |-
+                ESP_LOGW("panel_action", "Ignoring click for %s because it just handled a long press.", widget_id.c_str());
+                id(suppress_click_widget).clear();
+                id(suppress_click_until_ms) = 0;
+          else:
+            - lambda: |-
+                if (!id(suppress_click_widget).empty() && millis() > id(suppress_click_until_ms)) {
+                  id(suppress_click_widget).clear();
+                  id(suppress_click_until_ms) = 0;
+                }
+            - script.execute:
+                id: dispatch_widget_action
+                widget_id: !lambda "return widget_id;"
+                widget_type: !lambda "return widget_type;"
+                action: !lambda "return action;"
+                value: !lambda "return value;"
+                label: !lambda "return label;"
+                hold: false
+
   - id: dispatch_widget_action
     mode: queued
     parameters:
@@ -629,9 +673,13 @@ script:
       - lvgl.widget.update:
           id: main_page
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), 18));'
+          bg_grad_dir: VER
       - lvgl.widget.update:
           id: screen_background
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), 24));'
+          bg_grad_dir: VER
       - lvgl.widget.update:
           id: screen_glow_primary
           bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 32));'
@@ -701,10 +749,18 @@ script:
       - lvgl.widget.update:
           id: notification_overlay
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F), 22));'
+          bg_grad_dir: VER
       - lvgl.widget.update:
           id: notification_overlay_panel
           bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F), 18));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F), 6));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166), 10));'
+          outline_width: 1
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166), 28));'
+          outline_opa: 22%
+          clip_corner: true
       - lvgl.label.update:
           id: notification_title_label
           text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166));'
@@ -714,10 +770,18 @@ script:
       - lvgl.widget.update:
           id: media_overlay
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F), 22));'
+          bg_grad_dir: VER
       - lvgl.widget.update:
           id: media_overlay_panel
           bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F), 18));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F), 6));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166), 10));'
+          outline_width: 1
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166), 28));'
+          outline_opa: 22%
+          clip_corner: true
       - lvgl.label.update:
           id: media_overlay_title_label
           text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166));'
@@ -727,23 +791,53 @@ script:
       - lvgl.widget.update:
           id: media_btn_play_pause
           bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 8));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 10));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          outline_width: 1
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 22));'
+          outline_opa: 20%
+          clip_corner: true
       - lvgl.widget.update:
           id: media_btn_stop
           bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 8));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 10));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          outline_width: 1
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 22));'
+          outline_opa: 20%
+          clip_corner: true
       - lvgl.widget.update:
           id: media_btn_vol_down
           bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 8));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 10));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          outline_width: 1
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 22));'
+          outline_opa: 20%
+          clip_corner: true
       - lvgl.widget.update:
           id: media_btn_vol_up
           bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 8));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 10));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          outline_width: 1
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 22));'
+          outline_opa: 20%
+          clip_corner: true
       - lvgl.widget.update:
           id: media_btn_close
           bg_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F), 8));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_overlay_bg_color).state, 0x06101F), 18));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+          outline_width: 1
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166), 20));'
+          outline_opa: 22%
+          clip_corner: true
       - script.execute: render_all_widgets
       - lvgl.widget.redraw:
 
@@ -1089,8 +1183,15 @@ script:
           id: w01_card
           hidden: !lambda 'return !id(w01_visible).state || id(w01_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w01_type).state, id(w01_value).state, id(w01_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_widget_effective_bg(id(w01_type).state, id(w01_value).state, id(w01_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)), 18));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w01_show_border).state ? 2 : 0;'
+          border_opa: 72%
+          outline_width: !lambda 'return id(w01_show_border).state ? 1 : 0;'
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 18));'
+          outline_opa: 24%
+          clip_corner: true
       - lvgl.widget.update:
           id: w01_icon_label
           hidden: !lambda 'return !id(w01_show_icon).state;'
@@ -1165,7 +1266,7 @@ script:
               return id(w01_live_text);
             }
             return id(w01_value).state;
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w01_value_color).state, 0xF1F5F9));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_value_display_color(id(w01_type).state, id(w01_value).state, esp_panel_parse_color(id(w01_value_color).state, 0xF1F5F9), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: LEFT
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_layout_mode).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state, id(w01_show_icon).state, id(w01_show_label).state, id(w01_show_value).state);
@@ -1211,7 +1312,7 @@ script:
       - lvgl.label.update:
           id: w01_icon_label
           text: !lambda 'return esp_panel_icon_glyph(id(w01_icon).state, id(w01_type).state);'
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w01_icon_color).state, 0xF59E0B));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_accent_color(id(w01_type).state, id(w01_value).state, esp_panel_parse_color(id(w01_icon_color).state, 0xF59E0B), esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: CENTER
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w01_w).state, (int) id(w01_h).state, id(w01_content_align).state, id(w01_layout_mode).state, id(w01_type).state, (int) id(w01_icon_scale).state, (int) id(w01_label_scale).state, (int) id(w01_value_scale).state, id(w01_show_icon).state, id(w01_show_label).state, id(w01_show_value).state);
@@ -1243,8 +1344,15 @@ script:
           id: w02_card
           hidden: !lambda 'return !id(w02_visible).state || id(w02_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w02_type).state, id(w02_value).state, id(w02_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_widget_effective_bg(id(w02_type).state, id(w02_value).state, id(w02_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)), 18));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w02_show_border).state ? 2 : 0;'
+          border_opa: 72%
+          outline_width: !lambda 'return id(w02_show_border).state ? 1 : 0;'
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 18));'
+          outline_opa: 24%
+          clip_corner: true
       - lvgl.widget.update:
           id: w02_icon_label
           hidden: !lambda 'return !id(w02_show_icon).state;'
@@ -1319,7 +1427,7 @@ script:
               return id(w02_live_text);
             }
             return id(w02_value).state;
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w02_value_color).state, 0xF1F5F9));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_value_display_color(id(w02_type).state, id(w02_value).state, esp_panel_parse_color(id(w02_value_color).state, 0xF1F5F9), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: LEFT
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_layout_mode).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state, id(w02_show_icon).state, id(w02_show_label).state, id(w02_show_value).state);
@@ -1365,7 +1473,7 @@ script:
       - lvgl.label.update:
           id: w02_icon_label
           text: !lambda 'return esp_panel_icon_glyph(id(w02_icon).state, id(w02_type).state);'
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w02_icon_color).state, 0xF59E0B));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_accent_color(id(w02_type).state, id(w02_value).state, esp_panel_parse_color(id(w02_icon_color).state, 0xF59E0B), esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: CENTER
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w02_w).state, (int) id(w02_h).state, id(w02_content_align).state, id(w02_layout_mode).state, id(w02_type).state, (int) id(w02_icon_scale).state, (int) id(w02_label_scale).state, (int) id(w02_value_scale).state, id(w02_show_icon).state, id(w02_show_label).state, id(w02_show_value).state);
@@ -1381,8 +1489,15 @@ script:
           id: w03_card
           hidden: !lambda 'return !id(w03_visible).state || id(w03_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w03_type).state, id(w03_value).state, id(w03_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_widget_effective_bg(id(w03_type).state, id(w03_value).state, id(w03_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)), 18));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w03_show_border).state ? 2 : 0;'
+          border_opa: 72%
+          outline_width: !lambda 'return id(w03_show_border).state ? 1 : 0;'
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 18));'
+          outline_opa: 24%
+          clip_corner: true
       - lvgl.widget.update:
           id: w03_icon_label
           hidden: !lambda 'return !id(w03_show_icon).state;'
@@ -1468,7 +1583,7 @@ script:
               return std::string(buffer);
             }
             return id(w03_value).state;
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w03_value_color).state, 0xF1F5F9));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_value_display_color(id(w03_type).state, id(w03_value).state, esp_panel_parse_color(id(w03_value_color).state, 0xF1F5F9), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: LEFT
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_layout_mode).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state, id(w03_show_icon).state, id(w03_show_label).state, id(w03_show_value).state);
@@ -1514,7 +1629,7 @@ script:
       - lvgl.label.update:
           id: w03_icon_label
           text: !lambda 'return esp_panel_icon_glyph(id(w03_icon).state, id(w03_type).state);'
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w03_icon_color).state, 0xF59E0B));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_accent_color(id(w03_type).state, id(w03_value).state, esp_panel_parse_color(id(w03_icon_color).state, 0xF59E0B), esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: CENTER
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w03_w).state, (int) id(w03_h).state, id(w03_content_align).state, id(w03_layout_mode).state, id(w03_type).state, (int) id(w03_icon_scale).state, (int) id(w03_label_scale).state, (int) id(w03_value_scale).state, id(w03_show_icon).state, id(w03_show_label).state, id(w03_show_value).state);
@@ -1530,8 +1645,15 @@ script:
           id: w04_card
           hidden: !lambda 'return !id(w04_visible).state || id(w04_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w04_type).state, id(w04_value).state, id(w04_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_widget_effective_bg(id(w04_type).state, id(w04_value).state, id(w04_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)), 18));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w04_show_border).state ? 2 : 0;'
+          border_opa: 72%
+          outline_width: !lambda 'return id(w04_show_border).state ? 1 : 0;'
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 18));'
+          outline_opa: 24%
+          clip_corner: true
       - lvgl.widget.update:
           id: w04_icon_label
           hidden: !lambda 'return !id(w04_show_icon).state;'
@@ -1617,7 +1739,7 @@ script:
               return std::string(buffer);
             }
             return id(w04_value).state;
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w04_value_color).state, 0xF1F5F9));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_value_display_color(id(w04_type).state, id(w04_value).state, esp_panel_parse_color(id(w04_value_color).state, 0xF1F5F9), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: LEFT
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_layout_mode).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state, id(w04_show_icon).state, id(w04_show_label).state, id(w04_show_value).state);
@@ -1663,7 +1785,7 @@ script:
       - lvgl.label.update:
           id: w04_icon_label
           text: !lambda 'return esp_panel_icon_glyph(id(w04_icon).state, id(w04_type).state);'
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w04_icon_color).state, 0xF59E0B));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_accent_color(id(w04_type).state, id(w04_value).state, esp_panel_parse_color(id(w04_icon_color).state, 0xF59E0B), esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: CENTER
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w04_w).state, (int) id(w04_h).state, id(w04_content_align).state, id(w04_layout_mode).state, id(w04_type).state, (int) id(w04_icon_scale).state, (int) id(w04_label_scale).state, (int) id(w04_value_scale).state, id(w04_show_icon).state, id(w04_show_label).state, id(w04_show_value).state);
@@ -1679,8 +1801,15 @@ script:
           id: w05_card
           hidden: !lambda 'return !id(w05_visible).state || id(w05_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w05_type).state, id(w05_value).state, id(w05_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_widget_effective_bg(id(w05_type).state, id(w05_value).state, id(w05_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)), 18));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w05_show_border).state ? 2 : 0;'
+          border_opa: 72%
+          outline_width: !lambda 'return id(w05_show_border).state ? 1 : 0;'
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 18));'
+          outline_opa: 24%
+          clip_corner: true
       - lvgl.widget.update:
           id: w05_icon_label
           hidden: !lambda 'return !id(w05_show_icon).state;'
@@ -1766,7 +1895,7 @@ script:
               return std::string(buffer);
             }
             return id(w05_value).state;
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w05_value_color).state, 0xF1F5F9));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_value_display_color(id(w05_type).state, id(w05_value).state, esp_panel_parse_color(id(w05_value_color).state, 0xF1F5F9), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: LEFT
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_layout_mode).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state, id(w05_show_icon).state, id(w05_show_label).state, id(w05_show_value).state);
@@ -1812,7 +1941,7 @@ script:
       - lvgl.label.update:
           id: w05_icon_label
           text: !lambda 'return esp_panel_icon_glyph(id(w05_icon).state, id(w05_type).state);'
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w05_icon_color).state, 0xF59E0B));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_accent_color(id(w05_type).state, id(w05_value).state, esp_panel_parse_color(id(w05_icon_color).state, 0xF59E0B), esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: CENTER
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w05_w).state, (int) id(w05_h).state, id(w05_content_align).state, id(w05_layout_mode).state, id(w05_type).state, (int) id(w05_icon_scale).state, (int) id(w05_label_scale).state, (int) id(w05_value_scale).state, id(w05_show_icon).state, id(w05_show_label).state, id(w05_show_value).state);
@@ -1828,8 +1957,15 @@ script:
           id: w06_card
           hidden: !lambda 'return !id(w06_visible).state || id(w06_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w06_type).state, id(w06_value).state, id(w06_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_widget_effective_bg(id(w06_type).state, id(w06_value).state, id(w06_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)), 18));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w06_show_border).state ? 2 : 0;'
+          border_opa: 72%
+          outline_width: !lambda 'return id(w06_show_border).state ? 1 : 0;'
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 18));'
+          outline_opa: 24%
+          clip_corner: true
       - lvgl.widget.update:
           id: w06_icon_label
           hidden: !lambda 'return !id(w06_show_icon).state;'
@@ -1915,7 +2051,7 @@ script:
               return std::string(buffer);
             }
             return id(w06_value).state;
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w06_value_color).state, 0xF1F5F9));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_value_display_color(id(w06_type).state, id(w06_value).state, esp_panel_parse_color(id(w06_value_color).state, 0xF1F5F9), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: LEFT
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_layout_mode).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state, id(w06_show_icon).state, id(w06_show_label).state, id(w06_show_value).state);
@@ -1961,7 +2097,7 @@ script:
       - lvgl.label.update:
           id: w06_icon_label
           text: !lambda 'return esp_panel_icon_glyph(id(w06_icon).state, id(w06_type).state);'
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w06_icon_color).state, 0xF59E0B));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_accent_color(id(w06_type).state, id(w06_value).state, esp_panel_parse_color(id(w06_icon_color).state, 0xF59E0B), esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: CENTER
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w06_w).state, (int) id(w06_h).state, id(w06_content_align).state, id(w06_layout_mode).state, id(w06_type).state, (int) id(w06_icon_scale).state, (int) id(w06_label_scale).state, (int) id(w06_value_scale).state, id(w06_show_icon).state, id(w06_show_label).state, id(w06_show_value).state);
@@ -1977,8 +2113,15 @@ script:
           id: w07_card
           hidden: !lambda 'return !id(w07_visible).state || id(w07_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w07_type).state, id(w07_value).state, id(w07_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_widget_effective_bg(id(w07_type).state, id(w07_value).state, id(w07_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)), 18));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w07_show_border).state ? 2 : 0;'
+          border_opa: 72%
+          outline_width: !lambda 'return id(w07_show_border).state ? 1 : 0;'
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 18));'
+          outline_opa: 24%
+          clip_corner: true
       - lvgl.widget.update:
           id: w07_icon_label
           hidden: !lambda 'return !id(w07_show_icon).state;'
@@ -2064,7 +2207,7 @@ script:
               return std::string(buffer);
             }
             return id(w07_value).state;
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w07_value_color).state, 0xF1F5F9));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_value_display_color(id(w07_type).state, id(w07_value).state, esp_panel_parse_color(id(w07_value_color).state, 0xF1F5F9), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: LEFT
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_layout_mode).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state, id(w07_show_icon).state, id(w07_show_label).state, id(w07_show_value).state);
@@ -2110,7 +2253,7 @@ script:
       - lvgl.label.update:
           id: w07_icon_label
           text: !lambda 'return esp_panel_icon_glyph(id(w07_icon).state, id(w07_type).state);'
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w07_icon_color).state, 0xF59E0B));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_accent_color(id(w07_type).state, id(w07_value).state, esp_panel_parse_color(id(w07_icon_color).state, 0xF59E0B), esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: CENTER
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w07_w).state, (int) id(w07_h).state, id(w07_content_align).state, id(w07_layout_mode).state, id(w07_type).state, (int) id(w07_icon_scale).state, (int) id(w07_label_scale).state, (int) id(w07_value_scale).state, id(w07_show_icon).state, id(w07_show_label).state, id(w07_show_value).state);
@@ -2126,8 +2269,15 @@ script:
           id: w08_card
           hidden: !lambda 'return !id(w08_visible).state || id(w08_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w08_type).state, id(w08_value).state, id(w08_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_widget_effective_bg(id(w08_type).state, id(w08_value).state, id(w08_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)), 18));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w08_show_border).state ? 2 : 0;'
+          border_opa: 72%
+          outline_width: !lambda 'return id(w08_show_border).state ? 1 : 0;'
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 18));'
+          outline_opa: 24%
+          clip_corner: true
       - lvgl.widget.update:
           id: w08_icon_label
           hidden: !lambda 'return !id(w08_show_icon).state;'
@@ -2213,7 +2363,7 @@ script:
               return std::string(buffer);
             }
             return id(w08_value).state;
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w08_value_color).state, 0xF1F5F9));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_value_display_color(id(w08_type).state, id(w08_value).state, esp_panel_parse_color(id(w08_value_color).state, 0xF1F5F9), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: LEFT
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_layout_mode).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state, id(w08_show_icon).state, id(w08_show_label).state, id(w08_show_value).state);
@@ -2259,7 +2409,7 @@ script:
       - lvgl.label.update:
           id: w08_icon_label
           text: !lambda 'return esp_panel_icon_glyph(id(w08_icon).state, id(w08_type).state);'
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w08_icon_color).state, 0xF59E0B));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_accent_color(id(w08_type).state, id(w08_value).state, esp_panel_parse_color(id(w08_icon_color).state, 0xF59E0B), esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: CENTER
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w08_w).state, (int) id(w08_h).state, id(w08_content_align).state, id(w08_layout_mode).state, id(w08_type).state, (int) id(w08_icon_scale).state, (int) id(w08_label_scale).state, (int) id(w08_value_scale).state, id(w08_show_icon).state, id(w08_show_label).state, id(w08_show_value).state);
@@ -2275,8 +2425,15 @@ script:
           id: w09_card
           hidden: !lambda 'return !id(w09_visible).state || id(w09_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w09_type).state, id(w09_value).state, id(w09_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_widget_effective_bg(id(w09_type).state, id(w09_value).state, id(w09_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)), 18));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w09_show_border).state ? 2 : 0;'
+          border_opa: 72%
+          outline_width: !lambda 'return id(w09_show_border).state ? 1 : 0;'
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 18));'
+          outline_opa: 24%
+          clip_corner: true
       - lvgl.widget.update:
           id: w09_icon_label
           hidden: !lambda 'return !id(w09_show_icon).state;'
@@ -2362,7 +2519,7 @@ script:
               return std::string(buffer);
             }
             return id(w09_value).state;
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w09_value_color).state, 0xF1F5F9));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_value_display_color(id(w09_type).state, id(w09_value).state, esp_panel_parse_color(id(w09_value_color).state, 0xF1F5F9), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: LEFT
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_layout_mode).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state, id(w09_show_icon).state, id(w09_show_label).state, id(w09_show_value).state);
@@ -2408,7 +2565,7 @@ script:
       - lvgl.label.update:
           id: w09_icon_label
           text: !lambda 'return esp_panel_icon_glyph(id(w09_icon).state, id(w09_type).state);'
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w09_icon_color).state, 0xF59E0B));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_accent_color(id(w09_type).state, id(w09_value).state, esp_panel_parse_color(id(w09_icon_color).state, 0xF59E0B), esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: CENTER
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w09_w).state, (int) id(w09_h).state, id(w09_content_align).state, id(w09_layout_mode).state, id(w09_type).state, (int) id(w09_icon_scale).state, (int) id(w09_label_scale).state, (int) id(w09_value_scale).state, id(w09_show_icon).state, id(w09_show_label).state, id(w09_show_value).state);
@@ -2424,8 +2581,15 @@ script:
           id: w10_card
           hidden: !lambda 'return !id(w10_visible).state || id(w10_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w10_type).state, id(w10_value).state, id(w10_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_widget_effective_bg(id(w10_type).state, id(w10_value).state, id(w10_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)), 18));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w10_show_border).state ? 2 : 0;'
+          border_opa: 72%
+          outline_width: !lambda 'return id(w10_show_border).state ? 1 : 0;'
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 18));'
+          outline_opa: 24%
+          clip_corner: true
       - lvgl.widget.update:
           id: w10_icon_label
           hidden: !lambda 'return !id(w10_show_icon).state;'
@@ -2511,7 +2675,7 @@ script:
               return std::string(buffer);
             }
             return id(w10_value).state;
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w10_value_color).state, 0xF1F5F9));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_value_display_color(id(w10_type).state, id(w10_value).state, esp_panel_parse_color(id(w10_value_color).state, 0xF1F5F9), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: LEFT
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_layout_mode).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state, id(w10_show_icon).state, id(w10_show_label).state, id(w10_show_value).state);
@@ -2557,7 +2721,7 @@ script:
       - lvgl.label.update:
           id: w10_icon_label
           text: !lambda 'return esp_panel_icon_glyph(id(w10_icon).state, id(w10_type).state);'
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w10_icon_color).state, 0xF59E0B));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_accent_color(id(w10_type).state, id(w10_value).state, esp_panel_parse_color(id(w10_icon_color).state, 0xF59E0B), esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: CENTER
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w10_w).state, (int) id(w10_h).state, id(w10_content_align).state, id(w10_layout_mode).state, id(w10_type).state, (int) id(w10_icon_scale).state, (int) id(w10_label_scale).state, (int) id(w10_value_scale).state, id(w10_show_icon).state, id(w10_show_label).state, id(w10_show_value).state);
@@ -2573,8 +2737,15 @@ script:
           id: w11_card
           hidden: !lambda 'return !id(w11_visible).state || id(w11_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w11_type).state, id(w11_value).state, id(w11_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_widget_effective_bg(id(w11_type).state, id(w11_value).state, id(w11_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)), 18));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w11_show_border).state ? 2 : 0;'
+          border_opa: 72%
+          outline_width: !lambda 'return id(w11_show_border).state ? 1 : 0;'
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 18));'
+          outline_opa: 24%
+          clip_corner: true
       - lvgl.widget.update:
           id: w11_icon_label
           hidden: !lambda 'return !id(w11_show_icon).state;'
@@ -2660,7 +2831,7 @@ script:
               return std::string(buffer);
             }
             return id(w11_value).state;
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w11_value_color).state, 0xF1F5F9));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_value_display_color(id(w11_type).state, id(w11_value).state, esp_panel_parse_color(id(w11_value_color).state, 0xF1F5F9), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: LEFT
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_layout_mode).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state, id(w11_show_icon).state, id(w11_show_label).state, id(w11_show_value).state);
@@ -2706,7 +2877,7 @@ script:
       - lvgl.label.update:
           id: w11_icon_label
           text: !lambda 'return esp_panel_icon_glyph(id(w11_icon).state, id(w11_type).state);'
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w11_icon_color).state, 0xF59E0B));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_accent_color(id(w11_type).state, id(w11_value).state, esp_panel_parse_color(id(w11_icon_color).state, 0xF59E0B), esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: CENTER
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w11_w).state, (int) id(w11_h).state, id(w11_content_align).state, id(w11_layout_mode).state, id(w11_type).state, (int) id(w11_icon_scale).state, (int) id(w11_label_scale).state, (int) id(w11_value_scale).state, id(w11_show_icon).state, id(w11_show_label).state, id(w11_show_value).state);
@@ -2722,8 +2893,15 @@ script:
           id: w12_card
           hidden: !lambda 'return !id(w12_visible).state || id(w12_type).state == "blank";'
           bg_color: !lambda 'return lv_color_hex(esp_panel_widget_effective_bg(id(w12_type).state, id(w12_value).state, id(w12_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_widget_effective_bg(id(w12_type).state, id(w12_value).state, id(w12_bg_color).state, esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937)), 18));'
+          bg_grad_dir: VER
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
           border_width: !lambda 'return id(w12_show_border).state ? 2 : 0;'
+          border_opa: 72%
+          outline_width: !lambda 'return id(w12_show_border).state ? 1 : 0;'
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 18));'
+          outline_opa: 24%
+          clip_corner: true
       - lvgl.widget.update:
           id: w12_icon_label
           hidden: !lambda 'return !id(w12_show_icon).state;'
@@ -2809,7 +2987,7 @@ script:
               return std::string(buffer);
             }
             return id(w12_value).state;
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w12_value_color).state, 0xF1F5F9));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_value_display_color(id(w12_type).state, id(w12_value).state, esp_panel_parse_color(id(w12_value_color).state, 0xF1F5F9), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: LEFT
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_layout_mode).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state, id(w12_show_icon).state, id(w12_show_label).state, id(w12_show_value).state);
@@ -2855,7 +3033,7 @@ script:
       - lvgl.label.update:
           id: w12_icon_label
           text: !lambda 'return esp_panel_icon_glyph(id(w12_icon).state, id(w12_type).state);'
-          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(w12_icon_color).state, 0xF59E0B));'
+          text_color: !lambda 'return lv_color_hex(esp_panel_widget_accent_color(id(w12_type).state, id(w12_value).state, esp_panel_parse_color(id(w12_icon_color).state, 0xF59E0B), esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), esp_panel_parse_color(id(panel_button_on_bg_color).state, 0x14B8A6), esp_panel_parse_color(id(panel_button_off_bg_color).state, 0x1F2937), esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166)));'
           text_align: CENTER
           text_font: !lambda |-
             auto geometry = esp_panel_widget_geometry((int) id(w12_w).state, (int) id(w12_h).state, id(w12_content_align).state, id(w12_layout_mode).state, id(w12_type).state, (int) id(w12_icon_scale).state, (int) id(w12_label_scale).state, (int) id(w12_value_scale).state, id(w12_show_icon).state, id(w12_show_label).state, id(w12_show_value).state);
@@ -4854,18 +5032,20 @@ lvgl:
                   clickable: true
                   scrollable: false
                   press_lock: true
-                  on_short_click:
+                  on_click:
                     then:
                       - script.execute:
-                          id: dispatch_widget_action
+                          id: dispatch_widget_click
                           widget_id: "w01"
                           widget_type: !lambda "return id(w01_type).state;"
                           action: !lambda "return id(w01_action).state;"
                           value: !lambda "return id(w01_value).state;"
                           label: !lambda "return id(w01_label).state;"
-                          hold: false
                   on_long_press:
                     then:
+                      - lambda: |-
+                          id(suppress_click_widget) = "w01";
+                          id(suppress_click_until_ms) = millis() + 1500;
                       - script.execute:
                           id: dispatch_widget_action
                           widget_id: "w01"
@@ -4928,18 +5108,20 @@ lvgl:
                   clickable: true
                   scrollable: false
                   press_lock: true
-                  on_short_click:
+                  on_click:
                     then:
                       - script.execute:
-                          id: dispatch_widget_action
+                          id: dispatch_widget_click
                           widget_id: "w02"
                           widget_type: !lambda "return id(w02_type).state;"
                           action: !lambda "return id(w02_action).state;"
                           value: !lambda "return id(w02_value).state;"
                           label: !lambda "return id(w02_label).state;"
-                          hold: false
                   on_long_press:
                     then:
+                      - lambda: |-
+                          id(suppress_click_widget) = "w02";
+                          id(suppress_click_until_ms) = millis() + 1500;
                       - script.execute:
                           id: dispatch_widget_action
                           widget_id: "w02"
@@ -5002,18 +5184,20 @@ lvgl:
                   clickable: true
                   scrollable: false
                   press_lock: true
-                  on_short_click:
+                  on_click:
                     then:
                       - script.execute:
-                          id: dispatch_widget_action
+                          id: dispatch_widget_click
                           widget_id: "w03"
                           widget_type: !lambda "return id(w03_type).state;"
                           action: !lambda "return id(w03_action).state;"
                           value: !lambda "return id(w03_value).state;"
                           label: !lambda "return id(w03_label).state;"
-                          hold: false
                   on_long_press:
                     then:
+                      - lambda: |-
+                          id(suppress_click_widget) = "w03";
+                          id(suppress_click_until_ms) = millis() + 1500;
                       - script.execute:
                           id: dispatch_widget_action
                           widget_id: "w03"
@@ -5076,18 +5260,20 @@ lvgl:
                   clickable: true
                   scrollable: false
                   press_lock: true
-                  on_short_click:
+                  on_click:
                     then:
                       - script.execute:
-                          id: dispatch_widget_action
+                          id: dispatch_widget_click
                           widget_id: "w04"
                           widget_type: !lambda "return id(w04_type).state;"
                           action: !lambda "return id(w04_action).state;"
                           value: !lambda "return id(w04_value).state;"
                           label: !lambda "return id(w04_label).state;"
-                          hold: false
                   on_long_press:
                     then:
+                      - lambda: |-
+                          id(suppress_click_widget) = "w04";
+                          id(suppress_click_until_ms) = millis() + 1500;
                       - script.execute:
                           id: dispatch_widget_action
                           widget_id: "w04"
@@ -5150,18 +5336,20 @@ lvgl:
                   clickable: true
                   scrollable: false
                   press_lock: true
-                  on_short_click:
+                  on_click:
                     then:
                       - script.execute:
-                          id: dispatch_widget_action
+                          id: dispatch_widget_click
                           widget_id: "w05"
                           widget_type: !lambda "return id(w05_type).state;"
                           action: !lambda "return id(w05_action).state;"
                           value: !lambda "return id(w05_value).state;"
                           label: !lambda "return id(w05_label).state;"
-                          hold: false
                   on_long_press:
                     then:
+                      - lambda: |-
+                          id(suppress_click_widget) = "w05";
+                          id(suppress_click_until_ms) = millis() + 1500;
                       - script.execute:
                           id: dispatch_widget_action
                           widget_id: "w05"
@@ -5224,18 +5412,20 @@ lvgl:
                   clickable: true
                   scrollable: false
                   press_lock: true
-                  on_short_click:
+                  on_click:
                     then:
                       - script.execute:
-                          id: dispatch_widget_action
+                          id: dispatch_widget_click
                           widget_id: "w06"
                           widget_type: !lambda "return id(w06_type).state;"
                           action: !lambda "return id(w06_action).state;"
                           value: !lambda "return id(w06_value).state;"
                           label: !lambda "return id(w06_label).state;"
-                          hold: false
                   on_long_press:
                     then:
+                      - lambda: |-
+                          id(suppress_click_widget) = "w06";
+                          id(suppress_click_until_ms) = millis() + 1500;
                       - script.execute:
                           id: dispatch_widget_action
                           widget_id: "w06"
@@ -5299,18 +5489,20 @@ lvgl:
                   clickable: true
                   scrollable: false
                   press_lock: true
-                  on_short_click:
+                  on_click:
                     then:
                       - script.execute:
-                          id: dispatch_widget_action
+                          id: dispatch_widget_click
                           widget_id: "w07"
                           widget_type: !lambda "return id(w07_type).state;"
                           action: !lambda "return id(w07_action).state;"
                           value: !lambda "return id(w07_value).state;"
                           label: !lambda "return id(w07_label).state;"
-                          hold: false
                   on_long_press:
                     then:
+                      - lambda: |-
+                          id(suppress_click_widget) = "w07";
+                          id(suppress_click_until_ms) = millis() + 1500;
                       - script.execute:
                           id: dispatch_widget_action
                           widget_id: "w07"
@@ -5374,18 +5566,20 @@ lvgl:
                   clickable: true
                   scrollable: false
                   press_lock: true
-                  on_short_click:
+                  on_click:
                     then:
                       - script.execute:
-                          id: dispatch_widget_action
+                          id: dispatch_widget_click
                           widget_id: "w08"
                           widget_type: !lambda "return id(w08_type).state;"
                           action: !lambda "return id(w08_action).state;"
                           value: !lambda "return id(w08_value).state;"
                           label: !lambda "return id(w08_label).state;"
-                          hold: false
                   on_long_press:
                     then:
+                      - lambda: |-
+                          id(suppress_click_widget) = "w08";
+                          id(suppress_click_until_ms) = millis() + 1500;
                       - script.execute:
                           id: dispatch_widget_action
                           widget_id: "w08"
@@ -5449,18 +5643,20 @@ lvgl:
                   clickable: true
                   scrollable: false
                   press_lock: true
-                  on_short_click:
+                  on_click:
                     then:
                       - script.execute:
-                          id: dispatch_widget_action
+                          id: dispatch_widget_click
                           widget_id: "w09"
                           widget_type: !lambda "return id(w09_type).state;"
                           action: !lambda "return id(w09_action).state;"
                           value: !lambda "return id(w09_value).state;"
                           label: !lambda "return id(w09_label).state;"
-                          hold: false
                   on_long_press:
                     then:
+                      - lambda: |-
+                          id(suppress_click_widget) = "w09";
+                          id(suppress_click_until_ms) = millis() + 1500;
                       - script.execute:
                           id: dispatch_widget_action
                           widget_id: "w09"
@@ -5524,18 +5720,20 @@ lvgl:
                   clickable: true
                   scrollable: false
                   press_lock: true
-                  on_short_click:
+                  on_click:
                     then:
                       - script.execute:
-                          id: dispatch_widget_action
+                          id: dispatch_widget_click
                           widget_id: "w10"
                           widget_type: !lambda "return id(w10_type).state;"
                           action: !lambda "return id(w10_action).state;"
                           value: !lambda "return id(w10_value).state;"
                           label: !lambda "return id(w10_label).state;"
-                          hold: false
                   on_long_press:
                     then:
+                      - lambda: |-
+                          id(suppress_click_widget) = "w10";
+                          id(suppress_click_until_ms) = millis() + 1500;
                       - script.execute:
                           id: dispatch_widget_action
                           widget_id: "w10"
@@ -5599,18 +5797,20 @@ lvgl:
                   clickable: true
                   scrollable: false
                   press_lock: true
-                  on_short_click:
+                  on_click:
                     then:
                       - script.execute:
-                          id: dispatch_widget_action
+                          id: dispatch_widget_click
                           widget_id: "w11"
                           widget_type: !lambda "return id(w11_type).state;"
                           action: !lambda "return id(w11_action).state;"
                           value: !lambda "return id(w11_value).state;"
                           label: !lambda "return id(w11_label).state;"
-                          hold: false
                   on_long_press:
                     then:
+                      - lambda: |-
+                          id(suppress_click_widget) = "w11";
+                          id(suppress_click_until_ms) = millis() + 1500;
                       - script.execute:
                           id: dispatch_widget_action
                           widget_id: "w11"
@@ -5674,18 +5874,20 @@ lvgl:
                   clickable: true
                   scrollable: false
                   press_lock: true
-                  on_short_click:
+                  on_click:
                     then:
                       - script.execute:
-                          id: dispatch_widget_action
+                          id: dispatch_widget_click
                           widget_id: "w12"
                           widget_type: !lambda "return id(w12_type).state;"
                           action: !lambda "return id(w12_action).state;"
                           value: !lambda "return id(w12_value).state;"
                           label: !lambda "return id(w12_label).state;"
-                          hold: false
                   on_long_press:
                     then:
+                      - lambda: |-
+                          id(suppress_click_widget) = "w12";
+                          id(suppress_click_until_ms) = millis() + 1500;
                       - script.execute:
                           id: dispatch_widget_action
                           widget_id: "w12"
@@ -5843,7 +6045,7 @@ lvgl:
                         clickable: true
                         scrollable: false
                         press_lock: true
-                        on_short_click:
+                        on_click:
                           then:
                             - homeassistant.service:
                                 service: media_player.media_play_pause
@@ -5876,7 +6078,7 @@ lvgl:
                         clickable: true
                         scrollable: false
                         press_lock: true
-                        on_short_click:
+                        on_click:
                           then:
                             - homeassistant.service:
                                 service: media_player.media_stop
@@ -5909,7 +6111,7 @@ lvgl:
                         clickable: true
                         scrollable: false
                         press_lock: true
-                        on_short_click:
+                        on_click:
                           then:
                             - homeassistant.service:
                                 service: media_player.volume_down
@@ -5942,7 +6144,7 @@ lvgl:
                         clickable: true
                         scrollable: false
                         press_lock: true
-                        on_short_click:
+                        on_click:
                           then:
                             - homeassistant.service:
                                 service: media_player.volume_up
@@ -5975,7 +6177,7 @@ lvgl:
                         clickable: true
                         scrollable: false
                         press_lock: true
-                        on_short_click:
+                        on_click:
                           then:
                             - lvgl.widget.hide: media_overlay
                         widgets:
@@ -5988,6 +6190,7 @@ lvgl:
                               text_font: montserrat_18
                               text_color: 0xF1F5F9
                               text_align: CENTER
+
 
 
 

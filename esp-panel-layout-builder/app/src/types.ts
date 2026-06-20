@@ -14,6 +14,7 @@ export type WidgetId = (typeof WIDGET_IDS)[number];
 export type PanelThemeId = (typeof PANEL_THEME_IDS)[number];
 export type WidgetType = (typeof WIDGET_TYPES)[number];
 export type WidgetContentAlign = "start" | "center" | "end";
+export type WidgetLayoutMode = "auto" | "stacked" | "icon_right";
 export type WidgetTextTransform = "none" | "uppercase";
 export type WidgetFontWeight = "normal" | "bold";
 
@@ -49,6 +50,7 @@ export interface WidgetConfig {
   icon: string;
   action: string;
   contentAlign: WidgetContentAlign;
+  layoutMode: WidgetLayoutMode;
   labelTransform: WidgetTextTransform;
   labelWeight: WidgetFontWeight;
   valueWeight: WidgetFontWeight;
@@ -180,6 +182,7 @@ const DEFAULT_STYLE = {
   showValue: true,
   widgetBgColor: "",
   contentAlign: "start" as const,
+  layoutMode: "auto" as const,
   labelTransform: "none" as const,
   labelWeight: "bold" as const,
   valueWeight: "normal" as const,

@@ -425,6 +425,72 @@ static inline uint32_t esp_panel_widget_effective_bg(
   return esp_panel_widget_bg_for_state(type_name, value, widget_bg, button_on, button_off);
 }
 
+static inline uint32_t esp_panel_widget_accent_color(
+    const std::string &type_name,
+    const std::string &value,
+    uint32_t base_color,
+    uint32_t border_color,
+    uint32_t button_on,
+    uint32_t button_off,
+    uint32_t overlay_title) {
+  const int kind = esp_panel_state_kind(value);
+
+  if (type_name == "clock" || type_name == "date") {
+    return esp_panel_color_lighten(esp_panel_color_blend(base_color, overlay_title, 96), 18);
+  }
+  if (type_name == "media") {
+    if (kind > 0) {
+      return esp_panel_color_lighten(esp_panel_color_blend(button_on, overlay_title, 96), 22);
+    }
+    if (kind < 0) {
+      return esp_panel_color_lighten(esp_panel_color_blend(button_off, overlay_title, 72), 14);
+    }
+    return esp_panel_color_lighten(esp_panel_color_blend(base_color, overlay_title, 132), 12);
+  }
+  if (type_name == "button") {
+    if (kind > 0) {
+      return esp_panel_color_lighten(button_on, 32);
+    }
+    if (kind < 0) {
+      return esp_panel_color_lighten(button_off, 18);
+    }
+    return esp_panel_color_lighten(esp_panel_color_blend(base_color, border_color, 96), 10);
+  }
+  if (type_name == "status") {
+    return esp_panel_color_lighten(esp_panel_color_blend(base_color, border_color, 88), 14);
+  }
+  return esp_panel_color_lighten(base_color, 10);
+}
+
+static inline uint32_t esp_panel_widget_value_display_color(
+    const std::string &type_name,
+    const std::string &value,
+    uint32_t base_color,
+    uint32_t button_on,
+    uint32_t button_off,
+    uint32_t overlay_title) {
+  const int kind = esp_panel_state_kind(value);
+
+  if (type_name == "clock" || type_name == "date") {
+    return esp_panel_color_lighten(base_color, 12);
+  }
+  if (type_name == "media") {
+    if (kind > 0) {
+      return esp_panel_color_lighten(esp_panel_color_blend(base_color, button_on, 48), 10);
+    }
+    return esp_panel_color_lighten(esp_panel_color_blend(base_color, overlay_title, 28), 4);
+  }
+  if (type_name == "button") {
+    if (kind > 0) {
+      return esp_panel_color_lighten(esp_panel_color_blend(base_color, button_on, 40), 8);
+    }
+    if (kind < 0) {
+      return esp_panel_color_lighten(esp_panel_color_blend(base_color, button_off, 18), 2);
+    }
+  }
+  return base_color;
+}
+
 static inline std::string esp_panel_icon_glyph(std::string icon_name, std::string type_name) {
   std::transform(icon_name.begin(), icon_name.end(), icon_name.begin(), [](unsigned char character) {
     return static_cast<char>(std::tolower(character));
@@ -472,6 +538,10 @@ static inline EspPanelWidgetGeometry esp_panel_widget_geometry(
   const int card_h = std::max(1, grid_h) * 80 - 6;
   const int min_side = std::min(card_w, card_h);
   const bool auto_value = type_name == "clock" || type_name == "date";
+  const bool time_like = type_name == "clock" || type_name == "date";
+  const bool media_like = type_name == "media";
+  const bool button_like = type_name == "button";
+  const bool status_like = type_name == "status";
   const bool tall = card_h >= 148;
   const bool wide = card_w >= 228;
   const bool center_aligned = align == "center";
@@ -536,6 +606,21 @@ static inline EspPanelWidgetGeometry esp_panel_widget_geometry(
         56);
     int label_px = esp_panel_scale_px(tall ? 14 : 12, label_scale, 9, 24);
     int value_px = esp_panel_scale_px(auto_value ? card_h / 4 : (show_icon && show_label ? card_h / 6 : card_h / 5), value_scale, 12, 34);
+
+    if (time_like) {
+      icon_px = esp_panel_clamp_int(icon_px - 2, 16, 48);
+      label_px = esp_panel_clamp_int(label_px - 1, 9, 20);
+      value_px = esp_panel_clamp_int(value_px + 4, 16, 38);
+    } else if (media_like || button_like) {
+      icon_px = esp_panel_clamp_int(icon_px + 2, 18, 58);
+      label_px = esp_panel_clamp_int(label_px - 1, 9, 22);
+      value_px = esp_panel_clamp_int(value_px + 2, 14, 38);
+    } else if (status_like) {
+      icon_px = esp_panel_clamp_int(icon_px - 1, 16, 52);
+      label_px = esp_panel_clamp_int(label_px - 1, 9, 21);
+      value_px = esp_panel_clamp_int(value_px + 1, 13, 36);
+    }
+
     int stack_gap = gap;
 
     int icon_h = show_icon ? icon_px + 6 : 0;
@@ -590,10 +675,25 @@ static inline EspPanelWidgetGeometry esp_panel_widget_geometry(
     return geometry;
   }
 
-  const int base_icon_px = esp_panel_clamp_int(card_h - padding * 2 - (grid_h > 1 ? 18 : 12), 22, 52);
-  const int icon_px = esp_panel_scale_px(base_icon_px, icon_scale, 18, 64);
-  const int label_px = esp_panel_scale_px(card_h / 6, label_scale, 10, wide ? 22 : 18);
-  const int value_px = esp_panel_scale_px(auto_value ? card_h / 2 : card_h / 3, value_scale, 14, wide ? 40 : 32);
+  int base_icon_px = esp_panel_clamp_int(card_h - padding * 2 - (grid_h > 1 ? 18 : 12), 22, 52);
+  int icon_px = esp_panel_scale_px(base_icon_px, icon_scale, 18, 64);
+  int label_px = esp_panel_scale_px(card_h / 6, label_scale, 10, wide ? 22 : 18);
+  int value_px = esp_panel_scale_px(auto_value ? card_h / 2 : card_h / 3, value_scale, 14, wide ? 40 : 32);
+
+  if (time_like) {
+    icon_px = esp_panel_clamp_int(icon_px - 4, 16, 54);
+    label_px = esp_panel_clamp_int(label_px - 1, 10, 18);
+    value_px = esp_panel_clamp_int(value_px + 6, 18, wide ? 44 : 36);
+  } else if (media_like || button_like) {
+    icon_px = esp_panel_clamp_int(icon_px + 2, 18, 64);
+    label_px = esp_panel_clamp_int(label_px - 1, 10, wide ? 20 : 17);
+    value_px = esp_panel_clamp_int(value_px + 3, 16, wide ? 42 : 34);
+  } else if (status_like) {
+    icon_px = esp_panel_clamp_int(icon_px - 2, 18, 58);
+    label_px = esp_panel_clamp_int(label_px - 1, 10, wide ? 20 : 17);
+    value_px = esp_panel_clamp_int(value_px + 2, 15, wide ? 38 : 32);
+  }
+
   const int icon_w = show_icon ? std::min(icon_px + 12, std::max(28, card_w / 3)) : 0;
   const int icon_h = show_icon ? icon_px + 8 : 0;
   const int text_gap = gap + 2;
