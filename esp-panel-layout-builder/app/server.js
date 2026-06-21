@@ -10,6 +10,9 @@ const PORT = Number.parseInt(process.env.PORT || "8099", 10);
 const DATA_DIR = path.join(__dirname, "data");
 const STORE_PATH = path.join(DATA_DIR, "clock-layout.json");
 const GENERATED_YAML_PATH = path.resolve(__dirname, "..", "household-panel.generated.yaml");
+const GENERATED_HELPER_PATH = path.resolve(__dirname, "..", "esp-panel-live-helpers.yaml");
+const HASS_URL = process.env.HASS_URL || "http://supervisor/core/api";
+const TOKEN = process.env.SUPERVISOR_TOKEN || process.env.HASSIO_TOKEN || "";
 
 const SCREEN = {
   width: 480,
@@ -17,6 +20,9 @@ const SCREEN = {
   columns: 6,
   rows: 6
 };
+
+const MAX_CLOCK_WIDGETS = 8;
+const CELL_SIZE = 80;
 
 const DEFAULT_LAYOUT = {
   version: 1,
@@ -71,6 +77,22 @@ function normalizeInteger(value, fallback) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function yamlString(value) {
+  return `"${String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+}
+
+function slotIndex(index) {
+  return index + 1;
+}
+
+function helperEntityId(index) {
+  return `input_text.esp_panel_clock_slot_${slotIndex(index)}`;
+}
+
+function sanitizeTitle(title) {
+  return normalizeText(title, "Clock").replace(/\|/g, "/").trim().slice(0, 64) || "Clock";
+}
+
 function sanitizeClockWidget(input, fallback) {
   const variant = input?.variant === "analogue" ? "analogue" : "digital";
   const w = clamp(normalizeInteger(input?.w, fallback.w), 2, SCREEN.columns);
@@ -79,7 +101,7 @@ function sanitizeClockWidget(input, fallback) {
   return {
     id: normalizeText(input?.id, fallback.id),
     type: "clock",
-    title: normalizeText(input?.title, fallback.title),
+    title: sanitizeTitle(input?.title ?? fallback.title),
     variant,
     x: clamp(normalizeInteger(input?.x, fallback.x), 0, SCREEN.columns - w),
     y: clamp(normalizeInteger(input?.y, fallback.y), 0, SCREEN.rows - h),
@@ -90,7 +112,7 @@ function sanitizeClockWidget(input, fallback) {
 }
 
 function sanitizeLayout(input) {
-  const rawWidgets = Array.isArray(input?.widgets) ? input.widgets : DEFAULT_LAYOUT.widgets;
+  const rawWidgets = Array.isArray(input?.widgets) ? input.widgets.slice(0, MAX_CLOCK_WIDGETS) : DEFAULT_LAYOUT.widgets;
   const widgets = rawWidgets.map((widget, index) =>
     sanitizeClockWidget(widget, DEFAULT_LAYOUT.widgets[index] || DEFAULT_LAYOUT.widgets[0])
   );
@@ -105,6 +127,10 @@ function sanitizeLayout(input) {
 function validateLayout(layout) {
   const errors = [];
   const ids = new Set();
+
+  if (layout.widgets.length > MAX_CLOCK_WIDGETS) {
+    errors.push(`Layout supports a maximum of ${MAX_CLOCK_WIDGETS} clock widgets.`);
+  }
 
   layout.widgets.forEach((widget, index) => {
     if (!widget.id) {
@@ -151,80 +177,56 @@ function validateLayout(layout) {
 function buildLvglExport(layout) {
   return {
     version: 1,
-    target: "lvgl",
+    target: "lvgl-runtime-helpers",
+    maxWidgets: MAX_CLOCK_WIDGETS,
     screen: {
       width: layout.screen.width,
       height: layout.screen.height,
-      layout: "grid",
-      columns: Array.from({ length: layout.screen.columns }, () => "LV_GRID_FR(1)"),
-      rows: Array.from({ length: layout.screen.rows }, () => "LV_GRID_FR(1)"),
-      rowGap: 8,
-      columnGap: 8,
-      padding: 12
+      columns: layout.screen.columns,
+      rows: layout.screen.rows,
+      cellSize: CELL_SIZE
     },
-    widgets: layout.widgets.map((widget) => ({
-      id: widget.id,
-      type: widget.type,
-      role: "time_display",
-      title: widget.title,
-      variant: widget.variant,
-      gridCell: {
-        column: widget.x,
-        columnSpan: widget.w,
-        row: widget.y,
-        rowSpan: widget.h,
-        columnAlign: "LV_GRID_ALIGN_STRETCH",
-        rowAlign: "LV_GRID_ALIGN_STRETCH"
-      },
-      lvgl: {
-        container: "lv_obj",
-        style: "clock_card",
-        children:
-          widget.variant === "digital"
-            ? [
-                { widget: "lv_label", role: "title", textBinding: widget.title },
-                { widget: "lv_label", role: "time", format: widget.showSeconds ? "HH:mm:ss" : "HH:mm" },
-                { widget: "lv_label", role: "date", format: "EEE dd MMM" }
-              ]
-            : [
-                { widget: "lv_label", role: "title", textBinding: widget.title },
-                { widget: "lv_scale", role: "dial" },
-                { widget: "lv_line", role: "hour_hand" },
-                { widget: "lv_line", role: "minute_hand" },
-                ...(widget.showSeconds ? [{ widget: "lv_line", role: "second_hand" }] : [])
-              ]
-      }
+    helpers: Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => ({
+      entity_id: helperEntityId(index),
+      slot: slotIndex(index)
+    })),
+    widgets: layout.widgets.map((widget, index) => ({
+      slot: slotIndex(index),
+      payload: encodeWidgetPayload(widget)
     }))
   };
 }
 
-function buildExportText(layout) {
-  const model = buildLvglExport(layout);
-  return JSON.stringify(model, null, 2);
+function encodeWidgetPayload(widget) {
+  return [
+    widget.variant,
+    sanitizeTitle(widget.title),
+    widget.x,
+    widget.y,
+    widget.w,
+    widget.h,
+    widget.showSeconds ? 1 : 0
+  ].join("|");
 }
 
-function widgetKey(widget) {
-  return widget.id.replace(/[^a-zA-Z0-9_]/g, "_").toLowerCase();
+function buildHelperYaml() {
+  const helperBlocks = Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => `  esp_panel_clock_slot_${slotIndex(index)}:
+    name: ESP Panel Clock Slot ${slotIndex(index)}
+    max: 255`).join("\n");
+
+  return `input_text:
+${helperBlocks}
+`;
 }
 
-function yamlString(value) {
-  return `"${String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
-}
-
-function buildDigitalWidget(widget) {
-  const key = widgetKey(widget);
-  const timeFormat = widget.showSeconds ? "%H:%M:%S" : "%H:%M";
-  const timeFont = widget.w >= 4 || widget.h >= 3 ? "montserrat_bold_52" : "montserrat_bold_36";
-  const dateFont = widget.w >= 4 || widget.h >= 3 ? "montserrat_18" : "montserrat_14";
-
+function buildWidgetCard(slot) {
   return `      - obj:
-          id: ${key}_card
-          grid_cell_column_pos: ${widget.x}
-          grid_cell_row_pos: ${widget.y}
-          grid_cell_column_span: ${widget.w}
-          grid_cell_row_span: ${widget.h}
-          width: 100%
-          height: 100%
+          id: slot_${slot}_card
+          x: !lambda return id(slot_${slot}_x) * ${CELL_SIZE};
+          y: !lambda return id(slot_${slot}_y) * ${CELL_SIZE};
+          width: !lambda return id(slot_${slot}_w) * ${CELL_SIZE};
+          height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE};
+          hidden: !lambda return !id(slot_${slot}_visible);
           bg_color: 0x12315A
           bg_grad_color: 0x091A34
           bg_grad_dir: VER
@@ -236,67 +238,49 @@ function buildDigitalWidget(widget) {
           pad_left: 16
           pad_right: 16
           scrollable: false
-          layout:
-            type: FLEX
-            flex_flow: COLUMN
-            flex_align_main: CENTER
-            flex_align_cross: START
-            flex_align_track: CENTER
           widgets:
             - label:
-                text: ${yamlString(widget.title)}
-                text_font: montserrat_bold_14
-                text_color: 0x9FC7FF
-            - label:
-                id: ${key}_time
-                text: "--:--"
-                text_font: ${timeFont}
-                text_color: 0xF5F9FF
-            - label:
-                id: ${key}_date
-                text: "-- ---"
-                text_font: ${dateFont}
-                text_color: 0xC8DAF7`;
-}
-
-function buildAnalogueWidget(widget) {
-  const key = widgetKey(widget);
-
-  return `      - obj:
-          id: ${key}_card
-          grid_cell_column_pos: ${widget.x}
-          grid_cell_row_pos: ${widget.y}
-          grid_cell_column_span: ${widget.w}
-          grid_cell_row_span: ${widget.h}
-          width: 100%
-          height: 100%
-          bg_color: 0x12315A
-          bg_grad_color: 0x091A34
-          bg_grad_dir: VER
-          border_color: 0x6ED9FF
-          border_width: 2
-          radius: 22
-          pad_top: 14
-          pad_bottom: 14
-          pad_left: 14
-          pad_right: 14
-          scrollable: false
-          widgets:
-            - label:
+                id: slot_${slot}_title
                 x: 0
                 y: 0
                 width: 100%
-                text_align: LEFT
-                text: ${yamlString(widget.title)}
+                text: !lambda return id(slot_${slot}_title_text);
                 text_font: montserrat_bold_14
                 text_color: 0x9FC7FF
-            - meter:
-                id: ${key}_meter
+            - obj:
+                id: slot_${slot}_digital
                 x: 0
-                y: 24
+                y: 34
                 width: 100%
-                height: 100%
-                align: CENTER
+                height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - 48;
+                hidden: !lambda return !id(slot_${slot}_visible) || id(slot_${slot}_analogue);
+                bg_opa: TRANSP
+                border_width: 0
+                scrollable: false
+                layout:
+                  type: FLEX
+                  flex_flow: COLUMN
+                  flex_align_main: CENTER
+                  flex_align_cross: START
+                  flex_align_track: CENTER
+                widgets:
+                  - label:
+                      id: slot_${slot}_time
+                      text: "--:--"
+                      text_font: montserrat_bold_52
+                      text_color: 0xF5F9FF
+                  - label:
+                      id: slot_${slot}_date
+                      text: "-- ---"
+                      text_font: montserrat_18
+                      text_color: 0xC8DAF7
+            - meter:
+                id: slot_${slot}_analog
+                x: 0
+                y: 28
+                width: 100%
+                height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - 42;
+                hidden: !lambda return !id(slot_${slot}_visible) || !id(slot_${slot}_analogue);
                 bg_opa: TRANSP
                 border_width: 0
                 pad_all: 0
@@ -313,20 +297,20 @@ function buildAnalogueWidget(widget) {
                       color: 0xC8DAF7
                     indicators:
                       - line:
-                          id: ${key}_minute_hand
+                          id: slot_${slot}_minute_hand
                           width: 4
                           color: 0x8FDCFF
                           length: 78%
                           rounded: true
                           value: 0
-${widget.showSeconds ? `                      - line:
-                          id: ${key}_second_hand
+                      - line:
+                          id: slot_${slot}_second_hand
                           width: 2
                           color: 0xFFD36B
                           length: 86%
                           rounded: true
                           value: 0
-` : ""}                  - range_from: 1
+                  - range_from: 1
                     range_to: 12
                     angle_range: 330
                     rotation: 300
@@ -349,7 +333,7 @@ ${widget.showSeconds ? `                      - line:
                       count: 2
                     indicators:
                       - line:
-                          id: ${key}_hour_hand
+                          id: slot_${slot}_hour_hand
                           width: 6
                           color: 0xF7FBFF
                           length: 56%
@@ -357,70 +341,112 @@ ${widget.showSeconds ? `                      - line:
                           value: 0`;
 }
 
-function buildClockUpdateActions(layout) {
-  return layout.widgets.flatMap((widget) => {
-    const key = widgetKey(widget);
-    if (widget.variant === "digital") {
-      const timeFormat = widget.showSeconds ? "%H:%M:%S" : "%H:%M";
-      return [
-        `      - lvgl.label.update:
-          id: ${key}_time
-          text: !lambda |-
-            auto now = id(ha_time).now();
-            if (!now.is_valid()) return std::string("--:--");
-            char buffer[16];
-            now.strftime(buffer, sizeof(buffer), ${yamlString(timeFormat)});
-            return std::string(buffer);`,
-        `      - lvgl.label.update:
-          id: ${key}_date
-          text: !lambda |-
-            auto now = id(ha_time).now();
-            if (!now.is_valid()) return std::string("-- ---");
-            char buffer[24];
-            now.strftime(buffer, sizeof(buffer), "%a %d %b");
-            return std::string(buffer);`
-      ];
-    }
+function buildEsphomeYaml() {
+  const textSensors = Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => {
+    const slot = slotIndex(index);
+    return `  - platform: homeassistant
+    id: slot_${slot}_payload
+    entity_id: ${helperEntityId(index)}
+    on_value:
+      then:
+        - script.execute: apply_live_layout`;
+  }).join("\n");
 
-    return [
-      `      - lvgl.indicator.update:
-          id: ${key}_minute_hand
-          value: !lambda |-
-            auto now = id(ha_time).now();
-            if (!now.is_valid()) return 0;
-            return now.minute;`,
-      `      - lvgl.indicator.update:
-          id: ${key}_hour_hand
-          value: !lambda |-
-            auto now = id(ha_time).now();
-            if (!now.is_valid()) return 0;
-            return (now.hour % 12) * 60 + now.minute;`,
-      ...(widget.showSeconds
-        ? [
-            `      - lvgl.indicator.update:
-          id: ${key}_second_hand
-          value: !lambda |-
-            auto now = id(ha_time).now();
-            if (!now.is_valid()) return 0;
-            return now.second;`
-          ]
-        : [])
-    ];
-  });
-}
+  const globals = Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => {
+    const slot = slotIndex(index);
+    return `  - id: slot_${slot}_visible
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_${slot}_analogue
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_${slot}_show_seconds
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_${slot}_x
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_${slot}_y
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_${slot}_w
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_${slot}_h
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_${slot}_title_text
+    type: std::string
+    restore_value: no
+    initial_value: '"Clock"'`;
+  }).join("\n");
 
-function buildEsphomeYaml(layout) {
-  const widgetYaml = layout.widgets.length
-    ? layout.widgets
-        .map((widget) => (widget.variant === "analogue" ? buildAnalogueWidget(widget) : buildDigitalWidget(widget)))
-        .join("\n")
-    : `      - label:
-          text: "No widgets configured"
-          text_font: montserrat_bold_22
-          text_color: 0xF5F9FF
-          align: CENTER`;
+  const refreshList = Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => {
+    const slot = slotIndex(index);
+    return `              - slot_${slot}_card
+              - slot_${slot}_title
+              - slot_${slot}_digital
+              - slot_${slot}_analog`;
+  }).join("\n");
 
-  const updateActions = buildClockUpdateActions(layout).join("\n");
+  const widgetBlocks = Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => buildWidgetCard(slotIndex(index))).join("\n");
+
+  const digitalUpdates = Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => {
+    const slot = slotIndex(index);
+    return `      - if:
+          condition:
+            lambda: return id(slot_${slot}_visible) && !id(slot_${slot}_analogue);
+          then:
+            - lvgl.label.update:
+                id: slot_${slot}_time
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("--:--");
+                  char buffer[16];
+                  now.strftime(buffer, sizeof(buffer), id(slot_${slot}_show_seconds) ? "%H:%M:%S" : "%H:%M");
+                  return std::string(buffer);
+            - lvgl.label.update:
+                id: slot_${slot}_date
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("-- ---");
+                  char buffer[24];
+                  now.strftime(buffer, sizeof(buffer), "%a %d %b");
+                  return std::string(buffer);`;
+  }).join("\n");
+
+  const analogUpdates = Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => {
+    const slot = slotIndex(index);
+    return `      - if:
+          condition:
+            lambda: return id(slot_${slot}_visible) && id(slot_${slot}_analogue);
+          then:
+            - lvgl.indicator.update:
+                id: slot_${slot}_minute_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.minute;
+            - lvgl.indicator.update:
+                id: slot_${slot}_hour_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return (now.hour % 12) * 60 + now.minute;
+            - lvgl.indicator.update:
+                id: slot_${slot}_second_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.second;`;
+  }).join("\n");
 
   return `substitutions:
   screen_width: "480"
@@ -437,6 +463,7 @@ esphome:
       - light.turn_on:
           id: display_backlight
           brightness: 85%
+      - script.execute: apply_live_layout
       - script.execute: sync_clock_widgets
 
 esp32:
@@ -469,6 +496,7 @@ wifi:
   on_connect:
     then:
       - delay: 1s
+      - script.execute: apply_live_layout
       - script.execute: sync_clock_widgets
 
 time:
@@ -476,6 +504,7 @@ time:
     id: ha_time
     on_time_sync:
       then:
+        - script.execute: apply_live_layout
         - script.execute: sync_clock_widgets
     on_time:
       - seconds: /1
@@ -527,14 +556,9 @@ display:
       width: 480
       height: 480
 
+json:
+
 font:
-  - file:
-      type: gfonts
-      family: Montserrat
-      weight: 400
-    id: montserrat_14
-    size: 14
-    bpp: 4
   - file:
       type: gfonts
       family: Montserrat
@@ -553,28 +577,78 @@ font:
       type: gfonts
       family: Montserrat
       weight: 700
-    id: montserrat_bold_22
-    size: 22
-    bpp: 4
-  - file:
-      type: gfonts
-      family: Montserrat
-      weight: 700
-    id: montserrat_bold_36
-    size: 36
-    bpp: 4
-  - file:
-      type: gfonts
-      family: Montserrat
-      weight: 700
     id: montserrat_bold_52
     size: 52
     bpp: 4
 
+text_sensor:
+${textSensors}
+
+globals:
+${globals}
+
 script:
+  - id: apply_live_layout
+    then:
+      - lambda: |-
+          auto parse_slot = [](const std::string &payload, bool &visible, bool &analogue, std::string &title, int &x, int &y, int &w, int &h, bool &show_seconds) {
+            visible = false;
+            analogue = false;
+            title = "Clock";
+            x = 0;
+            y = 0;
+            w = 2;
+            h = 2;
+            show_seconds = false;
+            if (payload.empty()) {
+              return;
+            }
+
+            std::vector<std::string> parts;
+            size_t start = 0;
+            while (true) {
+              size_t pos = payload.find('|', start);
+              if (pos == std::string::npos) {
+                parts.push_back(payload.substr(start));
+                break;
+              }
+              parts.push_back(payload.substr(start, pos - start));
+              start = pos + 1;
+            }
+
+            if (parts.size() < 7) {
+              return;
+            }
+
+            visible = true;
+            analogue = parts[0] == "analogue";
+            title = parts[1];
+            x = std::max(0, std::min(${SCREEN.columns - 2}, atoi(parts[2].c_str())));
+            y = std::max(0, std::min(${SCREEN.rows - 2}, atoi(parts[3].c_str())));
+            w = std::max(2, std::min(${SCREEN.columns}, atoi(parts[4].c_str())));
+            h = std::max(2, std::min(${SCREEN.rows}, atoi(parts[5].c_str())));
+            if (x + w > ${SCREEN.columns}) x = ${SCREEN.columns} - w;
+            if (y + h > ${SCREEN.rows}) y = ${SCREEN.rows} - h;
+            show_seconds = atoi(parts[6].c_str()) == 1;
+          };
+
+          parse_slot(id(slot_1_payload).state, id(slot_1_visible), id(slot_1_analogue), id(slot_1_title_text), id(slot_1_x), id(slot_1_y), id(slot_1_w), id(slot_1_h), id(slot_1_show_seconds));
+          parse_slot(id(slot_2_payload).state, id(slot_2_visible), id(slot_2_analogue), id(slot_2_title_text), id(slot_2_x), id(slot_2_y), id(slot_2_w), id(slot_2_h), id(slot_2_show_seconds));
+          parse_slot(id(slot_3_payload).state, id(slot_3_visible), id(slot_3_analogue), id(slot_3_title_text), id(slot_3_x), id(slot_3_y), id(slot_3_w), id(slot_3_h), id(slot_3_show_seconds));
+          parse_slot(id(slot_4_payload).state, id(slot_4_visible), id(slot_4_analogue), id(slot_4_title_text), id(slot_4_x), id(slot_4_y), id(slot_4_w), id(slot_4_h), id(slot_4_show_seconds));
+          parse_slot(id(slot_5_payload).state, id(slot_5_visible), id(slot_5_analogue), id(slot_5_title_text), id(slot_5_x), id(slot_5_y), id(slot_5_w), id(slot_5_h), id(slot_5_show_seconds));
+          parse_slot(id(slot_6_payload).state, id(slot_6_visible), id(slot_6_analogue), id(slot_6_title_text), id(slot_6_x), id(slot_6_y), id(slot_6_w), id(slot_6_h), id(slot_6_show_seconds));
+          parse_slot(id(slot_7_payload).state, id(slot_7_visible), id(slot_7_analogue), id(slot_7_title_text), id(slot_7_x), id(slot_7_y), id(slot_7_w), id(slot_7_h), id(slot_7_show_seconds));
+          parse_slot(id(slot_8_payload).state, id(slot_8_visible), id(slot_8_analogue), id(slot_8_title_text), id(slot_8_x), id(slot_8_y), id(slot_8_w), id(slot_8_h), id(slot_8_show_seconds));
+      - lvgl.widget.refresh:
+          id:
+${refreshList}
+      - script.execute: sync_clock_widgets
+
   - id: sync_clock_widgets
     then:
-${updateActions}
+${digitalUpdates}
+${analogUpdates}
 
 lvgl:
   rotation: 180
@@ -595,24 +669,12 @@ lvgl:
             bg_grad_color: 0x050B16
             bg_grad_dir: VER
             border_width: 0
-            pad_all: 12
+            pad_all: 0
             radius: 0
             scrollable: false
-            layout:
-              type: GRID
-              grid_rows: 6
-              grid_columns: 6
-              pad_row: 8
-              pad_column: 8
-              grid_cell_x_align: center
-              grid_cell_y_align: center
             widgets:
-${widgetYaml}
+${widgetBlocks}
 `;
-}
-
-async function writeGeneratedYaml(layout) {
-  await fs.writeFile(GENERATED_YAML_PATH, buildEsphomeYaml(layout));
 }
 
 async function ensureDataDir() {
@@ -636,16 +698,74 @@ async function writeStoredLayout(layout) {
   await fs.writeFile(STORE_PATH, JSON.stringify(layout, null, 2));
 }
 
+async function hassFetch(endpoint, options = {}) {
+  if (!TOKEN) {
+    throw new Error("Missing SUPERVISOR_TOKEN or HASSIO_TOKEN.");
+  }
+
+  const response = await fetch(`${HASS_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${TOKEN}`,
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Home Assistant API request failed: ${response.status} ${response.statusText} ${body}`);
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    return response.json();
+  }
+  return response.text();
+}
+
+async function setHelperValue(entityId, value) {
+  await hassFetch("/services/input_text/set_value", {
+    method: "POST",
+    body: JSON.stringify({
+      entity_id: entityId,
+      value
+    })
+  });
+}
+
+async function syncHelpers(layout) {
+  const warnings = [];
+
+  for (let index = 0; index < MAX_CLOCK_WIDGETS; index += 1) {
+    const entityId = helperEntityId(index);
+    const widget = layout.widgets[index];
+    const payload = widget ? encodeWidgetPayload(widget) : "";
+    try {
+      await setHelperValue(entityId, payload);
+    } catch (error) {
+      warnings.push(`${entityId} was not updated: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+  }
+
+  return warnings;
+}
+
+async function writeGeneratedArtifacts() {
+  await fs.writeFile(GENERATED_YAML_PATH, buildEsphomeYaml());
+  await fs.writeFile(GENERATED_HELPER_PATH, buildHelperYaml());
+}
+
 async function loadLayout() {
   const existing = await readStoredLayout();
   if (existing) {
-    await writeGeneratedYaml(existing);
+    await writeGeneratedArtifacts();
     return existing;
   }
 
   const layout = sanitizeLayout(DEFAULT_LAYOUT);
   await writeStoredLayout(layout);
-  await writeGeneratedYaml(layout);
+  await writeGeneratedArtifacts();
   return layout;
 }
 
@@ -659,8 +779,9 @@ async function saveLayout(input) {
   }
 
   await writeStoredLayout(layout);
-  await writeGeneratedYaml(layout);
-  return layout;
+  await writeGeneratedArtifacts();
+  const warnings = await syncHelpers(layout);
+  return { layout, warnings };
 }
 
 app.get("/api/layout", async (_request, response) => {
@@ -668,8 +789,10 @@ app.get("/api/layout", async (_request, response) => {
     const layout = await loadLayout();
     response.json({
       layout,
+      warnings: [],
+      helperYaml: buildHelperYaml(),
       exportModel: buildLvglExport(layout),
-      exportText: buildEsphomeYaml(layout)
+      exportText: buildEsphomeYaml()
     });
   } catch (error) {
     log("Failed to load layout", error);
@@ -681,12 +804,14 @@ app.get("/api/layout", async (_request, response) => {
 
 app.post("/api/layout", async (request, response) => {
   try {
-    const layout = await saveLayout(request.body?.layout);
+    const { layout, warnings } = await saveLayout(request.body?.layout);
     response.json({
       ok: true,
       layout,
+      warnings,
+      helperYaml: buildHelperYaml(),
       exportModel: buildLvglExport(layout),
-      exportText: buildEsphomeYaml(layout)
+      exportText: buildEsphomeYaml()
     });
   } catch (error) {
     log("Failed to save layout", error);
@@ -700,11 +825,15 @@ app.post("/api/layout/reset", async (_request, response) => {
   try {
     const layout = sanitizeLayout(DEFAULT_LAYOUT);
     await writeStoredLayout(layout);
+    await writeGeneratedArtifacts();
+    const warnings = await syncHelpers(layout);
     response.json({
       ok: true,
       layout,
+      warnings,
+      helperYaml: buildHelperYaml(),
       exportModel: buildLvglExport(layout),
-      exportText: buildEsphomeYaml(layout)
+      exportText: buildEsphomeYaml()
     });
   } catch (error) {
     log("Failed to reset layout", error);
@@ -718,8 +847,9 @@ app.get("/api/export", async (_request, response) => {
   try {
     const layout = await loadLayout();
     response.json({
+      helperYaml: buildHelperYaml(),
       exportModel: buildLvglExport(layout),
-      exportText: buildEsphomeYaml(layout)
+      exportText: buildEsphomeYaml()
     });
   } catch (error) {
     log("Failed to export layout", error);
@@ -729,12 +859,21 @@ app.get("/api/export", async (_request, response) => {
   }
 });
 
+app.get("/api/helper-yaml", (_request, response) => {
+  response.type("text/plain").send(buildHelperYaml());
+});
+
 app.use(express.static(path.join(__dirname, "dist")));
 
 app.get("*", (_request, response) => {
   response.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, "0.0.0.0", async () => {
   log(`Server listening on 0.0.0.0:${PORT}`);
+  try {
+    await writeGeneratedArtifacts();
+  } catch (error) {
+    log("Failed to write generated artifacts on startup", error);
+  }
 });

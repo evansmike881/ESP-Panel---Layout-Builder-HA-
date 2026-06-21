@@ -1,5 +1,6 @@
 export const GRID_COLUMNS = 6;
 export const GRID_ROWS = 6;
+export const MAX_CLOCK_WIDGETS = 8;
 
 export type ClockVariant = "digital" | "analogue";
 

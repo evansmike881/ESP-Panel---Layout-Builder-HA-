@@ -28,6 +28,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
 export interface LayoutApiResponse {
   layout: LayoutState;
+  warnings?: string[];
+  helperYaml?: string;
   exportModel: unknown;
   exportText: string;
 }
@@ -50,5 +52,5 @@ export function resetLayout() {
 }
 
 export function fetchExport() {
-  return request<{ exportModel: unknown; exportText: string }>("api/export");
+  return request<{ helperYaml?: string; exportModel: unknown; exportText: string }>("api/export");
 }

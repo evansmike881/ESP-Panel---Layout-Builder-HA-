@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchLayout, resetLayout as resetStoredLayout, saveLayout } from "./api";
-import { DEFAULT_LAYOUT, GRID_COLUMNS, GRID_ROWS, type ClockVariant, type LayoutState, type LayoutWidget } from "./types";
+import { DEFAULT_LAYOUT, GRID_COLUMNS, GRID_ROWS, MAX_CLOCK_WIDGETS, type ClockVariant, type LayoutState, type LayoutWidget } from "./types";
 import { ClockWidget } from "./components/ClockWidget";
 
 const SCREEN_SIZE = 480;
@@ -36,6 +36,7 @@ function App() {
   const [error, setError] = useState("");
   const [status, setStatus] = useState("Loading saved layout...");
   const [exportText, setExportText] = useState("");
+  const [helperYaml, setHelperYaml] = useState("");
   const screenRef = useRef<HTMLDivElement | null>(null);
   const skipAutoSaveRef = useRef(true);
   const resizeOriginRef = useRef<{ pointerX: number; pointerY: number; widget: LayoutWidget } | null>(null);
@@ -57,6 +58,7 @@ function App() {
         setLayout(response.layout);
         setSelectedId(response.layout.widgets[0]?.id ?? "");
         setExportText(response.exportText);
+        setHelperYaml(response.helperYaml || "");
         setStatus("Loaded saved layout.");
       } catch (loadError) {
         if (!active) return;
@@ -141,7 +143,12 @@ function App() {
         const response = await saveLayout(layout);
         setLayout(response.layout);
         setExportText(response.exportText);
-        setStatus(`Saved ${response.layout.widgets.length} clock widget${response.layout.widgets.length === 1 ? "" : "s"}.`);
+        setHelperYaml(response.helperYaml || "");
+        setStatus(
+          response.warnings?.length
+            ? response.warnings.join(" ")
+            : `Saved ${response.layout.widgets.length} clock widget${response.layout.widgets.length === 1 ? "" : "s"} and pushed live helper updates.`
+        );
       } catch (saveError) {
         setError(saveError instanceof Error ? saveError.message : "Failed to save layout.");
         setStatus("Save failed.");
@@ -173,6 +180,10 @@ function App() {
   }
 
   function addClock() {
+    if (widgets.length >= MAX_CLOCK_WIDGETS) {
+      setStatus(`Live layout supports up to ${MAX_CLOCK_WIDGETS} clocks.`);
+      return;
+    }
     const nextClock = createClock(widgets.length + 1);
     const occupied = widgets.length;
     nextClock.x = occupied % (GRID_COLUMNS - nextClock.w + 1);
@@ -202,6 +213,7 @@ function App() {
       setLayout(response.layout);
       setSelectedId(response.layout.widgets[0]?.id ?? "");
       setExportText(response.exportText);
+      setHelperYaml(response.helperYaml || "");
       setStatus("Layout reset to defaults.");
     } catch (resetError) {
       setError(resetError instanceof Error ? resetError.message : "Failed to reset layout.");
@@ -229,7 +241,7 @@ function App() {
           <section className="panel-section">
             <div className="section-head">
               <h2>Widgets</h2>
-              <span>{widgets.length}</span>
+              <span>{widgets.length} / {MAX_CLOCK_WIDGETS}</span>
             </div>
             <div className="widget-list">
               {widgets.map((widget) => (
@@ -251,6 +263,14 @@ function App() {
               <span>Generated</span>
             </div>
             <textarea className="export-box" readOnly value={exportText} />
+          </section>
+
+          <section className="panel-section">
+            <div className="section-head">
+              <h2>Helper YAML</h2>
+              <span>Home Assistant</span>
+            </div>
+            <textarea className="export-box" readOnly value={helperYaml} />
           </section>
         </aside>
 
