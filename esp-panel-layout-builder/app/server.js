@@ -246,7 +246,6 @@ function buildWidgetCard(slot) {
           pad_left: 16
           pad_right: 16
           scrollable: false
-          hidden: true
           widgets:
             - label:
                 id: slot_${slot}_title
@@ -262,7 +261,7 @@ function buildWidgetCard(slot) {
                 y: 34
                 width: 100%
                 height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - 48;
-                hidden: true
+                hidden: !lambda return !id(slot_${slot}_visible) || id(slot_${slot}_analogue);
                 bg_opa: TRANSP
                 border_width: 0
                 scrollable: false
@@ -289,7 +288,7 @@ function buildWidgetCard(slot) {
                 y: 28
                 width: 100%
                 height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - 42;
-                hidden: true
+                hidden: !lambda return !id(slot_${slot}_visible) || !id(slot_${slot}_analogue);
                 bg_opa: TRANSP
                 border_width: 0
                 pad_all: 0
@@ -352,7 +351,7 @@ function buildWidgetCard(slot) {
                             count: 2
                           indicators:
                             - line:
-                              id: slot_${slot}_hour_hand
+                                id: slot_${slot}_hour_hand
                                 width: 6
                                 color: 0xF7FBFF
                                 length: 56%
