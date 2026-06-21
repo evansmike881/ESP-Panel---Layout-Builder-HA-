@@ -53,43 +53,56 @@ export function ClockWidget({
   const timeLabel = formatTime(now, widget.showSeconds);
   const dateLabel = formatDate(now);
   const hands = analogueHandAngles(now);
+  const showTitle = widget.titleVisible && widget.title.trim().length > 0;
+  const textAlign = widget.align === "center" ? "center" : widget.align === "end" ? "right" : "left";
+  const contentJustify = widget.align === "center" ? "center" : widget.align === "end" ? "end" : "start";
 
   return (
     <button
-      className={`clock-widget ${widget.variant}${selected ? " selected" : ""}`}
+      className={`clock-widget ${widget.variant} align-${widget.align}${selected ? " selected" : ""}${showTitle ? "" : " title-hidden"}${widget.borderVisible ? "" : " border-hidden"}`}
       style={{
         left: `${widget.x * cellWidth}px`,
         top: `${widget.y * cellHeight}px`,
         width: `${widget.w * cellWidth}px`,
-        height: `${widget.h * cellHeight}px`
+        height: `${widget.h * cellHeight}px`,
+        background: `linear-gradient(180deg, ${widget.backgroundColor} 0%, #081428 100%)`,
+        borderColor: widget.borderColor,
+        boxShadow: selected
+          ? `inset 0 0 0 1px rgba(255,255,255,0.08), 0 0 0 3px rgba(77, 177, 255, 0.22), 0 0 34px rgba(0, 168, 255, 0.28)`
+          : `inset 0 0 0 1px rgba(255,255,255,0.05), 0 0 28px rgba(0, 150, 255, 0.18)`,
+        textAlign
       }}
       onPointerDown={onPointerDown}
       onClick={onSelect}
     >
-      <span className="widget-title">{widget.title}</span>
+      {showTitle ? (
+        <span className="widget-title" style={{ color: widget.accentColor, textAlign }}>
+          {widget.title}
+        </span>
+      ) : null}
 
       {widget.variant === "digital" ? (
-        <div className="digital-clock">
+        <div className="digital-clock" style={{ justifyItems: contentJustify }}>
           <strong>{timeLabel}</strong>
           <span>{dateLabel}</span>
         </div>
       ) : (
         <div className="analogue-clock">
           <svg viewBox="0 0 160 160" className="clock-face" aria-hidden="true">
-            <circle cx="80" cy="80" r="70" className="face-ring" />
+            <circle cx="80" cy="80" r="70" className="face-ring" style={{ stroke: widget.borderColor }} />
             {Array.from({ length: 12 }, (_, index) => {
               const angle = (index * 30 * Math.PI) / 180;
               const x1 = 80 + Math.sin(angle) * 54;
               const y1 = 80 - Math.cos(angle) * 54;
               const x2 = 80 + Math.sin(angle) * 64;
               const y2 = 80 - Math.cos(angle) * 64;
-              return <line key={index} x1={x1} y1={y1} x2={x2} y2={y2} className="tick" />;
+              return <line key={index} x1={x1} y1={y1} x2={x2} y2={y2} className="tick" style={{ stroke: widget.accentColor }} />;
             })}
             <g transform={`rotate(${hands.hour} 80 80)`}>
               <line x1="80" y1="84" x2="80" y2="44" className="hand hour-hand" />
             </g>
             <g transform={`rotate(${hands.minute} 80 80)`}>
-              <line x1="80" y1="88" x2="80" y2="28" className="hand minute-hand" />
+              <line x1="80" y1="88" x2="80" y2="28" className="hand minute-hand" style={{ stroke: widget.accentColor }} />
             </g>
             {widget.showSeconds ? (
               <g transform={`rotate(${hands.second} 80 80)`}>

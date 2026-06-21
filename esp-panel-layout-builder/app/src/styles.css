@@ -230,31 +230,43 @@ button {
   position: absolute;
   z-index: 2;
   display: grid;
-  align-content: space-between;
+  align-content: start;
+  gap: 10px;
   padding: 14px;
   border: 1px solid rgba(120, 220, 255, 0.58);
   border-radius: 22px;
-  background:
-    linear-gradient(180deg, rgba(19, 57, 105, 0.96) 0%, rgba(8, 24, 48, 0.96) 100%);
   color: #f5f9ff;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
-    0 0 28px rgba(0, 150, 255, 0.18);
   text-align: left;
   user-select: none;
   touch-action: none;
 }
 
+.clock-widget.border-hidden {
+  border-width: 0;
+}
+
 .clock-widget.selected {
   border-color: #8bd8ff;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 0 0 3px rgba(77, 177, 255, 0.22),
-    0 0 34px rgba(0, 168, 255, 0.28);
 }
 
 .clock-widget.digital {
   justify-items: start;
+}
+
+.clock-widget.align-center,
+.clock-widget.align-center .digital-clock,
+.clock-widget.align-center .widget-title {
+  text-align: center;
+}
+
+.clock-widget.align-end,
+.clock-widget.align-end .digital-clock,
+.clock-widget.align-end .widget-title {
+  text-align: right;
+}
+
+.clock-widget.title-hidden {
+  align-content: center;
 }
 
 .widget-title {
@@ -300,7 +312,8 @@ button {
 .digital-clock {
   display: grid;
   gap: 6px;
-  align-self: end;
+  align-self: center;
+  min-height: 100%;
 }
 
 .digital-clock strong {
@@ -382,6 +395,11 @@ button {
   color: #edf4ff;
 }
 
+.field input[type="color"] {
+  min-height: 50px;
+  padding: 0.3rem;
+}
+
 .export-box {
   width: 100%;
   min-height: 280px;
@@ -398,6 +416,10 @@ button {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.color-grid {
+  align-items: end;
 }
 
 .checkbox-field {

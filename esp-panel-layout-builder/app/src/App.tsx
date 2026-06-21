@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchLayout, resetLayout as resetStoredLayout, saveLayout } from "./api";
-import { DEFAULT_LAYOUT, GRID_COLUMNS, GRID_ROWS, MAX_CLOCK_WIDGETS, type ClockVariant, type LayoutState, type LayoutWidget } from "./types";
+import {
+  DEFAULT_LAYOUT,
+  GRID_COLUMNS,
+  GRID_ROWS,
+  MAX_CLOCK_WIDGETS,
+  type ClockVariant,
+  type LayoutState,
+  type LayoutWidget,
+  type WidgetAlign
+} from "./types";
 import { ClockWidget } from "./components/ClockWidget";
 
 const SCREEN_SIZE = 480;
@@ -21,8 +30,19 @@ function createClock(idNumber: number): LayoutWidget {
     y: 0,
     w: 4,
     h: idNumber % 2 === 0 ? 4 : 2,
-    showSeconds: false
+    showSeconds: false,
+    titleVisible: true,
+    borderVisible: true,
+    align: "start",
+    backgroundColor: "#12315a",
+    borderColor: "#6ed9ff",
+    accentColor: "#9fc7ff"
   };
+}
+
+function formatWidgetName(widget: LayoutWidget) {
+  const name = widget.title.trim();
+  return name.length > 0 ? name : "Untitled clock";
 }
 
 function App() {
@@ -35,10 +55,9 @@ function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("Loading saved layout...");
-  const [exportText, setExportText] = useState("");
-  const [helperYaml, setHelperYaml] = useState("");
   const screenRef = useRef<HTMLDivElement | null>(null);
   const skipAutoSaveRef = useRef(true);
+  const lastSavedRef = useRef("");
   const resizeOriginRef = useRef<{ pointerX: number; pointerY: number; widget: LayoutWidget } | null>(null);
 
   const widgets = layout.widgets;
@@ -57,8 +76,7 @@ function App() {
         if (!active) return;
         setLayout(response.layout);
         setSelectedId(response.layout.widgets[0]?.id ?? "");
-        setExportText(response.exportText);
-        setHelperYaml(response.helperYaml || "");
+        lastSavedRef.current = JSON.stringify(response.layout);
         setStatus("Loaded saved layout.");
       } catch (loadError) {
         if (!active) return;
@@ -136,18 +154,22 @@ function App() {
       return;
     }
 
+    const serializedLayout = JSON.stringify(layout);
+    if (serializedLayout === lastSavedRef.current) {
+      return;
+    }
+
     const timeout = window.setTimeout(async () => {
       setIsSaving(true);
       setError("");
+      setStatus("Saving layout...");
       try {
         const response = await saveLayout(layout);
-        setLayout(response.layout);
-        setExportText(response.exportText);
-        setHelperYaml(response.helperYaml || "");
+        lastSavedRef.current = JSON.stringify(response.layout);
         setStatus(
           response.warnings?.length
             ? response.warnings.join(" ")
-            : `Saved ${response.layout.widgets.length} clock widget${response.layout.widgets.length === 1 ? "" : "s"} and pushed live helper updates.`
+            : `Saved ${response.layout.widgets.length} widget${response.layout.widgets.length === 1 ? "" : "s"} and pushed the live panel update.`
         );
       } catch (saveError) {
         setError(saveError instanceof Error ? saveError.message : "Failed to save layout.");
@@ -212,8 +234,7 @@ function App() {
       skipAutoSaveRef.current = true;
       setLayout(response.layout);
       setSelectedId(response.layout.widgets[0]?.id ?? "");
-      setExportText(response.exportText);
-      setHelperYaml(response.helperYaml || "");
+      lastSavedRef.current = JSON.stringify(response.layout);
       setStatus("Layout reset to defaults.");
     } catch (resetError) {
       setError(resetError instanceof Error ? resetError.message : "Failed to reset layout.");
@@ -225,11 +246,11 @@ function App() {
       <header className="app-header">
         <div>
           <span className="overline">LVGL Grid Builder</span>
-          <h1>Clock Layout Preview</h1>
+          <h1>Widget Layout Preview</h1>
         </div>
         <div className="header-actions">
           <button className="ghost-button" onClick={handleReset}>Reset</button>
-          <button className="primary-button" onClick={addClock}>Add Clock</button>
+          <button className="primary-button" onClick={addClock}>Add Widget</button>
         </div>
       </header>
 
@@ -250,27 +271,10 @@ function App() {
                   className={`widget-row${widget.id === selectedId ? " active" : ""}`}
                   onClick={() => setSelectedId(widget.id)}
                 >
-                  <strong>{widget.title}</strong>
-                  <span>{widget.variant}</span>
+                  <strong>{formatWidgetName(widget)}</strong>
                 </button>
               ))}
             </div>
-          </section>
-
-          <section className="panel-section">
-            <div className="section-head">
-              <h2>ESPHome YAML</h2>
-              <span>Generated</span>
-            </div>
-            <textarea className="export-box" readOnly value={exportText} />
-          </section>
-
-          <section className="panel-section">
-            <div className="section-head">
-              <h2>Helper YAML</h2>
-              <span>Home Assistant</span>
-            </div>
-            <textarea className="export-box" readOnly value={helperYaml} />
           </section>
         </aside>
 
@@ -344,6 +348,15 @@ function App() {
                   />
                 </label>
 
+                <label className="checkbox-field">
+                  <input
+                    type="checkbox"
+                    checked={selectedWidget.titleVisible}
+                    onChange={(event) => updateSelected({ titleVisible: event.target.checked })}
+                  />
+                  <span>Show title</span>
+                </label>
+
                 <label className="field">
                   <span>View</span>
                   <select
@@ -362,6 +375,55 @@ function App() {
                     onChange={(event) => updateSelected({ showSeconds: event.target.checked })}
                   />
                   <span>Show seconds</span>
+                </label>
+
+                <label className="checkbox-field">
+                  <input
+                    type="checkbox"
+                    checked={selectedWidget.borderVisible}
+                    onChange={(event) => updateSelected({ borderVisible: event.target.checked })}
+                  />
+                  <span>Show border</span>
+                </label>
+
+                <label className="field">
+                  <span>Alignment</span>
+                  <select
+                    value={selectedWidget.align}
+                    onChange={(event) => updateSelected({ align: event.target.value as WidgetAlign })}
+                  >
+                    <option value="start">Left</option>
+                    <option value="center">Center</option>
+                    <option value="end">Right</option>
+                  </select>
+                </label>
+
+                <div className="field-grid color-grid">
+                  <label className="field">
+                    <span>Background</span>
+                    <input
+                      type="color"
+                      value={selectedWidget.backgroundColor}
+                      onChange={(event) => updateSelected({ backgroundColor: event.target.value })}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Border</span>
+                    <input
+                      type="color"
+                      value={selectedWidget.borderColor}
+                      onChange={(event) => updateSelected({ borderColor: event.target.value })}
+                    />
+                  </label>
+                </div>
+
+                <label className="field">
+                  <span>Accent</span>
+                  <input
+                    type="color"
+                    value={selectedWidget.accentColor}
+                    onChange={(event) => updateSelected({ accentColor: event.target.value })}
+                  />
                 </label>
 
                 <div className="field-grid">
@@ -410,10 +472,10 @@ function App() {
                   </label>
                 </div>
 
-                <button className="danger-button" onClick={removeSelected}>Delete Clock</button>
+                <button className="danger-button" onClick={removeSelected}>Delete Widget</button>
               </div>
             ) : (
-              <div className="empty-state">No clock selected.</div>
+              <div className="empty-state">No widget selected.</div>
             )}
           </section>
         </aside>

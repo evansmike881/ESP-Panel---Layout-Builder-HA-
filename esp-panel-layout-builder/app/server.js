@@ -10,7 +10,7 @@ const PORT = Number.parseInt(process.env.PORT || "8099", 10);
 const DATA_DIR = path.join(__dirname, "data");
 const STORE_PATH = path.join(DATA_DIR, "clock-layout.json");
 const GENERATED_YAML_PATH = path.resolve(__dirname, "..", "household-panel.generated.yaml");
-const GENERATED_HELPER_PATH = path.resolve(__dirname, "..", "esp-panel-live-helpers.yaml");
+const GENERATED_HELPER_PATH = path.resolve(__dirname, "..", "esp_panel_live_helpers.yaml");
 const HASS_URL = process.env.HASS_URL || "http://supervisor/core/api";
 const TOKEN = process.env.SUPERVISOR_TOKEN || process.env.HASSIO_TOKEN || "";
 
@@ -37,7 +37,13 @@ const DEFAULT_LAYOUT = {
       y: 0,
       w: 4,
       h: 2,
-      showSeconds: false
+      showSeconds: false,
+      titleVisible: true,
+      borderVisible: true,
+      align: "start",
+      backgroundColor: "#12315a",
+      borderColor: "#6ed9ff",
+      accentColor: "#9fc7ff"
     },
     {
       id: "clock-2",
@@ -48,7 +54,13 @@ const DEFAULT_LAYOUT = {
       y: 2,
       w: 3,
       h: 3,
-      showSeconds: true
+      showSeconds: true,
+      titleVisible: true,
+      borderVisible: true,
+      align: "center",
+      backgroundColor: "#12315a",
+      borderColor: "#6ed9ff",
+      accentColor: "#9fc7ff"
     }
   ]
 };
@@ -77,6 +89,35 @@ function normalizeInteger(value, fallback) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function normalizeBoolean(value, fallback) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (value === "1" || value === 1 || value === "true") {
+    return true;
+  }
+  if (value === "0" || value === 0 || value === "false") {
+    return false;
+  }
+  return fallback;
+}
+
+function normalizeAlign(value, fallback = "start") {
+  return ["start", "center", "end"].includes(value) ? value : fallback;
+}
+
+function normalizeColor(value, fallback) {
+  const source = normalizeText(value, fallback).trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(source)) {
+    return source.toLowerCase();
+  }
+  const stripped = source.replace(/^#/, "");
+  if (/^[0-9a-fA-F]{6}$/.test(stripped)) {
+    return `#${stripped.toLowerCase()}`;
+  }
+  return fallback;
+}
+
 function yamlString(value) {
   return `"${String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
@@ -97,8 +138,9 @@ function helperEntityId(index) {
   return `input_text.esp_panel_widget_slot_${slotIndex(index)}`;
 }
 
-function sanitizeTitle(title) {
-  return normalizeText(title, "Clock").replace(/\|/g, "/").trim().slice(0, 64) || "Clock";
+function sanitizeTitle(title, fallback = "Clock") {
+  const normalized = normalizeText(title, fallback).replace(/\|/g, "/").trim().slice(0, 64);
+  return normalized;
 }
 
 function sanitizeClockWidget(input, fallback) {
@@ -109,13 +151,19 @@ function sanitizeClockWidget(input, fallback) {
   return {
     id: normalizeText(input?.id, fallback.id),
     type: "clock",
-    title: sanitizeTitle(input?.title ?? fallback.title),
+    title: sanitizeTitle(input?.title, fallback.title),
     variant,
     x: clamp(normalizeInteger(input?.x, fallback.x), 0, SCREEN.columns - w),
     y: clamp(normalizeInteger(input?.y, fallback.y), 0, SCREEN.rows - h),
     w,
     h,
-    showSeconds: typeof input?.showSeconds === "boolean" ? input.showSeconds : fallback.showSeconds
+    showSeconds: normalizeBoolean(input?.showSeconds, fallback.showSeconds),
+    titleVisible: normalizeBoolean(input?.titleVisible, fallback.titleVisible),
+    borderVisible: normalizeBoolean(input?.borderVisible, fallback.borderVisible),
+    align: normalizeAlign(input?.align, fallback.align),
+    backgroundColor: normalizeColor(input?.backgroundColor, fallback.backgroundColor),
+    borderColor: normalizeColor(input?.borderColor, fallback.borderColor),
+    accentColor: normalizeColor(input?.accentColor, fallback.accentColor)
   };
 }
 
@@ -214,7 +262,13 @@ function encodeWidgetPayload(widget) {
     widget.w,
     widget.h,
     widget.variant,
-    widget.showSeconds ? 1 : 0
+    widget.showSeconds ? 1 : 0,
+    widget.titleVisible ? 1 : 0,
+    widget.borderVisible ? 1 : 0,
+    widget.align,
+    widget.backgroundColor.replace(/^#/, "").toUpperCase(),
+    widget.borderColor.replace(/^#/, "").toUpperCase(),
+    widget.accentColor.replace(/^#/, "").toUpperCase()
   ].join("|");
 }
 
@@ -236,11 +290,11 @@ function buildWidgetCard(slot) {
           width: !lambda return id(slot_${slot}_w) * ${CELL_SIZE};
           height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE};
           hidden: !lambda return !id(slot_${slot}_visible);
-          bg_color: 0x12315A
-          bg_grad_color: 0x091A34
+          bg_color: !lambda return id(slot_${slot}_bg_color);
+          bg_grad_color: 0x081428
           bg_grad_dir: VER
-          border_color: 0x6ED9FF
-          border_width: 2
+          border_color: !lambda return id(slot_${slot}_border_color);
+          border_width: !lambda return id(slot_${slot}_border_visible) ? 2 : 0;
           radius: 22
           pad_top: 14
           pad_bottom: 14
@@ -249,20 +303,42 @@ function buildWidgetCard(slot) {
           scrollable: false
           widgets:
             - label:
-                id: slot_${slot}_title
+                id: slot_${slot}_title_start
                 x: 0
                 y: 0
                 width: 100%
+                hidden: !lambda return !id(slot_${slot}_visible) || !id(slot_${slot}_title_visible) || id(slot_${slot}_title_text).empty() || id(slot_${slot}_align_mode) != 0;
                 text: !lambda return id(slot_${slot}_title_text);
                 text_font: montserrat_bold_14
-                text_color: 0x9FC7FF
-            - obj:
-                id: slot_${slot}_digital
+                text_color: !lambda return id(slot_${slot}_accent_color);
+                text_align: LEFT
+            - label:
+                id: slot_${slot}_title_center
                 x: 0
-                y: 34
+                y: 0
                 width: 100%
-                height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - 48;
-                hidden: !lambda return !id(slot_${slot}_visible) || id(slot_${slot}_analogue);
+                hidden: !lambda return !id(slot_${slot}_visible) || !id(slot_${slot}_title_visible) || id(slot_${slot}_title_text).empty() || id(slot_${slot}_align_mode) != 1;
+                text: !lambda return id(slot_${slot}_title_text);
+                text_font: montserrat_bold_14
+                text_color: !lambda return id(slot_${slot}_accent_color);
+                text_align: CENTER
+            - label:
+                id: slot_${slot}_title_end
+                x: 0
+                y: 0
+                width: 100%
+                hidden: !lambda return !id(slot_${slot}_visible) || !id(slot_${slot}_title_visible) || id(slot_${slot}_title_text).empty() || id(slot_${slot}_align_mode) != 2;
+                text: !lambda return id(slot_${slot}_title_text);
+                text_font: montserrat_bold_14
+                text_color: !lambda return id(slot_${slot}_accent_color);
+                text_align: RIGHT
+            - obj:
+                id: slot_${slot}_digital_start
+                x: 0
+                y: !lambda return (id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 34 : 0;
+                width: 100%
+                height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - ((id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 48 : 12);
+                hidden: !lambda return !id(slot_${slot}_visible) || id(slot_${slot}_analogue) || id(slot_${slot}_align_mode) != 0;
                 bg_opa: TRANSP
                 border_width: 0
                 scrollable: false
@@ -274,36 +350,98 @@ function buildWidgetCard(slot) {
                   flex_align_track: CENTER
                 widgets:
                   - label:
-                      id: slot_${slot}_time
+                      id: slot_${slot}_time_start
                       text: "--:--"
                       text_font: montserrat_bold_52
                       text_color: 0xF5F9FF
                   - label:
-                      id: slot_${slot}_date
+                      id: slot_${slot}_date_start
                       text: "-- ---"
                       text_font: montserrat_18
-                      text_color: 0xC8DAF7
+                      text_color: !lambda return id(slot_${slot}_accent_color);
             - obj:
-                id: slot_${slot}_analog_shell
+                id: slot_${slot}_digital_center
                 x: 0
-                y: 28
+                y: !lambda return (id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 34 : 0;
                 width: 100%
-                height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - 42;
-                hidden: !lambda return !id(slot_${slot}_visible) || !id(slot_${slot}_analogue);
+                height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - ((id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 48 : 12);
+                hidden: !lambda return !id(slot_${slot}_visible) || id(slot_${slot}_analogue) || id(slot_${slot}_align_mode) != 1;
+                bg_opa: TRANSP
+                border_width: 0
+                scrollable: false
+                layout:
+                  type: FLEX
+                  flex_flow: COLUMN
+                  flex_align_main: CENTER
+                  flex_align_cross: CENTER
+                  flex_align_track: CENTER
+                widgets:
+                  - label:
+                      id: slot_${slot}_time_center
+                      text: "--:--"
+                      text_font: montserrat_bold_52
+                      text_color: 0xF5F9FF
+                      text_align: CENTER
+                      width: 100%
+                  - label:
+                      id: slot_${slot}_date_center
+                      text: "-- ---"
+                      text_font: montserrat_18
+                      text_color: !lambda return id(slot_${slot}_accent_color);
+                      text_align: CENTER
+                      width: 100%
+            - obj:
+                id: slot_${slot}_digital_end
+                x: 0
+                y: !lambda return (id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 34 : 0;
+                width: 100%
+                height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - ((id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 48 : 12);
+                hidden: !lambda return !id(slot_${slot}_visible) || id(slot_${slot}_analogue) || id(slot_${slot}_align_mode) != 2;
+                bg_opa: TRANSP
+                border_width: 0
+                scrollable: false
+                layout:
+                  type: FLEX
+                  flex_flow: COLUMN
+                  flex_align_main: CENTER
+                  flex_align_cross: END
+                  flex_align_track: CENTER
+                widgets:
+                  - label:
+                      id: slot_${slot}_time_end
+                      text: "--:--"
+                      text_font: montserrat_bold_52
+                      text_color: 0xF5F9FF
+                      text_align: RIGHT
+                      width: 100%
+                  - label:
+                      id: slot_${slot}_date_end
+                      text: "-- ---"
+                      text_font: montserrat_18
+                      text_color: !lambda return id(slot_${slot}_accent_color);
+                      text_align: RIGHT
+                      width: 100%
+            - obj:
+                id: slot_${slot}_analog_shell_seconds
+                x: 0
+                y: !lambda return (id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 28 : 0;
+                width: 100%
+                height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - ((id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 42 : 10);
+                hidden: !lambda return !id(slot_${slot}_visible) || !id(slot_${slot}_analogue) || !id(slot_${slot}_show_seconds);
                 bg_opa: TRANSP
                 border_width: 0
                 pad_all: 0
                 scrollable: false
                 widgets:
                   - meter:
-                      id: slot_${slot}_analog
+                      id: slot_${slot}_analog_seconds
                       width: 100%
                       height: 100%
                       align: CENTER
                       bg_opa: TRANSP
                       border_width: 0
                       pad_all: 0
-                      text_color: 0xDCEBFF
+                      text_color: !lambda return id(slot_${slot}_accent_color);
                       scales:
                         - range_from: 0
                           range_to: 60
@@ -313,12 +451,12 @@ function buildWidgetCard(slot) {
                             width: 1
                             count: 61
                             length: 10
-                            color: 0xC8DAF7
+                            color: !lambda return id(slot_${slot}_accent_color);
                           indicators:
                             - line:
                                 id: slot_${slot}_minute_hand
                                 width: 4
-                                color: 0x8FDCFF
+                                color: !lambda return id(slot_${slot}_accent_color);
                                 length: 78%
                                 rounded: true
                                 value: 0
@@ -342,7 +480,7 @@ function buildWidgetCard(slot) {
                               stride: 1
                               width: 3
                               length: 16
-                              color: 0xF5F9FF
+                              color: !lambda return id(slot_${slot}_border_color);
                               label_gap: 0
                         - range_from: 0
                           range_to: 720
@@ -353,6 +491,74 @@ function buildWidgetCard(slot) {
                           indicators:
                             - line:
                                 id: slot_${slot}_hour_hand
+                                width: 6
+                                color: 0xF7FBFF
+                                length: 56%
+                                rounded: true
+                                value: 0
+            - obj:
+                id: slot_${slot}_analog_shell_plain
+                x: 0
+                y: !lambda return (id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 28 : 0;
+                width: 100%
+                height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - ((id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 42 : 10);
+                hidden: !lambda return !id(slot_${slot}_visible) || !id(slot_${slot}_analogue) || id(slot_${slot}_show_seconds);
+                bg_opa: TRANSP
+                border_width: 0
+                pad_all: 0
+                scrollable: false
+                widgets:
+                  - meter:
+                      id: slot_${slot}_analog_plain
+                      width: 100%
+                      height: 100%
+                      align: CENTER
+                      bg_opa: TRANSP
+                      border_width: 0
+                      pad_all: 0
+                      text_color: !lambda return id(slot_${slot}_accent_color);
+                      scales:
+                        - range_from: 0
+                          range_to: 60
+                          angle_range: 360
+                          rotation: 270
+                          ticks:
+                            width: 1
+                            count: 61
+                            length: 10
+                            color: !lambda return id(slot_${slot}_accent_color);
+                          indicators:
+                            - line:
+                                id: slot_${slot}_minute_hand_plain
+                                width: 4
+                                color: !lambda return id(slot_${slot}_accent_color);
+                                length: 78%
+                                rounded: true
+                                value: 0
+                        - range_from: 1
+                          range_to: 12
+                          angle_range: 330
+                          rotation: 300
+                          ticks:
+                            width: 1
+                            count: 12
+                            length: 1
+                            color: 0x000000
+                            major:
+                              stride: 1
+                              width: 3
+                              length: 16
+                              color: !lambda return id(slot_${slot}_border_color);
+                              label_gap: 0
+                        - range_from: 0
+                          range_to: 720
+                          angle_range: 360
+                          rotation: 270
+                          ticks:
+                            count: 2
+                          indicators:
+                            - line:
+                                id: slot_${slot}_hour_hand_plain
                                 width: 6
                                 color: 0xF7FBFF
                                 length: 56%
@@ -385,6 +591,18 @@ function buildEsphomeYaml() {
     type: bool
     restore_value: no
     initial_value: "false"
+  - id: slot_${slot}_title_visible
+    type: bool
+    restore_value: no
+    initial_value: "true"
+  - id: slot_${slot}_border_visible
+    type: bool
+    restore_value: no
+    initial_value: "true"
+  - id: slot_${slot}_align_mode
+    type: int
+    restore_value: no
+    initial_value: "0"
   - id: slot_${slot}_x
     type: int
     restore_value: no
@@ -404,7 +622,19 @@ function buildEsphomeYaml() {
   - id: slot_${slot}_title_text
     type: std::string
     restore_value: no
-    initial_value: '"Clock"'`;
+    initial_value: '"Clock"'
+  - id: slot_${slot}_bg_color
+    type: uint32_t
+    restore_value: no
+    initial_value: "0x12315A"
+  - id: slot_${slot}_border_color
+    type: uint32_t
+    restore_value: no
+    initial_value: "0x6ED9FF"
+  - id: slot_${slot}_accent_color
+    type: uint32_t
+    restore_value: no
+    initial_value: "0x9FC7FF"`;
   }).join("\n");
 
   const refreshList = Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => {
@@ -412,13 +642,25 @@ function buildEsphomeYaml() {
     return `      - lvgl.widget.refresh:
           id: slot_${slot}_card
       - lvgl.widget.refresh:
-          id: slot_${slot}_title
+          id: slot_${slot}_title_start
       - lvgl.widget.refresh:
-          id: slot_${slot}_digital
+          id: slot_${slot}_title_center
       - lvgl.widget.refresh:
-          id: slot_${slot}_analog_shell
+          id: slot_${slot}_title_end
       - lvgl.widget.refresh:
-          id: slot_${slot}_analog`;
+          id: slot_${slot}_digital_start
+      - lvgl.widget.refresh:
+          id: slot_${slot}_digital_center
+      - lvgl.widget.refresh:
+          id: slot_${slot}_digital_end
+      - lvgl.widget.refresh:
+          id: slot_${slot}_analog_shell_seconds
+      - lvgl.widget.refresh:
+          id: slot_${slot}_analog_shell_plain
+      - lvgl.widget.refresh:
+          id: slot_${slot}_analog_seconds
+      - lvgl.widget.refresh:
+          id: slot_${slot}_analog_plain`;
   }).join("\n");
 
   const widgetBlocks = indentBlock(
@@ -433,7 +675,7 @@ function buildEsphomeYaml() {
             lambda: return id(slot_${slot}_visible) && !id(slot_${slot}_analogue);
           then:
             - lvgl.label.update:
-                id: slot_${slot}_time
+                id: slot_${slot}_time_start
                 text: !lambda |-
                   auto now = id(ha_time).now();
                   if (!now.is_valid()) return std::string("--:--");
@@ -441,7 +683,39 @@ function buildEsphomeYaml() {
                   now.strftime(buffer, sizeof(buffer), id(slot_${slot}_show_seconds) ? "%H:%M:%S" : "%H:%M");
                   return std::string(buffer);
             - lvgl.label.update:
-                id: slot_${slot}_date
+                id: slot_${slot}_date_start
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("-- ---");
+                  char buffer[24];
+                  now.strftime(buffer, sizeof(buffer), "%a %d %b");
+                  return std::string(buffer);
+            - lvgl.label.update:
+                id: slot_${slot}_time_center
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("--:--");
+                  char buffer[16];
+                  now.strftime(buffer, sizeof(buffer), id(slot_${slot}_show_seconds) ? "%H:%M:%S" : "%H:%M");
+                  return std::string(buffer);
+            - lvgl.label.update:
+                id: slot_${slot}_date_center
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("-- ---");
+                  char buffer[24];
+                  now.strftime(buffer, sizeof(buffer), "%a %d %b");
+                  return std::string(buffer);
+            - lvgl.label.update:
+                id: slot_${slot}_time_end
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("--:--");
+                  char buffer[16];
+                  now.strftime(buffer, sizeof(buffer), id(slot_${slot}_show_seconds) ? "%H:%M:%S" : "%H:%M");
+                  return std::string(buffer);
+            - lvgl.label.update:
+                id: slot_${slot}_date_end
                 text: !lambda |-
                   auto now = id(ha_time).now();
                   if (!now.is_valid()) return std::string("-- ---");
@@ -473,7 +747,19 @@ function buildEsphomeYaml() {
                 value: !lambda |-
                   auto now = id(ha_time).now();
                   if (!now.is_valid()) return 0;
-                  return now.second;`;
+                  return now.second;
+            - lvgl.indicator.update:
+                id: slot_${slot}_minute_hand_plain
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.minute;
+            - lvgl.indicator.update:
+                id: slot_${slot}_hour_hand_plain
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return (now.hour % 12) * 60 + now.minute;`;
   }).join("\n");
 
   return `substitutions:
@@ -619,7 +905,7 @@ script:
   - id: apply_live_layout
     then:
       - lambda: |-
-          auto parse_slot = [](const std::string &payload, bool &visible, bool &analogue, std::string &title, int &x, int &y, int &w, int &h, bool &show_seconds) {
+          auto parse_slot = [](const std::string &payload, bool &visible, bool &analogue, std::string &title, int &x, int &y, int &w, int &h, bool &show_seconds, bool &title_visible, bool &border_visible, int &align_mode, uint32_t &bg_color, uint32_t &border_color, uint32_t &accent_color) {
             visible = false;
             analogue = false;
             title = "Clock";
@@ -628,6 +914,12 @@ script:
             w = 2;
             h = 2;
             show_seconds = false;
+            title_visible = true;
+            border_visible = true;
+            align_mode = 0;
+            bg_color = 0x12315A;
+            border_color = 0x6ED9FF;
+            accent_color = 0x9FC7FF;
             if (payload.empty()) {
               return;
             }
@@ -644,12 +936,12 @@ script:
               start = pos + 1;
             }
 
-            if (parts.size() < 7) {
+            if (parts.size() < 8) {
               return;
             }
 
-            visible = true;
-            analogue = parts[0] == "analogue";
+            visible = parts[0] == "clock";
+            analogue = visible && parts[6] == "analogue";
             title = parts[1];
             x = std::max(0, std::min(${SCREEN.columns - 2}, atoi(parts[2].c_str())));
             y = std::max(0, std::min(${SCREEN.rows - 2}, atoi(parts[3].c_str())));
@@ -657,17 +949,26 @@ script:
             h = std::max(2, std::min(${SCREEN.rows}, atoi(parts[5].c_str())));
             if (x + w > ${SCREEN.columns}) x = ${SCREEN.columns} - w;
             if (y + h > ${SCREEN.rows}) y = ${SCREEN.rows} - h;
-            show_seconds = atoi(parts[6].c_str()) == 1;
+            show_seconds = atoi(parts[7].c_str()) == 1;
+            if (parts.size() >= 9) title_visible = atoi(parts[8].c_str()) == 1;
+            if (parts.size() >= 10) border_visible = atoi(parts[9].c_str()) == 1;
+            if (parts.size() >= 11) {
+              if (parts[10] == "center") align_mode = 1;
+              else if (parts[10] == "end") align_mode = 2;
+            }
+            if (parts.size() >= 12) bg_color = strtoul(parts[11].c_str(), nullptr, 16);
+            if (parts.size() >= 13) border_color = strtoul(parts[12].c_str(), nullptr, 16);
+            if (parts.size() >= 14) accent_color = strtoul(parts[13].c_str(), nullptr, 16);
           };
 
-          parse_slot(id(slot_1_payload).state, id(slot_1_visible), id(slot_1_analogue), id(slot_1_title_text), id(slot_1_x), id(slot_1_y), id(slot_1_w), id(slot_1_h), id(slot_1_show_seconds));
-          parse_slot(id(slot_2_payload).state, id(slot_2_visible), id(slot_2_analogue), id(slot_2_title_text), id(slot_2_x), id(slot_2_y), id(slot_2_w), id(slot_2_h), id(slot_2_show_seconds));
-          parse_slot(id(slot_3_payload).state, id(slot_3_visible), id(slot_3_analogue), id(slot_3_title_text), id(slot_3_x), id(slot_3_y), id(slot_3_w), id(slot_3_h), id(slot_3_show_seconds));
-          parse_slot(id(slot_4_payload).state, id(slot_4_visible), id(slot_4_analogue), id(slot_4_title_text), id(slot_4_x), id(slot_4_y), id(slot_4_w), id(slot_4_h), id(slot_4_show_seconds));
-          parse_slot(id(slot_5_payload).state, id(slot_5_visible), id(slot_5_analogue), id(slot_5_title_text), id(slot_5_x), id(slot_5_y), id(slot_5_w), id(slot_5_h), id(slot_5_show_seconds));
-          parse_slot(id(slot_6_payload).state, id(slot_6_visible), id(slot_6_analogue), id(slot_6_title_text), id(slot_6_x), id(slot_6_y), id(slot_6_w), id(slot_6_h), id(slot_6_show_seconds));
-          parse_slot(id(slot_7_payload).state, id(slot_7_visible), id(slot_7_analogue), id(slot_7_title_text), id(slot_7_x), id(slot_7_y), id(slot_7_w), id(slot_7_h), id(slot_7_show_seconds));
-          parse_slot(id(slot_8_payload).state, id(slot_8_visible), id(slot_8_analogue), id(slot_8_title_text), id(slot_8_x), id(slot_8_y), id(slot_8_w), id(slot_8_h), id(slot_8_show_seconds));
+          parse_slot(id(slot_1_payload).state, id(slot_1_visible), id(slot_1_analogue), id(slot_1_title_text), id(slot_1_x), id(slot_1_y), id(slot_1_w), id(slot_1_h), id(slot_1_show_seconds), id(slot_1_title_visible), id(slot_1_border_visible), id(slot_1_align_mode), id(slot_1_bg_color), id(slot_1_border_color), id(slot_1_accent_color));
+          parse_slot(id(slot_2_payload).state, id(slot_2_visible), id(slot_2_analogue), id(slot_2_title_text), id(slot_2_x), id(slot_2_y), id(slot_2_w), id(slot_2_h), id(slot_2_show_seconds), id(slot_2_title_visible), id(slot_2_border_visible), id(slot_2_align_mode), id(slot_2_bg_color), id(slot_2_border_color), id(slot_2_accent_color));
+          parse_slot(id(slot_3_payload).state, id(slot_3_visible), id(slot_3_analogue), id(slot_3_title_text), id(slot_3_x), id(slot_3_y), id(slot_3_w), id(slot_3_h), id(slot_3_show_seconds), id(slot_3_title_visible), id(slot_3_border_visible), id(slot_3_align_mode), id(slot_3_bg_color), id(slot_3_border_color), id(slot_3_accent_color));
+          parse_slot(id(slot_4_payload).state, id(slot_4_visible), id(slot_4_analogue), id(slot_4_title_text), id(slot_4_x), id(slot_4_y), id(slot_4_w), id(slot_4_h), id(slot_4_show_seconds), id(slot_4_title_visible), id(slot_4_border_visible), id(slot_4_align_mode), id(slot_4_bg_color), id(slot_4_border_color), id(slot_4_accent_color));
+          parse_slot(id(slot_5_payload).state, id(slot_5_visible), id(slot_5_analogue), id(slot_5_title_text), id(slot_5_x), id(slot_5_y), id(slot_5_w), id(slot_5_h), id(slot_5_show_seconds), id(slot_5_title_visible), id(slot_5_border_visible), id(slot_5_align_mode), id(slot_5_bg_color), id(slot_5_border_color), id(slot_5_accent_color));
+          parse_slot(id(slot_6_payload).state, id(slot_6_visible), id(slot_6_analogue), id(slot_6_title_text), id(slot_6_x), id(slot_6_y), id(slot_6_w), id(slot_6_h), id(slot_6_show_seconds), id(slot_6_title_visible), id(slot_6_border_visible), id(slot_6_align_mode), id(slot_6_bg_color), id(slot_6_border_color), id(slot_6_accent_color));
+          parse_slot(id(slot_7_payload).state, id(slot_7_visible), id(slot_7_analogue), id(slot_7_title_text), id(slot_7_x), id(slot_7_y), id(slot_7_w), id(slot_7_h), id(slot_7_show_seconds), id(slot_7_title_visible), id(slot_7_border_visible), id(slot_7_align_mode), id(slot_7_bg_color), id(slot_7_border_color), id(slot_7_accent_color));
+          parse_slot(id(slot_8_payload).state, id(slot_8_visible), id(slot_8_analogue), id(slot_8_title_text), id(slot_8_x), id(slot_8_y), id(slot_8_w), id(slot_8_h), id(slot_8_show_seconds), id(slot_8_title_visible), id(slot_8_border_visible), id(slot_8_align_mode), id(slot_8_bg_color), id(slot_8_border_color), id(slot_8_accent_color));
 ${refreshList}
       - script.execute: sync_clock_widgets
 
