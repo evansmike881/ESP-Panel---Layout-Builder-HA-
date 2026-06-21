@@ -81,6 +81,14 @@ function yamlString(value) {
   return `"${String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
+function indentBlock(text, spaces) {
+  const prefix = " ".repeat(spaces);
+  return text
+    .split("\n")
+    .map((line) => (line.length > 0 ? `${prefix}${line}` : line))
+    .join("\n");
+}
+
 function slotIndex(index) {
   return index + 1;
 }
@@ -220,7 +228,7 @@ ${helperBlocks}
 }
 
 function buildWidgetCard(slot) {
-  return `      - obj:
+  return `- obj:
           id: slot_${slot}_card
           x: !lambda return id(slot_${slot}_x) * ${CELL_SIZE};
           y: !lambda return id(slot_${slot}_y) * ${CELL_SIZE};
@@ -238,6 +246,7 @@ function buildWidgetCard(slot) {
           pad_left: 16
           pad_right: 16
           scrollable: false
+          hidden: true
           widgets:
             - label:
                 id: slot_${slot}_title
@@ -253,7 +262,7 @@ function buildWidgetCard(slot) {
                 y: 34
                 width: 100%
                 height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - 48;
-                hidden: !lambda return !id(slot_${slot}_visible) || id(slot_${slot}_analogue);
+                hidden: true
                 bg_opa: TRANSP
                 border_width: 0
                 scrollable: false
@@ -274,71 +283,81 @@ function buildWidgetCard(slot) {
                       text: "-- ---"
                       text_font: montserrat_18
                       text_color: 0xC8DAF7
-            - meter:
-                id: slot_${slot}_analog
+            - obj:
+                id: slot_${slot}_analog_shell
                 x: 0
                 y: 28
                 width: 100%
                 height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - 42;
-                hidden: !lambda return !id(slot_${slot}_visible) || !id(slot_${slot}_analogue);
+                hidden: true
                 bg_opa: TRANSP
                 border_width: 0
                 pad_all: 0
-                text_color: 0xDCEBFF
-                scales:
-                  - range_from: 0
-                    range_to: 60
-                    angle_range: 360
-                    rotation: 270
-                    ticks:
-                      width: 1
-                      count: 61
-                      length: 10
-                      color: 0xC8DAF7
-                    indicators:
-                      - line:
-                          id: slot_${slot}_minute_hand
-                          width: 4
-                          color: 0x8FDCFF
-                          length: 78%
-                          rounded: true
-                          value: 0
-                      - line:
-                          id: slot_${slot}_second_hand
-                          width: 2
-                          color: 0xFFD36B
-                          length: 86%
-                          rounded: true
-                          value: 0
-                  - range_from: 1
-                    range_to: 12
-                    angle_range: 330
-                    rotation: 300
-                    ticks:
-                      width: 1
-                      count: 12
-                      length: 1
-                      color: 0x000000
-                      major:
-                        stride: 1
-                        width: 3
-                        length: 16
-                        color: 0xF5F9FF
-                        label_gap: 0
-                  - range_from: 0
-                    range_to: 720
-                    angle_range: 360
-                    rotation: 270
-                    ticks:
-                      count: 2
-                    indicators:
-                      - line:
-                          id: slot_${slot}_hour_hand
-                          width: 6
-                          color: 0xF7FBFF
-                          length: 56%
-                          rounded: true
-                          value: 0`;
+                scrollable: false
+                widgets:
+                  - meter:
+                      id: slot_${slot}_analog
+                      width: 100%
+                      height: 100%
+                      align: CENTER
+                      bg_opa: TRANSP
+                      border_width: 0
+                      pad_all: 0
+                      text_color: 0xDCEBFF
+                      scales:
+                        - range_from: 0
+                          range_to: 60
+                          angle_range: 360
+                          rotation: 270
+                          ticks:
+                            width: 1
+                            count: 61
+                            length: 10
+                            color: 0xC8DAF7
+                          indicators:
+                            - line:
+                                id: slot_${slot}_minute_hand
+                                width: 4
+                                color: 0x8FDCFF
+                                length: 78%
+                                rounded: true
+                                value: 0
+                            - line:
+                                id: slot_${slot}_second_hand
+                                width: 2
+                                color: 0xFFD36B
+                                length: 86%
+                                rounded: true
+                                value: 0
+                        - range_from: 1
+                          range_to: 12
+                          angle_range: 330
+                          rotation: 300
+                          ticks:
+                            width: 1
+                            count: 12
+                            length: 1
+                            color: 0x000000
+                            major:
+                              stride: 1
+                              width: 3
+                              length: 16
+                              color: 0xF5F9FF
+                              label_gap: 0
+                        - range_from: 0
+                          range_to: 720
+                          angle_range: 360
+                          rotation: 270
+                          ticks:
+                            count: 2
+                          indicators:
+                            - line:
+                              id: slot_${slot}_hour_hand
+                                width: 6
+                                color: 0xF7FBFF
+                                length: 56%
+                                rounded: true
+                                value: 0`;
 }
 
 function buildEsphomeYaml() {
@@ -390,13 +409,18 @@ function buildEsphomeYaml() {
 
   const refreshList = Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => {
     const slot = slotIndex(index);
-    return `              - slot_${slot}_card
-              - slot_${slot}_title
-              - slot_${slot}_digital
-              - slot_${slot}_analog`;
+    return `- slot_${slot}_card
+- slot_${slot}_title
+- slot_${slot}_digital
+- slot_${slot}_analog_shell
+- slot_${slot}_analog`;
   }).join("\n");
 
-  const widgetBlocks = Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => buildWidgetCard(slotIndex(index))).join("\n");
+  const widgetBlocks = indentBlock(
+    Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => buildWidgetCard(slotIndex(index))).join("\n"),
+    14
+  );
+  const refreshIds = indentBlock(refreshList, 12);
 
   const digitalUpdates = Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => {
     const slot = slotIndex(index);
@@ -642,7 +666,7 @@ script:
           parse_slot(id(slot_8_payload).state, id(slot_8_visible), id(slot_8_analogue), id(slot_8_title_text), id(slot_8_x), id(slot_8_y), id(slot_8_w), id(slot_8_h), id(slot_8_show_seconds));
       - lvgl.widget.refresh:
           id:
-${refreshList}
+${refreshIds}
       - script.execute: sync_clock_widgets
 
   - id: sync_clock_widgets
