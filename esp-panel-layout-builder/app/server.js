@@ -408,18 +408,22 @@ function buildEsphomeYaml() {
 
   const refreshList = Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => {
     const slot = slotIndex(index);
-    return `- slot_${slot}_card
-- slot_${slot}_title
-- slot_${slot}_digital
-- slot_${slot}_analog_shell
-- slot_${slot}_analog`;
+    return `      - lvgl.widget.refresh:
+          id: slot_${slot}_card
+      - lvgl.widget.refresh:
+          id: slot_${slot}_title
+      - lvgl.widget.refresh:
+          id: slot_${slot}_digital
+      - lvgl.widget.refresh:
+          id: slot_${slot}_analog_shell
+      - lvgl.widget.refresh:
+          id: slot_${slot}_analog`;
   }).join("\n");
 
   const widgetBlocks = indentBlock(
     Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => buildWidgetCard(slotIndex(index))).join("\n"),
     14
   );
-  const refreshIds = indentBlock(refreshList, 12);
 
   const digitalUpdates = Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => {
     const slot = slotIndex(index);
@@ -663,9 +667,7 @@ script:
           parse_slot(id(slot_6_payload).state, id(slot_6_visible), id(slot_6_analogue), id(slot_6_title_text), id(slot_6_x), id(slot_6_y), id(slot_6_w), id(slot_6_h), id(slot_6_show_seconds));
           parse_slot(id(slot_7_payload).state, id(slot_7_visible), id(slot_7_analogue), id(slot_7_title_text), id(slot_7_x), id(slot_7_y), id(slot_7_w), id(slot_7_h), id(slot_7_show_seconds));
           parse_slot(id(slot_8_payload).state, id(slot_8_visible), id(slot_8_analogue), id(slot_8_title_text), id(slot_8_x), id(slot_8_y), id(slot_8_w), id(slot_8_h), id(slot_8_show_seconds));
-      - lvgl.widget.refresh:
-          id:
-${refreshIds}
+${refreshList}
       - script.execute: sync_clock_widgets
 
   - id: sync_clock_widgets
