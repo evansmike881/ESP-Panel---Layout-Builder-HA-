@@ -1,0 +1,1967 @@
+substitutions:
+  screen_width: "480"
+  screen_height: "480"
+
+esphome:
+  name: household-panel
+  friendly_name: Household Panel
+  min_version: 2026.4.0
+  on_boot:
+    priority: -200
+    then:
+      - delay: 1s
+      - light.turn_on:
+          id: display_backlight
+          brightness: 85%
+      - script.execute: apply_live_layout
+      - script.execute: sync_clock_widgets
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    advanced:
+      execute_from_psram: true
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+preferences:
+  flash_write_interval: 5min
+
+logger:
+  level: WARN
+
+api:
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  on_connect:
+    then:
+      - delay: 1s
+      - script.execute: apply_live_layout
+      - script.execute: sync_clock_widgets
+
+time:
+  - platform: homeassistant
+    id: ha_time
+    on_time_sync:
+      then:
+        - script.execute: apply_live_layout
+        - script.execute: sync_clock_widgets
+    on_time:
+      - seconds: /1
+        then:
+          - script.execute: sync_clock_widgets
+
+output:
+  - platform: ledc
+    pin: GPIO38
+    id: gpio_backlight_pwm
+    frequency: 100Hz
+
+light:
+  - platform: monochromatic
+    output: gpio_backlight_pwm
+    name: Display Backlight
+    id: display_backlight
+    restore_mode: ALWAYS_ON
+
+i2c:
+  - id: bus_a
+    sda: GPIO19
+    scl:
+      number: GPIO45
+      ignore_strapping_warning: true
+
+touchscreen:
+  platform: gt911
+  id: panel_touch
+  display: my_display
+  i2c_id: bus_a
+  transform:
+    mirror_x: true
+    mirror_y: true
+    swap_xy: false
+
+spi:
+  - id: lcd_spi
+    clk_pin: GPIO48
+    mosi_pin: GPIO47
+
+display:
+  - platform: mipi_rgb
+    id: my_display
+    model: GUITION-4848S040
+    auto_clear_enabled: false
+    update_interval: never
+    dimensions:
+      width: 480
+      height: 480
+
+font:
+  - file:
+      type: gfonts
+      family: Montserrat
+      weight: 400
+    id: montserrat_18
+    size: 18
+    bpp: 4
+  - file:
+      type: gfonts
+      family: Montserrat
+      weight: 700
+    id: montserrat_bold_14
+    size: 14
+    bpp: 4
+  - file:
+      type: gfonts
+      family: Montserrat
+      weight: 700
+    id: montserrat_bold_36
+    size: 36
+    bpp: 4
+  - file:
+      type: gfonts
+      family: Montserrat
+      weight: 700
+    id: montserrat_bold_52
+    size: 52
+    bpp: 4
+
+text_sensor:
+  - platform: homeassistant
+    id: slot_1_payload
+    entity_id: input_text.esp_panel_widget_slot_1
+    on_value:
+      then:
+        - script.execute: apply_live_layout
+  - platform: homeassistant
+    id: slot_2_payload
+    entity_id: input_text.esp_panel_widget_slot_2
+    on_value:
+      then:
+        - script.execute: apply_live_layout
+  - platform: homeassistant
+    id: slot_3_payload
+    entity_id: input_text.esp_panel_widget_slot_3
+    on_value:
+      then:
+        - script.execute: apply_live_layout
+  - platform: homeassistant
+    id: slot_4_payload
+    entity_id: input_text.esp_panel_widget_slot_4
+    on_value:
+      then:
+        - script.execute: apply_live_layout
+  - platform: homeassistant
+    id: slot_5_payload
+    entity_id: input_text.esp_panel_widget_slot_5
+    on_value:
+      then:
+        - script.execute: apply_live_layout
+  - platform: homeassistant
+    id: slot_6_payload
+    entity_id: input_text.esp_panel_widget_slot_6
+    on_value:
+      then:
+        - script.execute: apply_live_layout
+  - platform: homeassistant
+    id: slot_7_payload
+    entity_id: input_text.esp_panel_widget_slot_7
+    on_value:
+      then:
+        - script.execute: apply_live_layout
+  - platform: homeassistant
+    id: slot_8_payload
+    entity_id: input_text.esp_panel_widget_slot_8
+    on_value:
+      then:
+        - script.execute: apply_live_layout
+
+globals:
+  - id: slot_1_visible
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_1_analogue
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_1_show_seconds
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_1_x
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_1_y
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_1_w
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_1_h
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_1_title_text
+    type: std::string
+    restore_value: no
+    initial_value: '"Clock"'
+  - id: slot_2_visible
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_2_analogue
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_2_show_seconds
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_2_x
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_2_y
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_2_w
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_2_h
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_2_title_text
+    type: std::string
+    restore_value: no
+    initial_value: '"Clock"'
+  - id: slot_3_visible
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_3_analogue
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_3_show_seconds
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_3_x
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_3_y
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_3_w
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_3_h
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_3_title_text
+    type: std::string
+    restore_value: no
+    initial_value: '"Clock"'
+  - id: slot_4_visible
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_4_analogue
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_4_show_seconds
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_4_x
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_4_y
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_4_w
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_4_h
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_4_title_text
+    type: std::string
+    restore_value: no
+    initial_value: '"Clock"'
+  - id: slot_5_visible
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_5_analogue
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_5_show_seconds
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_5_x
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_5_y
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_5_w
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_5_h
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_5_title_text
+    type: std::string
+    restore_value: no
+    initial_value: '"Clock"'
+  - id: slot_6_visible
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_6_analogue
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_6_show_seconds
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_6_x
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_6_y
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_6_w
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_6_h
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_6_title_text
+    type: std::string
+    restore_value: no
+    initial_value: '"Clock"'
+  - id: slot_7_visible
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_7_analogue
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_7_show_seconds
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_7_x
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_7_y
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_7_w
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_7_h
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_7_title_text
+    type: std::string
+    restore_value: no
+    initial_value: '"Clock"'
+  - id: slot_8_visible
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_8_analogue
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_8_show_seconds
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: slot_8_x
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_8_y
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: slot_8_w
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_8_h
+    type: int
+    restore_value: no
+    initial_value: "2"
+  - id: slot_8_title_text
+    type: std::string
+    restore_value: no
+    initial_value: '"Clock"'
+
+script:
+  - id: apply_live_layout
+    then:
+      - lambda: |-
+          auto parse_slot = [](const std::string &payload, bool &visible, bool &analogue, std::string &title, int &x, int &y, int &w, int &h, bool &show_seconds) {
+            visible = false;
+            analogue = false;
+            title = "Clock";
+            x = 0;
+            y = 0;
+            w = 2;
+            h = 2;
+            show_seconds = false;
+            if (payload.empty()) {
+              return;
+            }
+
+            std::vector<std::string> parts;
+            size_t start = 0;
+            while (true) {
+              size_t pos = payload.find('|', start);
+              if (pos == std::string::npos) {
+                parts.push_back(payload.substr(start));
+                break;
+              }
+              parts.push_back(payload.substr(start, pos - start));
+              start = pos + 1;
+            }
+
+            if (parts.size() < 8) {
+              return;
+            }
+
+            visible = parts[0] == "clock";
+            analogue = visible && parts[6] == "analogue";
+            title = parts[1];
+            x = std::max(0, std::min(4, atoi(parts[2].c_str())));
+            y = std::max(0, std::min(4, atoi(parts[3].c_str())));
+            w = std::max(2, std::min(6, atoi(parts[4].c_str())));
+            h = std::max(2, std::min(6, atoi(parts[5].c_str())));
+            if (x + w > 6) x = 6 - w;
+            if (y + h > 6) y = 6 - h;
+            show_seconds = atoi(parts[7].c_str()) == 1;
+          };
+
+          parse_slot(id(slot_1_payload).state, id(slot_1_visible), id(slot_1_analogue), id(slot_1_title_text), id(slot_1_x), id(slot_1_y), id(slot_1_w), id(slot_1_h), id(slot_1_show_seconds));
+          parse_slot(id(slot_2_payload).state, id(slot_2_visible), id(slot_2_analogue), id(slot_2_title_text), id(slot_2_x), id(slot_2_y), id(slot_2_w), id(slot_2_h), id(slot_2_show_seconds));
+          parse_slot(id(slot_3_payload).state, id(slot_3_visible), id(slot_3_analogue), id(slot_3_title_text), id(slot_3_x), id(slot_3_y), id(slot_3_w), id(slot_3_h), id(slot_3_show_seconds));
+          parse_slot(id(slot_4_payload).state, id(slot_4_visible), id(slot_4_analogue), id(slot_4_title_text), id(slot_4_x), id(slot_4_y), id(slot_4_w), id(slot_4_h), id(slot_4_show_seconds));
+          parse_slot(id(slot_5_payload).state, id(slot_5_visible), id(slot_5_analogue), id(slot_5_title_text), id(slot_5_x), id(slot_5_y), id(slot_5_w), id(slot_5_h), id(slot_5_show_seconds));
+          parse_slot(id(slot_6_payload).state, id(slot_6_visible), id(slot_6_analogue), id(slot_6_title_text), id(slot_6_x), id(slot_6_y), id(slot_6_w), id(slot_6_h), id(slot_6_show_seconds));
+          parse_slot(id(slot_7_payload).state, id(slot_7_visible), id(slot_7_analogue), id(slot_7_title_text), id(slot_7_x), id(slot_7_y), id(slot_7_w), id(slot_7_h), id(slot_7_show_seconds));
+          parse_slot(id(slot_8_payload).state, id(slot_8_visible), id(slot_8_analogue), id(slot_8_title_text), id(slot_8_x), id(slot_8_y), id(slot_8_w), id(slot_8_h), id(slot_8_show_seconds));
+      - lvgl.widget.refresh:
+          id: slot_1_card
+      - lvgl.widget.refresh:
+          id: slot_1_title
+      - lvgl.widget.refresh:
+          id: slot_1_digital
+      - lvgl.widget.refresh:
+          id: slot_1_analog_shell
+      - lvgl.widget.refresh:
+          id: slot_2_card
+      - lvgl.widget.refresh:
+          id: slot_2_title
+      - lvgl.widget.refresh:
+          id: slot_2_digital
+      - lvgl.widget.refresh:
+          id: slot_2_analog_shell
+      - lvgl.widget.refresh:
+          id: slot_3_card
+      - lvgl.widget.refresh:
+          id: slot_3_title
+      - lvgl.widget.refresh:
+          id: slot_3_digital
+      - lvgl.widget.refresh:
+          id: slot_3_analog_shell
+      - lvgl.widget.refresh:
+          id: slot_4_card
+      - lvgl.widget.refresh:
+          id: slot_4_title
+      - lvgl.widget.refresh:
+          id: slot_4_digital
+      - lvgl.widget.refresh:
+          id: slot_4_analog_shell
+      - lvgl.widget.refresh:
+          id: slot_5_card
+      - lvgl.widget.refresh:
+          id: slot_5_title
+      - lvgl.widget.refresh:
+          id: slot_5_digital
+      - lvgl.widget.refresh:
+          id: slot_5_analog_shell
+      - lvgl.widget.refresh:
+          id: slot_6_card
+      - lvgl.widget.refresh:
+          id: slot_6_title
+      - lvgl.widget.refresh:
+          id: slot_6_digital
+      - lvgl.widget.refresh:
+          id: slot_6_analog_shell
+      - lvgl.widget.refresh:
+          id: slot_7_card
+      - lvgl.widget.refresh:
+          id: slot_7_title
+      - lvgl.widget.refresh:
+          id: slot_7_digital
+      - lvgl.widget.refresh:
+          id: slot_7_analog_shell
+      - lvgl.widget.refresh:
+          id: slot_8_card
+      - lvgl.widget.refresh:
+          id: slot_8_title
+      - lvgl.widget.refresh:
+          id: slot_8_digital
+      - lvgl.widget.refresh:
+          id: slot_8_analog_shell
+      - script.execute: sync_clock_widgets
+
+  - id: sync_clock_widgets
+    then:
+      - if:
+          condition:
+            lambda: return id(slot_1_visible) && !id(slot_1_analogue);
+          then:
+            - lvgl.label.update:
+                id: slot_1_time
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("--:--");
+                  char buffer[16];
+                  now.strftime(buffer, sizeof(buffer), id(slot_1_show_seconds) ? "%H:%M:%S" : "%H:%M");
+                  return std::string(buffer);
+            - lvgl.label.update:
+                id: slot_1_date
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("-- ---");
+                  char buffer[24];
+                  now.strftime(buffer, sizeof(buffer), "%a %d %b");
+                  return std::string(buffer);
+      - if:
+          condition:
+            lambda: return id(slot_1_visible) && id(slot_1_analogue);
+          then:
+            - lvgl.indicator.update:
+                id: slot_1_minute_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.minute;
+            - lvgl.indicator.update:
+                id: slot_1_hour_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return (now.hour % 12) * 60 + now.minute;
+            - lvgl.indicator.update:
+                id: slot_1_second_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.second;
+      - if:
+          condition:
+            lambda: return id(slot_2_visible) && !id(slot_2_analogue);
+          then:
+            - lvgl.label.update:
+                id: slot_2_time
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("--:--");
+                  char buffer[16];
+                  now.strftime(buffer, sizeof(buffer), id(slot_2_show_seconds) ? "%H:%M:%S" : "%H:%M");
+                  return std::string(buffer);
+            - lvgl.label.update:
+                id: slot_2_date
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("-- ---");
+                  char buffer[24];
+                  now.strftime(buffer, sizeof(buffer), "%a %d %b");
+                  return std::string(buffer);
+      - if:
+          condition:
+            lambda: return id(slot_2_visible) && id(slot_2_analogue);
+          then:
+            - lvgl.indicator.update:
+                id: slot_2_minute_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.minute;
+            - lvgl.indicator.update:
+                id: slot_2_hour_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return (now.hour % 12) * 60 + now.minute;
+            - lvgl.indicator.update:
+                id: slot_2_second_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.second;
+      - if:
+          condition:
+            lambda: return id(slot_3_visible) && !id(slot_3_analogue);
+          then:
+            - lvgl.label.update:
+                id: slot_3_time
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("--:--");
+                  char buffer[16];
+                  now.strftime(buffer, sizeof(buffer), id(slot_3_show_seconds) ? "%H:%M:%S" : "%H:%M");
+                  return std::string(buffer);
+            - lvgl.label.update:
+                id: slot_3_date
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("-- ---");
+                  char buffer[24];
+                  now.strftime(buffer, sizeof(buffer), "%a %d %b");
+                  return std::string(buffer);
+      - if:
+          condition:
+            lambda: return id(slot_3_visible) && id(slot_3_analogue);
+          then:
+            - lvgl.indicator.update:
+                id: slot_3_minute_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.minute;
+            - lvgl.indicator.update:
+                id: slot_3_hour_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return (now.hour % 12) * 60 + now.minute;
+            - lvgl.indicator.update:
+                id: slot_3_second_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.second;
+      - if:
+          condition:
+            lambda: return id(slot_4_visible) && !id(slot_4_analogue);
+          then:
+            - lvgl.label.update:
+                id: slot_4_time
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("--:--");
+                  char buffer[16];
+                  now.strftime(buffer, sizeof(buffer), id(slot_4_show_seconds) ? "%H:%M:%S" : "%H:%M");
+                  return std::string(buffer);
+            - lvgl.label.update:
+                id: slot_4_date
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("-- ---");
+                  char buffer[24];
+                  now.strftime(buffer, sizeof(buffer), "%a %d %b");
+                  return std::string(buffer);
+      - if:
+          condition:
+            lambda: return id(slot_4_visible) && id(slot_4_analogue);
+          then:
+            - lvgl.indicator.update:
+                id: slot_4_minute_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.minute;
+            - lvgl.indicator.update:
+                id: slot_4_hour_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return (now.hour % 12) * 60 + now.minute;
+            - lvgl.indicator.update:
+                id: slot_4_second_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.second;
+      - if:
+          condition:
+            lambda: return id(slot_5_visible) && !id(slot_5_analogue);
+          then:
+            - lvgl.label.update:
+                id: slot_5_time
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("--:--");
+                  char buffer[16];
+                  now.strftime(buffer, sizeof(buffer), id(slot_5_show_seconds) ? "%H:%M:%S" : "%H:%M");
+                  return std::string(buffer);
+            - lvgl.label.update:
+                id: slot_5_date
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("-- ---");
+                  char buffer[24];
+                  now.strftime(buffer, sizeof(buffer), "%a %d %b");
+                  return std::string(buffer);
+      - if:
+          condition:
+            lambda: return id(slot_5_visible) && id(slot_5_analogue);
+          then:
+            - lvgl.indicator.update:
+                id: slot_5_minute_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.minute;
+            - lvgl.indicator.update:
+                id: slot_5_hour_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return (now.hour % 12) * 60 + now.minute;
+            - lvgl.indicator.update:
+                id: slot_5_second_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.second;
+      - if:
+          condition:
+            lambda: return id(slot_6_visible) && !id(slot_6_analogue);
+          then:
+            - lvgl.label.update:
+                id: slot_6_time
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("--:--");
+                  char buffer[16];
+                  now.strftime(buffer, sizeof(buffer), id(slot_6_show_seconds) ? "%H:%M:%S" : "%H:%M");
+                  return std::string(buffer);
+            - lvgl.label.update:
+                id: slot_6_date
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("-- ---");
+                  char buffer[24];
+                  now.strftime(buffer, sizeof(buffer), "%a %d %b");
+                  return std::string(buffer);
+      - if:
+          condition:
+            lambda: return id(slot_6_visible) && id(slot_6_analogue);
+          then:
+            - lvgl.indicator.update:
+                id: slot_6_minute_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.minute;
+            - lvgl.indicator.update:
+                id: slot_6_hour_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return (now.hour % 12) * 60 + now.minute;
+            - lvgl.indicator.update:
+                id: slot_6_second_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.second;
+      - if:
+          condition:
+            lambda: return id(slot_7_visible) && !id(slot_7_analogue);
+          then:
+            - lvgl.label.update:
+                id: slot_7_time
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("--:--");
+                  char buffer[16];
+                  now.strftime(buffer, sizeof(buffer), id(slot_7_show_seconds) ? "%H:%M:%S" : "%H:%M");
+                  return std::string(buffer);
+            - lvgl.label.update:
+                id: slot_7_date
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("-- ---");
+                  char buffer[24];
+                  now.strftime(buffer, sizeof(buffer), "%a %d %b");
+                  return std::string(buffer);
+      - if:
+          condition:
+            lambda: return id(slot_7_visible) && id(slot_7_analogue);
+          then:
+            - lvgl.indicator.update:
+                id: slot_7_minute_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.minute;
+            - lvgl.indicator.update:
+                id: slot_7_hour_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return (now.hour % 12) * 60 + now.minute;
+            - lvgl.indicator.update:
+                id: slot_7_second_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.second;
+      - if:
+          condition:
+            lambda: return id(slot_8_visible) && !id(slot_8_analogue);
+          then:
+            - lvgl.label.update:
+                id: slot_8_time
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("--:--");
+                  char buffer[16];
+                  now.strftime(buffer, sizeof(buffer), id(slot_8_show_seconds) ? "%H:%M:%S" : "%H:%M");
+                  return std::string(buffer);
+            - lvgl.label.update:
+                id: slot_8_date
+                text: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return std::string("-- ---");
+                  char buffer[24];
+                  now.strftime(buffer, sizeof(buffer), "%a %d %b");
+                  return std::string(buffer);
+      - if:
+          condition:
+            lambda: return id(slot_8_visible) && id(slot_8_analogue);
+          then:
+            - lvgl.indicator.update:
+                id: slot_8_minute_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.minute;
+            - lvgl.indicator.update:
+                id: slot_8_hour_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return (now.hour % 12) * 60 + now.minute;
+            - lvgl.indicator.update:
+                id: slot_8_second_hand
+                value: !lambda |-
+                  auto now = id(ha_time).now();
+                  if (!now.is_valid()) return 0;
+                  return now.second;
+
+lvgl:
+  rotation: 180
+  pages:
+    - id: main_page
+      bg_color: 0x08142D
+      pad_all: 0
+      scrollable: false
+      scrollbar_mode: "OFF"
+      widgets:
+        - obj:
+            id: screen_root
+            x: 0
+            y: 0
+            width: 480
+            height: 480
+            bg_color: 0x08142D
+            bg_grad_color: 0x050B16
+            bg_grad_dir: VER
+            border_width: 0
+            pad_all: 0
+            radius: 0
+            scrollable: false
+            widgets:
+              - obj:
+                  id: slot_1_card
+                  x: !lambda return id(slot_1_x) * 80;
+                  y: !lambda return id(slot_1_y) * 80;
+                  width: !lambda return id(slot_1_w) * 80;
+                  height: !lambda return id(slot_1_h) * 80;
+                  hidden: !lambda return !id(slot_1_visible);
+                  bg_color: 0x12315A
+                  bg_grad_color: 0x091A34
+                  bg_grad_dir: VER
+                  border_color: 0x6ED9FF
+                  border_width: 2
+                  radius: 22
+                  pad_top: 14
+                  pad_bottom: 14
+                  pad_left: 16
+                  pad_right: 16
+                  scrollable: false
+                  widgets:
+                    - label:
+                        id: slot_1_title
+                        x: 0
+                        y: 0
+                        width: 100%
+                        text: !lambda |-
+                          return id(slot_1_title_text);
+                        text_font: montserrat_bold_14
+                        text_color: 0x9FC7FF
+                    - obj:
+                        id: slot_1_digital
+                        x: 0
+                        y: 34
+                        width: 100%
+                        height: !lambda return id(slot_1_h) * 80 - 48;
+                        hidden: !lambda return !id(slot_1_visible) || id(slot_1_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        scrollable: false
+                        layout:
+                          type: FLEX
+                          flex_flow: COLUMN
+                          flex_align_main: CENTER
+                          flex_align_cross: START
+                          flex_align_track: CENTER
+                        widgets:
+                          - label:
+                              id: slot_1_time
+                              text: "--:--"
+                              text_font: montserrat_bold_52
+                              text_color: 0xF5F9FF
+                          - label:
+                              id: slot_1_date
+                              text: "-- ---"
+                              text_font: montserrat_18
+                              text_color: 0xC8DAF7
+                    - obj:
+                        id: slot_1_analog_shell
+                        x: 0
+                        y: 28
+                        width: 100%
+                        height: !lambda return id(slot_1_h) * 80 - 42;
+                        hidden: !lambda return !id(slot_1_visible) || !id(slot_1_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        pad_all: 0
+                        scrollable: false
+                        widgets:
+                          - meter:
+                              id: slot_1_analog
+                              width: 100%
+                              height: 100%
+                              align: CENTER
+                              bg_opa: TRANSP
+                              border_width: 0
+                              pad_all: 0
+                              text_color: 0xDCEBFF
+                              scales:
+                                - range_from: 0
+                                  range_to: 60
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    width: 1
+                                    count: 61
+                                    length: 10
+                                    color: 0xC8DAF7
+                                  indicators:
+                                    - line:
+                                        id: slot_1_minute_hand
+                                        width: 4
+                                        color: 0x8FDCFF
+                                        length: 78%
+                                        rounded: true
+                                        value: 0
+                                    - line:
+                                        id: slot_1_second_hand
+                                        width: 2
+                                        color: 0xFFD36B
+                                        length: 86%
+                                        rounded: true
+                                        value: 0
+                                - range_from: 1
+                                  range_to: 12
+                                  angle_range: 330
+                                  rotation: 300
+                                  ticks:
+                                    width: 1
+                                    count: 12
+                                    length: 1
+                                    color: 0x000000
+                                    major:
+                                      stride: 1
+                                      width: 3
+                                      length: 16
+                                      color: 0xF5F9FF
+                                      label_gap: 0
+                                - range_from: 0
+                                  range_to: 720
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    count: 2
+                                  indicators:
+                                    - line:
+                                        id: slot_1_hour_hand
+                                        width: 6
+                                        color: 0xF7FBFF
+                                        length: 56%
+                                        rounded: true
+                                        value: 0
+              - obj:
+                  id: slot_2_card
+                  x: !lambda return id(slot_2_x) * 80;
+                  y: !lambda return id(slot_2_y) * 80;
+                  width: !lambda return id(slot_2_w) * 80;
+                  height: !lambda return id(slot_2_h) * 80;
+                  hidden: !lambda return !id(slot_2_visible);
+                  bg_color: 0x12315A
+                  bg_grad_color: 0x091A34
+                  bg_grad_dir: VER
+                  border_color: 0x6ED9FF
+                  border_width: 2
+                  radius: 22
+                  pad_top: 14
+                  pad_bottom: 14
+                  pad_left: 16
+                  pad_right: 16
+                  scrollable: false
+                  widgets:
+                    - label:
+                        id: slot_2_title
+                        x: 0
+                        y: 0
+                        width: 100%
+                        text: !lambda |-
+                          return id(slot_2_title_text);
+                        text_font: montserrat_bold_14
+                        text_color: 0x9FC7FF
+                    - obj:
+                        id: slot_2_digital
+                        x: 0
+                        y: 34
+                        width: 100%
+                        height: !lambda return id(slot_2_h) * 80 - 48;
+                        hidden: !lambda return !id(slot_2_visible) || id(slot_2_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        scrollable: false
+                        layout:
+                          type: FLEX
+                          flex_flow: COLUMN
+                          flex_align_main: CENTER
+                          flex_align_cross: START
+                          flex_align_track: CENTER
+                        widgets:
+                          - label:
+                              id: slot_2_time
+                              text: "--:--"
+                              text_font: montserrat_bold_52
+                              text_color: 0xF5F9FF
+                          - label:
+                              id: slot_2_date
+                              text: "-- ---"
+                              text_font: montserrat_18
+                              text_color: 0xC8DAF7
+                    - obj:
+                        id: slot_2_analog_shell
+                        x: 0
+                        y: 28
+                        width: 100%
+                        height: !lambda return id(slot_2_h) * 80 - 42;
+                        hidden: !lambda return !id(slot_2_visible) || !id(slot_2_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        pad_all: 0
+                        scrollable: false
+                        widgets:
+                          - meter:
+                              id: slot_2_analog
+                              width: 100%
+                              height: 100%
+                              align: CENTER
+                              bg_opa: TRANSP
+                              border_width: 0
+                              pad_all: 0
+                              text_color: 0xDCEBFF
+                              scales:
+                                - range_from: 0
+                                  range_to: 60
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    width: 1
+                                    count: 61
+                                    length: 10
+                                    color: 0xC8DAF7
+                                  indicators:
+                                    - line:
+                                        id: slot_2_minute_hand
+                                        width: 4
+                                        color: 0x8FDCFF
+                                        length: 78%
+                                        rounded: true
+                                        value: 0
+                                    - line:
+                                        id: slot_2_second_hand
+                                        width: 2
+                                        color: 0xFFD36B
+                                        length: 86%
+                                        rounded: true
+                                        value: 0
+                                - range_from: 1
+                                  range_to: 12
+                                  angle_range: 330
+                                  rotation: 300
+                                  ticks:
+                                    width: 1
+                                    count: 12
+                                    length: 1
+                                    color: 0x000000
+                                    major:
+                                      stride: 1
+                                      width: 3
+                                      length: 16
+                                      color: 0xF5F9FF
+                                      label_gap: 0
+                                - range_from: 0
+                                  range_to: 720
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    count: 2
+                                  indicators:
+                                    - line:
+                                        id: slot_2_hour_hand
+                                        width: 6
+                                        color: 0xF7FBFF
+                                        length: 56%
+                                        rounded: true
+                                        value: 0
+              - obj:
+                  id: slot_3_card
+                  x: !lambda return id(slot_3_x) * 80;
+                  y: !lambda return id(slot_3_y) * 80;
+                  width: !lambda return id(slot_3_w) * 80;
+                  height: !lambda return id(slot_3_h) * 80;
+                  hidden: !lambda return !id(slot_3_visible);
+                  bg_color: 0x12315A
+                  bg_grad_color: 0x091A34
+                  bg_grad_dir: VER
+                  border_color: 0x6ED9FF
+                  border_width: 2
+                  radius: 22
+                  pad_top: 14
+                  pad_bottom: 14
+                  pad_left: 16
+                  pad_right: 16
+                  scrollable: false
+                  widgets:
+                    - label:
+                        id: slot_3_title
+                        x: 0
+                        y: 0
+                        width: 100%
+                        text: !lambda |-
+                          return id(slot_3_title_text);
+                        text_font: montserrat_bold_14
+                        text_color: 0x9FC7FF
+                    - obj:
+                        id: slot_3_digital
+                        x: 0
+                        y: 34
+                        width: 100%
+                        height: !lambda return id(slot_3_h) * 80 - 48;
+                        hidden: !lambda return !id(slot_3_visible) || id(slot_3_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        scrollable: false
+                        layout:
+                          type: FLEX
+                          flex_flow: COLUMN
+                          flex_align_main: CENTER
+                          flex_align_cross: START
+                          flex_align_track: CENTER
+                        widgets:
+                          - label:
+                              id: slot_3_time
+                              text: "--:--"
+                              text_font: montserrat_bold_52
+                              text_color: 0xF5F9FF
+                          - label:
+                              id: slot_3_date
+                              text: "-- ---"
+                              text_font: montserrat_18
+                              text_color: 0xC8DAF7
+                    - obj:
+                        id: slot_3_analog_shell
+                        x: 0
+                        y: 28
+                        width: 100%
+                        height: !lambda return id(slot_3_h) * 80 - 42;
+                        hidden: !lambda return !id(slot_3_visible) || !id(slot_3_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        pad_all: 0
+                        scrollable: false
+                        widgets:
+                          - meter:
+                              id: slot_3_analog
+                              width: 100%
+                              height: 100%
+                              align: CENTER
+                              bg_opa: TRANSP
+                              border_width: 0
+                              pad_all: 0
+                              text_color: 0xDCEBFF
+                              scales:
+                                - range_from: 0
+                                  range_to: 60
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    width: 1
+                                    count: 61
+                                    length: 10
+                                    color: 0xC8DAF7
+                                  indicators:
+                                    - line:
+                                        id: slot_3_minute_hand
+                                        width: 4
+                                        color: 0x8FDCFF
+                                        length: 78%
+                                        rounded: true
+                                        value: 0
+                                    - line:
+                                        id: slot_3_second_hand
+                                        width: 2
+                                        color: 0xFFD36B
+                                        length: 86%
+                                        rounded: true
+                                        value: 0
+                                - range_from: 1
+                                  range_to: 12
+                                  angle_range: 330
+                                  rotation: 300
+                                  ticks:
+                                    width: 1
+                                    count: 12
+                                    length: 1
+                                    color: 0x000000
+                                    major:
+                                      stride: 1
+                                      width: 3
+                                      length: 16
+                                      color: 0xF5F9FF
+                                      label_gap: 0
+                                - range_from: 0
+                                  range_to: 720
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    count: 2
+                                  indicators:
+                                    - line:
+                                        id: slot_3_hour_hand
+                                        width: 6
+                                        color: 0xF7FBFF
+                                        length: 56%
+                                        rounded: true
+                                        value: 0
+              - obj:
+                  id: slot_4_card
+                  x: !lambda return id(slot_4_x) * 80;
+                  y: !lambda return id(slot_4_y) * 80;
+                  width: !lambda return id(slot_4_w) * 80;
+                  height: !lambda return id(slot_4_h) * 80;
+                  hidden: !lambda return !id(slot_4_visible);
+                  bg_color: 0x12315A
+                  bg_grad_color: 0x091A34
+                  bg_grad_dir: VER
+                  border_color: 0x6ED9FF
+                  border_width: 2
+                  radius: 22
+                  pad_top: 14
+                  pad_bottom: 14
+                  pad_left: 16
+                  pad_right: 16
+                  scrollable: false
+                  widgets:
+                    - label:
+                        id: slot_4_title
+                        x: 0
+                        y: 0
+                        width: 100%
+                        text: !lambda |-
+                          return id(slot_4_title_text);
+                        text_font: montserrat_bold_14
+                        text_color: 0x9FC7FF
+                    - obj:
+                        id: slot_4_digital
+                        x: 0
+                        y: 34
+                        width: 100%
+                        height: !lambda return id(slot_4_h) * 80 - 48;
+                        hidden: !lambda return !id(slot_4_visible) || id(slot_4_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        scrollable: false
+                        layout:
+                          type: FLEX
+                          flex_flow: COLUMN
+                          flex_align_main: CENTER
+                          flex_align_cross: START
+                          flex_align_track: CENTER
+                        widgets:
+                          - label:
+                              id: slot_4_time
+                              text: "--:--"
+                              text_font: montserrat_bold_52
+                              text_color: 0xF5F9FF
+                          - label:
+                              id: slot_4_date
+                              text: "-- ---"
+                              text_font: montserrat_18
+                              text_color: 0xC8DAF7
+                    - obj:
+                        id: slot_4_analog_shell
+                        x: 0
+                        y: 28
+                        width: 100%
+                        height: !lambda return id(slot_4_h) * 80 - 42;
+                        hidden: !lambda return !id(slot_4_visible) || !id(slot_4_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        pad_all: 0
+                        scrollable: false
+                        widgets:
+                          - meter:
+                              id: slot_4_analog
+                              width: 100%
+                              height: 100%
+                              align: CENTER
+                              bg_opa: TRANSP
+                              border_width: 0
+                              pad_all: 0
+                              text_color: 0xDCEBFF
+                              scales:
+                                - range_from: 0
+                                  range_to: 60
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    width: 1
+                                    count: 61
+                                    length: 10
+                                    color: 0xC8DAF7
+                                  indicators:
+                                    - line:
+                                        id: slot_4_minute_hand
+                                        width: 4
+                                        color: 0x8FDCFF
+                                        length: 78%
+                                        rounded: true
+                                        value: 0
+                                    - line:
+                                        id: slot_4_second_hand
+                                        width: 2
+                                        color: 0xFFD36B
+                                        length: 86%
+                                        rounded: true
+                                        value: 0
+                                - range_from: 1
+                                  range_to: 12
+                                  angle_range: 330
+                                  rotation: 300
+                                  ticks:
+                                    width: 1
+                                    count: 12
+                                    length: 1
+                                    color: 0x000000
+                                    major:
+                                      stride: 1
+                                      width: 3
+                                      length: 16
+                                      color: 0xF5F9FF
+                                      label_gap: 0
+                                - range_from: 0
+                                  range_to: 720
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    count: 2
+                                  indicators:
+                                    - line:
+                                        id: slot_4_hour_hand
+                                        width: 6
+                                        color: 0xF7FBFF
+                                        length: 56%
+                                        rounded: true
+                                        value: 0
+              - obj:
+                  id: slot_5_card
+                  x: !lambda return id(slot_5_x) * 80;
+                  y: !lambda return id(slot_5_y) * 80;
+                  width: !lambda return id(slot_5_w) * 80;
+                  height: !lambda return id(slot_5_h) * 80;
+                  hidden: !lambda return !id(slot_5_visible);
+                  bg_color: 0x12315A
+                  bg_grad_color: 0x091A34
+                  bg_grad_dir: VER
+                  border_color: 0x6ED9FF
+                  border_width: 2
+                  radius: 22
+                  pad_top: 14
+                  pad_bottom: 14
+                  pad_left: 16
+                  pad_right: 16
+                  scrollable: false
+                  widgets:
+                    - label:
+                        id: slot_5_title
+                        x: 0
+                        y: 0
+                        width: 100%
+                        text: !lambda |-
+                          return id(slot_5_title_text);
+                        text_font: montserrat_bold_14
+                        text_color: 0x9FC7FF
+                    - obj:
+                        id: slot_5_digital
+                        x: 0
+                        y: 34
+                        width: 100%
+                        height: !lambda return id(slot_5_h) * 80 - 48;
+                        hidden: !lambda return !id(slot_5_visible) || id(slot_5_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        scrollable: false
+                        layout:
+                          type: FLEX
+                          flex_flow: COLUMN
+                          flex_align_main: CENTER
+                          flex_align_cross: START
+                          flex_align_track: CENTER
+                        widgets:
+                          - label:
+                              id: slot_5_time
+                              text: "--:--"
+                              text_font: montserrat_bold_52
+                              text_color: 0xF5F9FF
+                          - label:
+                              id: slot_5_date
+                              text: "-- ---"
+                              text_font: montserrat_18
+                              text_color: 0xC8DAF7
+                    - obj:
+                        id: slot_5_analog_shell
+                        x: 0
+                        y: 28
+                        width: 100%
+                        height: !lambda return id(slot_5_h) * 80 - 42;
+                        hidden: !lambda return !id(slot_5_visible) || !id(slot_5_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        pad_all: 0
+                        scrollable: false
+                        widgets:
+                          - meter:
+                              id: slot_5_analog
+                              width: 100%
+                              height: 100%
+                              align: CENTER
+                              bg_opa: TRANSP
+                              border_width: 0
+                              pad_all: 0
+                              text_color: 0xDCEBFF
+                              scales:
+                                - range_from: 0
+                                  range_to: 60
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    width: 1
+                                    count: 61
+                                    length: 10
+                                    color: 0xC8DAF7
+                                  indicators:
+                                    - line:
+                                        id: slot_5_minute_hand
+                                        width: 4
+                                        color: 0x8FDCFF
+                                        length: 78%
+                                        rounded: true
+                                        value: 0
+                                    - line:
+                                        id: slot_5_second_hand
+                                        width: 2
+                                        color: 0xFFD36B
+                                        length: 86%
+                                        rounded: true
+                                        value: 0
+                                - range_from: 1
+                                  range_to: 12
+                                  angle_range: 330
+                                  rotation: 300
+                                  ticks:
+                                    width: 1
+                                    count: 12
+                                    length: 1
+                                    color: 0x000000
+                                    major:
+                                      stride: 1
+                                      width: 3
+                                      length: 16
+                                      color: 0xF5F9FF
+                                      label_gap: 0
+                                - range_from: 0
+                                  range_to: 720
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    count: 2
+                                  indicators:
+                                    - line:
+                                        id: slot_5_hour_hand
+                                        width: 6
+                                        color: 0xF7FBFF
+                                        length: 56%
+                                        rounded: true
+                                        value: 0
+              - obj:
+                  id: slot_6_card
+                  x: !lambda return id(slot_6_x) * 80;
+                  y: !lambda return id(slot_6_y) * 80;
+                  width: !lambda return id(slot_6_w) * 80;
+                  height: !lambda return id(slot_6_h) * 80;
+                  hidden: !lambda return !id(slot_6_visible);
+                  bg_color: 0x12315A
+                  bg_grad_color: 0x091A34
+                  bg_grad_dir: VER
+                  border_color: 0x6ED9FF
+                  border_width: 2
+                  radius: 22
+                  pad_top: 14
+                  pad_bottom: 14
+                  pad_left: 16
+                  pad_right: 16
+                  scrollable: false
+                  widgets:
+                    - label:
+                        id: slot_6_title
+                        x: 0
+                        y: 0
+                        width: 100%
+                        text: !lambda |-
+                          return id(slot_6_title_text);
+                        text_font: montserrat_bold_14
+                        text_color: 0x9FC7FF
+                    - obj:
+                        id: slot_6_digital
+                        x: 0
+                        y: 34
+                        width: 100%
+                        height: !lambda return id(slot_6_h) * 80 - 48;
+                        hidden: !lambda return !id(slot_6_visible) || id(slot_6_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        scrollable: false
+                        layout:
+                          type: FLEX
+                          flex_flow: COLUMN
+                          flex_align_main: CENTER
+                          flex_align_cross: START
+                          flex_align_track: CENTER
+                        widgets:
+                          - label:
+                              id: slot_6_time
+                              text: "--:--"
+                              text_font: montserrat_bold_52
+                              text_color: 0xF5F9FF
+                          - label:
+                              id: slot_6_date
+                              text: "-- ---"
+                              text_font: montserrat_18
+                              text_color: 0xC8DAF7
+                    - obj:
+                        id: slot_6_analog_shell
+                        x: 0
+                        y: 28
+                        width: 100%
+                        height: !lambda return id(slot_6_h) * 80 - 42;
+                        hidden: !lambda return !id(slot_6_visible) || !id(slot_6_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        pad_all: 0
+                        scrollable: false
+                        widgets:
+                          - meter:
+                              id: slot_6_analog
+                              width: 100%
+                              height: 100%
+                              align: CENTER
+                              bg_opa: TRANSP
+                              border_width: 0
+                              pad_all: 0
+                              text_color: 0xDCEBFF
+                              scales:
+                                - range_from: 0
+                                  range_to: 60
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    width: 1
+                                    count: 61
+                                    length: 10
+                                    color: 0xC8DAF7
+                                  indicators:
+                                    - line:
+                                        id: slot_6_minute_hand
+                                        width: 4
+                                        color: 0x8FDCFF
+                                        length: 78%
+                                        rounded: true
+                                        value: 0
+                                    - line:
+                                        id: slot_6_second_hand
+                                        width: 2
+                                        color: 0xFFD36B
+                                        length: 86%
+                                        rounded: true
+                                        value: 0
+                                - range_from: 1
+                                  range_to: 12
+                                  angle_range: 330
+                                  rotation: 300
+                                  ticks:
+                                    width: 1
+                                    count: 12
+                                    length: 1
+                                    color: 0x000000
+                                    major:
+                                      stride: 1
+                                      width: 3
+                                      length: 16
+                                      color: 0xF5F9FF
+                                      label_gap: 0
+                                - range_from: 0
+                                  range_to: 720
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    count: 2
+                                  indicators:
+                                    - line:
+                                        id: slot_6_hour_hand
+                                        width: 6
+                                        color: 0xF7FBFF
+                                        length: 56%
+                                        rounded: true
+                                        value: 0
+              - obj:
+                  id: slot_7_card
+                  x: !lambda return id(slot_7_x) * 80;
+                  y: !lambda return id(slot_7_y) * 80;
+                  width: !lambda return id(slot_7_w) * 80;
+                  height: !lambda return id(slot_7_h) * 80;
+                  hidden: !lambda return !id(slot_7_visible);
+                  bg_color: 0x12315A
+                  bg_grad_color: 0x091A34
+                  bg_grad_dir: VER
+                  border_color: 0x6ED9FF
+                  border_width: 2
+                  radius: 22
+                  pad_top: 14
+                  pad_bottom: 14
+                  pad_left: 16
+                  pad_right: 16
+                  scrollable: false
+                  widgets:
+                    - label:
+                        id: slot_7_title
+                        x: 0
+                        y: 0
+                        width: 100%
+                        text: !lambda |-
+                          return id(slot_7_title_text);
+                        text_font: montserrat_bold_14
+                        text_color: 0x9FC7FF
+                    - obj:
+                        id: slot_7_digital
+                        x: 0
+                        y: 34
+                        width: 100%
+                        height: !lambda return id(slot_7_h) * 80 - 48;
+                        hidden: !lambda return !id(slot_7_visible) || id(slot_7_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        scrollable: false
+                        layout:
+                          type: FLEX
+                          flex_flow: COLUMN
+                          flex_align_main: CENTER
+                          flex_align_cross: START
+                          flex_align_track: CENTER
+                        widgets:
+                          - label:
+                              id: slot_7_time
+                              text: "--:--"
+                              text_font: montserrat_bold_52
+                              text_color: 0xF5F9FF
+                          - label:
+                              id: slot_7_date
+                              text: "-- ---"
+                              text_font: montserrat_18
+                              text_color: 0xC8DAF7
+                    - obj:
+                        id: slot_7_analog_shell
+                        x: 0
+                        y: 28
+                        width: 100%
+                        height: !lambda return id(slot_7_h) * 80 - 42;
+                        hidden: !lambda return !id(slot_7_visible) || !id(slot_7_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        pad_all: 0
+                        scrollable: false
+                        widgets:
+                          - meter:
+                              id: slot_7_analog
+                              width: 100%
+                              height: 100%
+                              align: CENTER
+                              bg_opa: TRANSP
+                              border_width: 0
+                              pad_all: 0
+                              text_color: 0xDCEBFF
+                              scales:
+                                - range_from: 0
+                                  range_to: 60
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    width: 1
+                                    count: 61
+                                    length: 10
+                                    color: 0xC8DAF7
+                                  indicators:
+                                    - line:
+                                        id: slot_7_minute_hand
+                                        width: 4
+                                        color: 0x8FDCFF
+                                        length: 78%
+                                        rounded: true
+                                        value: 0
+                                    - line:
+                                        id: slot_7_second_hand
+                                        width: 2
+                                        color: 0xFFD36B
+                                        length: 86%
+                                        rounded: true
+                                        value: 0
+                                - range_from: 1
+                                  range_to: 12
+                                  angle_range: 330
+                                  rotation: 300
+                                  ticks:
+                                    width: 1
+                                    count: 12
+                                    length: 1
+                                    color: 0x000000
+                                    major:
+                                      stride: 1
+                                      width: 3
+                                      length: 16
+                                      color: 0xF5F9FF
+                                      label_gap: 0
+                                - range_from: 0
+                                  range_to: 720
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    count: 2
+                                  indicators:
+                                    - line:
+                                        id: slot_7_hour_hand
+                                        width: 6
+                                        color: 0xF7FBFF
+                                        length: 56%
+                                        rounded: true
+                                        value: 0
+              - obj:
+                  id: slot_8_card
+                  x: !lambda return id(slot_8_x) * 80;
+                  y: !lambda return id(slot_8_y) * 80;
+                  width: !lambda return id(slot_8_w) * 80;
+                  height: !lambda return id(slot_8_h) * 80;
+                  hidden: !lambda return !id(slot_8_visible);
+                  bg_color: 0x12315A
+                  bg_grad_color: 0x091A34
+                  bg_grad_dir: VER
+                  border_color: 0x6ED9FF
+                  border_width: 2
+                  radius: 22
+                  pad_top: 14
+                  pad_bottom: 14
+                  pad_left: 16
+                  pad_right: 16
+                  scrollable: false
+                  widgets:
+                    - label:
+                        id: slot_8_title
+                        x: 0
+                        y: 0
+                        width: 100%
+                        text: !lambda |-
+                          return id(slot_8_title_text);
+                        text_font: montserrat_bold_14
+                        text_color: 0x9FC7FF
+                    - obj:
+                        id: slot_8_digital
+                        x: 0
+                        y: 34
+                        width: 100%
+                        height: !lambda return id(slot_8_h) * 80 - 48;
+                        hidden: !lambda return !id(slot_8_visible) || id(slot_8_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        scrollable: false
+                        layout:
+                          type: FLEX
+                          flex_flow: COLUMN
+                          flex_align_main: CENTER
+                          flex_align_cross: START
+                          flex_align_track: CENTER
+                        widgets:
+                          - label:
+                              id: slot_8_time
+                              text: "--:--"
+                              text_font: montserrat_bold_52
+                              text_color: 0xF5F9FF
+                          - label:
+                              id: slot_8_date
+                              text: "-- ---"
+                              text_font: montserrat_18
+                              text_color: 0xC8DAF7
+                    - obj:
+                        id: slot_8_analog_shell
+                        x: 0
+                        y: 28
+                        width: 100%
+                        height: !lambda return id(slot_8_h) * 80 - 42;
+                        hidden: !lambda return !id(slot_8_visible) || !id(slot_8_analogue);
+                        bg_opa: TRANSP
+                        border_width: 0
+                        pad_all: 0
+                        scrollable: false
+                        widgets:
+                          - meter:
+                              id: slot_8_analog
+                              width: 100%
+                              height: 100%
+                              align: CENTER
+                              bg_opa: TRANSP
+                              border_width: 0
+                              pad_all: 0
+                              text_color: 0xDCEBFF
+                              scales:
+                                - range_from: 0
+                                  range_to: 60
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    width: 1
+                                    count: 61
+                                    length: 10
+                                    color: 0xC8DAF7
+                                  indicators:
+                                    - line:
+                                        id: slot_8_minute_hand
+                                        width: 4
+                                        color: 0x8FDCFF
+                                        length: 78%
+                                        rounded: true
+                                        value: 0
+                                    - line:
+                                        id: slot_8_second_hand
+                                        width: 2
+                                        color: 0xFFD36B
+                                        length: 86%
+                                        rounded: true
+                                        value: 0
+                                - range_from: 1
+                                  range_to: 12
+                                  angle_range: 330
+                                  rotation: 300
+                                  ticks:
+                                    width: 1
+                                    count: 12
+                                    length: 1
+                                    color: 0x000000
+                                    major:
+                                      stride: 1
+                                      width: 3
+                                      length: 16
+                                      color: 0xF5F9FF
+                                      label_gap: 0
+                                - range_from: 0
+                                  range_to: 720
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    count: 2
+                                  indicators:
+                                    - line:
+                                        id: slot_8_hour_hand
+                                        width: 6
+                                        color: 0xF7FBFF
+                                        length: 56%
+                                        rounded: true
+                                        value: 0

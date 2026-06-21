@@ -94,7 +94,7 @@ function slotIndex(index) {
 }
 
 function helperEntityId(index) {
-  return `input_text.esp_panel_clock_slot_${slotIndex(index)}`;
+  return `input_text.esp_panel_widget_slot_${slotIndex(index)}`;
 }
 
 function sanitizeTitle(title) {
@@ -207,19 +207,20 @@ function buildLvglExport(layout) {
 
 function encodeWidgetPayload(widget) {
   return [
-    widget.variant,
+    widget.type,
     sanitizeTitle(widget.title),
     widget.x,
     widget.y,
     widget.w,
     widget.h,
+    widget.variant,
     widget.showSeconds ? 1 : 0
   ].join("|");
 }
 
 function buildHelperYaml() {
-  const helperBlocks = Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => `  esp_panel_clock_slot_${slotIndex(index)}:
-    name: ESP Panel Clock Slot ${slotIndex(index)}
+  const helperBlocks = Array.from({ length: MAX_CLOCK_WIDGETS }, (_, index) => `  esp_panel_widget_slot_${slotIndex(index)}:
+    name: ESP Panel Widget Slot ${slotIndex(index)}
     max: 255`).join("\n");
 
   return `input_text:

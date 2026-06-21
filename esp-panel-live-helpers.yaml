@@ -1,25 +1,25 @@
 input_text:
-  esp_panel_clock_slot_1:
-    name: ESP Panel Clock Slot 1
+  esp_panel_widget_slot_1:
+    name: ESP Panel Widget Slot 1
     max: 255
-  esp_panel_clock_slot_2:
-    name: ESP Panel Clock Slot 2
+  esp_panel_widget_slot_2:
+    name: ESP Panel Widget Slot 2
     max: 255
-  esp_panel_clock_slot_3:
-    name: ESP Panel Clock Slot 3
+  esp_panel_widget_slot_3:
+    name: ESP Panel Widget Slot 3
     max: 255
-  esp_panel_clock_slot_4:
-    name: ESP Panel Clock Slot 4
+  esp_panel_widget_slot_4:
+    name: ESP Panel Widget Slot 4
     max: 255
-  esp_panel_clock_slot_5:
-    name: ESP Panel Clock Slot 5
+  esp_panel_widget_slot_5:
+    name: ESP Panel Widget Slot 5
     max: 255
-  esp_panel_clock_slot_6:
-    name: ESP Panel Clock Slot 6
+  esp_panel_widget_slot_6:
+    name: ESP Panel Widget Slot 6
     max: 255
-  esp_panel_clock_slot_7:
-    name: ESP Panel Clock Slot 7
+  esp_panel_widget_slot_7:
+    name: ESP Panel Widget Slot 7
     max: 255
-  esp_panel_clock_slot_8:
-    name: ESP Panel Clock Slot 8
+  esp_panel_widget_slot_8:
+    name: ESP Panel Widget Slot 8
     max: 255
