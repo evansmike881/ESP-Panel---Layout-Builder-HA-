@@ -1,4 +1,60 @@
-substitutions:
+﻿substitutions:
+  screen_width: "480"
+  screen_height: "480"
+
+esphome:
+  name: household-panel
+  friendly_name: Household Panel
+  min_version: 2026.4.0
+  includes:
+    - esp_panel_widget_helpers.h
+  on_boot:
+    priority: -200
+    then:
+      - delay: 2s
+      - light.turn_on:
+          id: display_backlight
+          brightness: 85%
+      - script.execute: refresh_panel
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    advanced:
+      execute_from_psram: true
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+preferences:
+  flash_write_interval: 5min
+
+logger:
+  level: WARN
+
+api:
+  actions:
+    - action: panel_notify
+      variables:
+        message: string
+      then:
+        - script.execute:
+            id: show_notification
+            message: !lambda "return message;"
+  on_client_connected:
+    then:
+      - delay: 1s
+      - script.execute: refresh_panel
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !sesubstitutions:
   screen_width: "480"
   screen_height: "480"
 
@@ -354,11 +410,11 @@ globals:
   - id: slot_w
     type: int
     restore_value: no
-    initial_value: "80"
+    initial_value: "74"
   - id: slot_h
     type: int
     restore_value: no
-    initial_value: "79"
+    initial_value: "66"
   - id: slot_gap
     type: int
     restore_value: no
@@ -720,6 +776,48 @@ script:
             - 0, 2
             - 164, 2
       - lvgl.widget.update:
+          id: screen_dashboard_shell
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), 4));'
+          border_width: 1
+          border_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 14));'
+      - lvgl.widget.update:
+          id: screen_dashboard_sheen
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_overlay_title_color).state, 0xFFD166), 28));'
+      - lvgl.widget.update:
+          id: screen_dashboard_hero
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 8));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+      - lvgl.widget.update:
+          id: screen_dashboard_metrics
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 6));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+      - lvgl.widget.update:
+          id: screen_dashboard_actions
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 5));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+      - lvgl.widget.update:
+          id: screen_dashboard_queue
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33), 4));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
+      - lvgl.bar.update:
+          id: screen_action_track_top
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), 6));'
+      - lvgl.bar.update:
+          id: screen_action_track_bottom
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(panel_screen_bg_color).state, 0x08142D), 12));'
+      - lvgl.line.update:
+          id: screen_queue_line_top
+          line_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 16));'
+          points:
+            - 0, 2
+            - 192, 2
+      - lvgl.line.update:
+          id: screen_queue_line_mid
+          line_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8), 16));'
+          points:
+            - 0, 2
+            - 192, 2
+      - lvgl.widget.update:
           id: w01_card
           bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_bg_color).state, 0x0D1B33));'
           border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(panel_widget_border_color).state, 0x285EA8));'
@@ -1047,8 +1145,8 @@ script:
     then:
       - lvgl.widget.update:
           id: w01_card
-          x: !lambda "return (int) id(w01_x).state * id(slot_w) + 3;"
-          y: !lambda "return (int) id(w01_y).state * id(slot_h) + 3;"
+          x: !lambda "return (int) id(w01_x).state * id(slot_w) + 18;"
+          y: !lambda "return (int) id(w01_y).state * id(slot_h) + 81;"
           width: !lambda "return ((int) id(w01_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w01_h).state * id(slot_h)) - id(slot_gap);"
       - script.execute: render_w01
@@ -1057,8 +1155,8 @@ script:
     then:
       - lvgl.widget.update:
           id: w02_card
-          x: !lambda "return (int) id(w02_x).state * id(slot_w) + 3;"
-          y: !lambda "return (int) id(w02_y).state * id(slot_h) + 3;"
+          x: !lambda "return (int) id(w02_x).state * id(slot_w) + 18;"
+          y: !lambda "return (int) id(w02_y).state * id(slot_h) + 81;"
           width: !lambda "return ((int) id(w02_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w02_h).state * id(slot_h)) - id(slot_gap);"
       - script.execute: render_w02
@@ -1067,8 +1165,8 @@ script:
     then:
       - lvgl.widget.update:
           id: w03_card
-          x: !lambda "return (int) id(w03_x).state * id(slot_w) + 3;"
-          y: !lambda "return (int) id(w03_y).state * id(slot_h) + 3;"
+          x: !lambda "return (int) id(w03_x).state * id(slot_w) + 18;"
+          y: !lambda "return (int) id(w03_y).state * id(slot_h) + 81;"
           width: !lambda "return ((int) id(w03_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w03_h).state * id(slot_h)) - id(slot_gap);"
       - script.execute: render_w03
@@ -1077,8 +1175,8 @@ script:
     then:
       - lvgl.widget.update:
           id: w04_card
-          x: !lambda "return (int) id(w04_x).state * id(slot_w) + 3;"
-          y: !lambda "return (int) id(w04_y).state * id(slot_h) + 3;"
+          x: !lambda "return (int) id(w04_x).state * id(slot_w) + 18;"
+          y: !lambda "return (int) id(w04_y).state * id(slot_h) + 81;"
           width: !lambda "return ((int) id(w04_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w04_h).state * id(slot_h)) - id(slot_gap);"
       - script.execute: render_w04
@@ -1087,8 +1185,8 @@ script:
     then:
       - lvgl.widget.update:
           id: w05_card
-          x: !lambda "return (int) id(w05_x).state * id(slot_w) + 3;"
-          y: !lambda "return (int) id(w05_y).state * id(slot_h) + 3;"
+          x: !lambda "return (int) id(w05_x).state * id(slot_w) + 18;"
+          y: !lambda "return (int) id(w05_y).state * id(slot_h) + 81;"
           width: !lambda "return ((int) id(w05_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w05_h).state * id(slot_h)) - id(slot_gap);"
       - script.execute: render_w05
@@ -1097,8 +1195,8 @@ script:
     then:
       - lvgl.widget.update:
           id: w06_card
-          x: !lambda "return (int) id(w06_x).state * id(slot_w) + 3;"
-          y: !lambda "return (int) id(w06_y).state * id(slot_h) + 3;"
+          x: !lambda "return (int) id(w06_x).state * id(slot_w) + 18;"
+          y: !lambda "return (int) id(w06_y).state * id(slot_h) + 81;"
           width: !lambda "return ((int) id(w06_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w06_h).state * id(slot_h)) - id(slot_gap);"
       - script.execute: render_w06
@@ -1107,8 +1205,8 @@ script:
     then:
       - lvgl.widget.update:
           id: w07_card
-          x: !lambda "return (int) id(w07_x).state * id(slot_w) + 3;"
-          y: !lambda "return (int) id(w07_y).state * id(slot_h) + 3;"
+          x: !lambda "return (int) id(w07_x).state * id(slot_w) + 18;"
+          y: !lambda "return (int) id(w07_y).state * id(slot_h) + 81;"
           width: !lambda "return ((int) id(w07_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w07_h).state * id(slot_h)) - id(slot_gap);"
       - script.execute: render_w07
@@ -1117,8 +1215,8 @@ script:
     then:
       - lvgl.widget.update:
           id: w08_card
-          x: !lambda "return (int) id(w08_x).state * id(slot_w) + 3;"
-          y: !lambda "return (int) id(w08_y).state * id(slot_h) + 3;"
+          x: !lambda "return (int) id(w08_x).state * id(slot_w) + 18;"
+          y: !lambda "return (int) id(w08_y).state * id(slot_h) + 81;"
           width: !lambda "return ((int) id(w08_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w08_h).state * id(slot_h)) - id(slot_gap);"
       - script.execute: render_w08
@@ -1127,8 +1225,8 @@ script:
     then:
       - lvgl.widget.update:
           id: w09_card
-          x: !lambda "return (int) id(w09_x).state * id(slot_w) + 3;"
-          y: !lambda "return (int) id(w09_y).state * id(slot_h) + 3;"
+          x: !lambda "return (int) id(w09_x).state * id(slot_w) + 18;"
+          y: !lambda "return (int) id(w09_y).state * id(slot_h) + 81;"
           width: !lambda "return ((int) id(w09_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w09_h).state * id(slot_h)) - id(slot_gap);"
       - script.execute: render_w09
@@ -1137,8 +1235,8 @@ script:
     then:
       - lvgl.widget.update:
           id: w10_card
-          x: !lambda "return (int) id(w10_x).state * id(slot_w) + 3;"
-          y: !lambda "return (int) id(w10_y).state * id(slot_h) + 3;"
+          x: !lambda "return (int) id(w10_x).state * id(slot_w) + 18;"
+          y: !lambda "return (int) id(w10_y).state * id(slot_h) + 81;"
           width: !lambda "return ((int) id(w10_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w10_h).state * id(slot_h)) - id(slot_gap);"
       - script.execute: render_w10
@@ -1147,8 +1245,8 @@ script:
     then:
       - lvgl.widget.update:
           id: w11_card
-          x: !lambda "return (int) id(w11_x).state * id(slot_w) + 3;"
-          y: !lambda "return (int) id(w11_y).state * id(slot_h) + 3;"
+          x: !lambda "return (int) id(w11_x).state * id(slot_w) + 18;"
+          y: !lambda "return (int) id(w11_y).state * id(slot_h) + 81;"
           width: !lambda "return ((int) id(w11_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w11_h).state * id(slot_h)) - id(slot_gap);"
       - script.execute: render_w11
@@ -1157,8 +1255,8 @@ script:
     then:
       - lvgl.widget.update:
           id: w12_card
-          x: !lambda "return (int) id(w12_x).state * id(slot_w) + 3;"
-          y: !lambda "return (int) id(w12_y).state * id(slot_h) + 3;"
+          x: !lambda "return (int) id(w12_x).state * id(slot_w) + 18;"
+          y: !lambda "return (int) id(w12_y).state * id(slot_h) + 81;"
           width: !lambda "return ((int) id(w12_w).state * id(slot_w)) - id(slot_gap);"
           height: !lambda "return ((int) id(w12_h).state * id(slot_h)) - id(slot_gap);"
       - script.execute: render_w12
@@ -4997,11 +5095,11 @@ lvgl:
             widgets:
               - obj:
                   id: screen_glow_primary
-                  x: -48
-                  y: -42
-                  width: 228
-                  height: 228
-                  radius: 160
+                  x: -58
+                  y: -52
+                  width: 246
+                  height: 246
+                  radius: 180
                   bg_color: 0x4A88FF
                   bg_opa: 10%
                   border_width: 0
@@ -5009,10 +5107,10 @@ lvgl:
                   scrollable: false
               - obj:
                   id: screen_glow_secondary
-                  x: 304
-                  y: 320
-                  width: 196
-                  height: 196
+                  x: 318
+                  y: 328
+                  width: 188
+                  height: 188
                   radius: 160
                   bg_color: 0xFFD166
                   bg_opa: 8%
@@ -5038,7 +5136,7 @@ lvgl:
                   id: screen_header_panel
                   x: 18
                   y: 18
-                  width: 172
+                  width: 176
                   height: 46
                   radius: 18
                   bg_color: 0x11213B
@@ -5052,7 +5150,7 @@ lvgl:
                         id: screen_header_title
                         x: 14
                         y: 8
-                        width: 144
+                        width: 148
                         height: 18
                         text: "ESP Panel"
                         text_font: montserrat_bold_16
@@ -5061,16 +5159,16 @@ lvgl:
                         id: screen_header_subtitle
                         x: 14
                         y: 25
-                        width: 144
+                        width: 148
                         height: 14
-                        text: "LVGL surface"
+                        text: "Embedded LVGL"
                         text_font: montserrat_10
                         text_color: 0x8E9FB8
               - bar:
                   id: screen_header_bar
-                  x: 202
+                  x: 206
                   y: 30
-                  width: 146
+                  width: 144
                   height: 8
                   min_value: 0
                   max_value: 100
@@ -5115,7 +5213,7 @@ lvgl:
                         y: 22
                         width: 102
                         height: 14
-                        text: "Active"
+                        text: "Live"
                         text_font: montserrat_10
                         text_align: CENTER
                         text_color: 0xDCE7F7
@@ -5132,923 +5230,1077 @@ lvgl:
                     - 0, 2
                     - 164, 2
               - obj:
-                  id: w01_card
-                  x: 3
-                  y: 3
-                  width: 234
-                  height: 74
-                  bg_color: 0x070E1B
-                  bg_opa: 100%
+                  id: screen_dashboard_shell
+                  x: 6
+                  y: 72
+                  width: 468
+                  height: 402
+                  radius: 34
+                  bg_color: 0x0A162B
+                  bg_opa: 36%
                   border_width: 0
-                  radius: 20
-                  shadow_width: 18
-                  shadow_color: 0x000000
-                  shadow_opa: 18%
-                  clickable: true
+                  clickable: false
                   scrollable: false
-                  press_lock: true
-                  on_click:
-                    then:
-                      - script.execute:
-                          id: dispatch_widget_click
-                          widget_id: "w01"
-                          widget_type: !lambda "return id(w01_type).state;"
-                          action: !lambda "return id(w01_action).state;"
-                          value: !lambda "return id(w01_value).state;"
-                          label: !lambda "return id(w01_label).state;"
-                  on_long_press:
-                    then:
-                      - lambda: |-
-                          id(suppress_click_widget) = "w01";
-                          id(suppress_click_until_ms) = millis() + 1500;
-                      - script.execute:
-                          id: dispatch_widget_action
-                          widget_id: "w01"
-                          widget_type: !lambda "return id(w01_type).state;"
-                          action: !lambda "return id(w01_action).state;"
-                          value: !lambda "return id(w01_value).state;"
-                          label: !lambda "return id(w01_label).state;"
-                          hold: true
-                  scrollbar_mode: "OFF"
-                  pad_all: 0
-                  widgets:
-                    - label:
-                        id: w01_icon_label
-                        clickable: false
-                        x: 7
-                        y: 8
-                        width: 38
-                        height: 38
-                        text: "\U000F0150"
-                        text_font: mdi_icons_32
-                        text_align: CENTER
-                        text_color: 0xF59E0B
-                    - label:
-                        id: w01_label_label
-                        clickable: false
-                        x: 48
-                        y: 8
-                        width: 170
-                        height: 18
-                        text: "Clock"
-                        text_color: 0x8E9FB8
-                        text_align: LEFT
-                        text_font: montserrat_12
-                        long_mode: DOT
-                    - label:
-                        id: w01_value_label
-                        clickable: false
-                        x: 48
-                        y: 26
-                        width: 170
-                        height: 42
-                        text: "--:--"
-                        text_color: 0xF1F5F9
-                        text_align: LEFT
-                        text_font: montserrat_28
-                        long_mode: DOT
               - obj:
-                  id: w02_card
-                  x: 243
-                  y: 3
-                  width: 234
-                  height: 74
-                  bg_color: 0x070E1B
-                  bg_opa: 100%
+                  id: screen_dashboard_sheen
+                  x: 18
+                  y: 84
+                  width: 444
+                  height: 96
+                  radius: 26
+                  bg_color: 0xFFFFFF
+                  bg_opa: 4%
                   border_width: 0
-                  radius: 20
-                  shadow_width: 18
-                  shadow_color: 0x000000
-                  shadow_opa: 18%
-                  clickable: true
+                  clickable: false
                   scrollable: false
-                  press_lock: true
-                  on_click:
-                    then:
-                      - script.execute:
-                          id: dispatch_widget_click
-                          widget_id: "w02"
-                          widget_type: !lambda "return id(w02_type).state;"
-                          action: !lambda "return id(w02_action).state;"
-                          value: !lambda "return id(w02_value).state;"
-                          label: !lambda "return id(w02_label).state;"
-                  on_long_press:
-                    then:
-                      - lambda: |-
-                          id(suppress_click_widget) = "w02";
-                          id(suppress_click_until_ms) = millis() + 1500;
-                      - script.execute:
-                          id: dispatch_widget_action
-                          widget_id: "w02"
-                          widget_type: !lambda "return id(w02_type).state;"
-                          action: !lambda "return id(w02_action).state;"
-                          value: !lambda "return id(w02_value).state;"
-                          label: !lambda "return id(w02_label).state;"
-                          hold: true
-                  scrollbar_mode: "OFF"
-                  pad_all: 0
-                  widgets:
-                    - label:
-                        id: w02_icon_label
-                        clickable: false
-                        x: 7
-                        y: 8
-                        width: 38
-                        height: 38
-                        text: "\U000F00ED"
-                        text_font: mdi_icons_32
-                        text_align: CENTER
-                        text_color: 0xF59E0B
-                    - label:
-                        id: w02_label_label
-                        clickable: false
-                        x: 48
-                        y: 8
-                        width: 170
-                        height: 18
-                        text: "Date"
-                        text_color: 0x8E9FB8
-                        text_align: LEFT
-                        text_font: montserrat_12
-                        long_mode: DOT
-                    - label:
-                        id: w02_value_label
-                        clickable: false
-                        x: 48
-                        y: 26
-                        width: 170
-                        height: 42
-                        text: "--"
-                        text_color: 0xF1F5F9
-                        text_align: LEFT
-                        text_font: montserrat_22
-                        long_mode: DOT
               - obj:
-                  id: w03_card
-                  x: 3
-                  y: 83
-                  width: 234
-                  height: 74
-                  bg_color: 0x070E1B
-                  bg_opa: 100%
-                  border_width: 0
-                  radius: 20
-                  shadow_width: 18
-                  shadow_color: 0x000000
-                  shadow_opa: 18%
-                  clickable: true
+                  id: screen_dashboard_hero
+                  x: 18
+                  y: 160
+                  width: 444
+                  height: 76
+                  radius: 24
+                  bg_color: 0x0F2039
+                  bg_opa: 42%
+                  border_width: 1
+                  border_color: 0x214A86
+                  clickable: false
                   scrollable: false
-                  press_lock: true
-                  on_click:
-                    then:
-                      - script.execute:
-                          id: dispatch_widget_click
-                          widget_id: "w03"
-                          widget_type: !lambda "return id(w03_type).state;"
-                          action: !lambda "return id(w03_action).state;"
-                          value: !lambda "return id(w03_value).state;"
-                          label: !lambda "return id(w03_label).state;"
-                  on_long_press:
-                    then:
-                      - lambda: |-
-                          id(suppress_click_widget) = "w03";
-                          id(suppress_click_until_ms) = millis() + 1500;
-                      - script.execute:
-                          id: dispatch_widget_action
-                          widget_id: "w03"
-                          widget_type: !lambda "return id(w03_type).state;"
-                          action: !lambda "return id(w03_action).state;"
-                          value: !lambda "return id(w03_value).state;"
-                          label: !lambda "return id(w03_label).state;"
-                          hold: true
-                  scrollbar_mode: "OFF"
-                  pad_all: 0
-                  widgets:
-                    - label:
-                        id: w03_icon_label
-                        clickable: false
-                        x: 7
-                        y: 8
-                        width: 38
-                        height: 38
-                        text: "\U000F0595"
-                        text_font: mdi_icons_32
-                        text_align: CENTER
-                        text_color: 0xF59E0B
-                    - label:
-                        id: w03_label_label
-                        clickable: false
-                        x: 48
-                        y: 8
-                        width: 170
-                        height: 18
-                        text: "Weather"
-                        text_color: 0x8E9FB8
-                        text_align: LEFT
-                        text_font: montserrat_12
-                        long_mode: DOT
-                    - label:
-                        id: w03_value_label
-                        clickable: false
-                        x: 48
-                        y: 26
-                        width: 170
-                        height: 42
-                        text: "--"
-                        text_color: 0xF1F5F9
-                        text_align: LEFT
-                        text_font: montserrat_22
-                        long_mode: DOT
               - obj:
-                  id: w04_card
-                  x: 243
-                  y: 83
-                  width: 154
-                  height: 74
-                  bg_color: 0x070E1B
-                  bg_opa: 100%
-                  border_width: 0
-                  radius: 20
-                  shadow_width: 18
-                  shadow_color: 0x000000
-                  shadow_opa: 18%
-                  clickable: true
+                  id: screen_dashboard_metrics
+                  x: 238
+                  y: 240
+                  width: 224
+                  height: 76
+                  radius: 24
+                  bg_color: 0x10203A
+                  bg_opa: 34%
+                  border_width: 1
+                  border_color: 0x214A86
+                  clickable: false
                   scrollable: false
-                  press_lock: true
-                  on_click:
-                    then:
-                      - script.execute:
-                          id: dispatch_widget_click
-                          widget_id: "w04"
-                          widget_type: !lambda "return id(w04_type).state;"
-                          action: !lambda "return id(w04_action).state;"
-                          value: !lambda "return id(w04_value).state;"
-                          label: !lambda "return id(w04_label).state;"
-                  on_long_press:
-                    then:
-                      - lambda: |-
-                          id(suppress_click_widget) = "w04";
-                          id(suppress_click_until_ms) = millis() + 1500;
-                      - script.execute:
-                          id: dispatch_widget_action
-                          widget_id: "w04"
-                          widget_type: !lambda "return id(w04_type).state;"
-                          action: !lambda "return id(w04_action).state;"
-                          value: !lambda "return id(w04_value).state;"
-                          label: !lambda "return id(w04_label).state;"
-                          hold: true
-                  scrollbar_mode: "OFF"
-                  pad_all: 0
-                  widgets:
-                    - label:
-                        id: w04_icon_label
-                        clickable: false
-                        x: 7
-                        y: 8
-                        width: 38
-                        height: 38
-                        text: "\U000F050F"
-                        text_font: mdi_icons_32
-                        text_align: CENTER
-                        text_color: 0xF59E0B
-                    - label:
-                        id: w04_label_label
-                        clickable: false
-                        x: 48
-                        y: 8
-                        width: 90
-                        height: 18
-                        text: "Temp"
-                        text_color: 0x8E9FB8
-                        text_align: LEFT
-                        text_font: montserrat_12
-                        long_mode: DOT
-                    - label:
-                        id: w04_value_label
-                        clickable: false
-                        x: 48
-                        y: 26
-                        width: 90
-                        height: 42
-                        text: "--"
-                        text_color: 0xF1F5F9
-                        text_align: LEFT
-                        text_font: montserrat_22
-                        long_mode: DOT
               - obj:
-                  id: w05_card
-                  x: 403
-                  y: 83
-                  width: 74
-                  height: 74
-                  bg_color: 0x070E1B
-                  bg_opa: 100%
-                  border_width: 0
-                  radius: 20
-                  shadow_width: 18
-                  shadow_color: 0x000000
-                  shadow_opa: 18%
-                  clickable: true
+                  id: screen_dashboard_actions
+                  x: 18
+                  y: 320
+                  width: 214
+                  height: 146
+                  radius: 24
+                  bg_color: 0x10203A
+                  bg_opa: 32%
+                  border_width: 1
+                  border_color: 0x214A86
+                  clickable: false
                   scrollable: false
-                  press_lock: true
-                  on_click:
-                    then:
-                      - script.execute:
-                          id: dispatch_widget_click
-                          widget_id: "w05"
-                          widget_type: !lambda "return id(w05_type).state;"
-                          action: !lambda "return id(w05_action).state;"
-                          value: !lambda "return id(w05_value).state;"
-                          label: !lambda "return id(w05_label).state;"
-                  on_long_press:
-                    then:
-                      - lambda: |-
-                          id(suppress_click_widget) = "w05";
-                          id(suppress_click_until_ms) = millis() + 1500;
-                      - script.execute:
-                          id: dispatch_widget_action
-                          widget_id: "w05"
-                          widget_type: !lambda "return id(w05_type).state;"
-                          action: !lambda "return id(w05_action).state;"
-                          value: !lambda "return id(w05_value).state;"
-                          label: !lambda "return id(w05_label).state;"
-                          hold: true
-                  scrollbar_mode: "OFF"
-                  pad_all: 0
                   widgets:
-                    - label:
-                        id: w05_icon_label
-                        clickable: false
+                    - bar:
+                        id: screen_action_track_top
                         x: 18
-                        y: 5
-                        width: 38
-                        height: 38
-                        text: "\U000F058E"
-                        text_font: mdi_icons_32
-                        text_align: CENTER
-                        text_color: 0xF59E0B
-                    - label:
-                        id: w05_label_label
-                        clickable: false
-                        x: 4
-                        y: 39
-                        width: 66
-                        height: 18
-                        text: "Humidity"
-                        text_color: 0x8E9FB8
-                        text_align: CENTER
-                        text_font: montserrat_12
-                        long_mode: DOT
-                    - label:
-                        id: w05_value_label
-                        clickable: false
-                        x: 4
-                        y: 54
-                        width: 66
-                        height: 42
-                        text: "--"
-                        text_color: 0xF1F5F9
-                        text_align: CENTER
-                        text_font: montserrat_16
-                        long_mode: DOT
+                        y: 108
+                        width: 178
+                        height: 8
+                        min_value: 0
+                        max_value: 100
+                        value: 84
+                        bg_color: 0x17263E
+                        bg_opa: 100%
+                        border_width: 0
+                        radius: 8
+                        pad_all: 2
+                        indicator:
+                          bg_color: 0x4A88FF
+                          bg_grad_color: 0xFFD166
+                          bg_grad_dir: HOR
+                          radius: 8
+                    - bar:
+                        id: screen_action_track_bottom
+                        x: 18
+                        y: 122
+                        width: 126
+                        height: 6
+                        min_value: 0
+                        max_value: 100
+                        value: 62
+                        bg_color: 0x17263E
+                        bg_opa: 100%
+                        border_width: 0
+                        radius: 8
+                        pad_all: 2
+                        indicator:
+                          bg_color: 0x18B39B
+                          bg_grad_color: 0x4A88FF
+                          bg_grad_dir: HOR
+                          radius: 8
               - obj:
-                  id: w06_card
-                  x: 3
-                  y: 323
-                  width: 154
-                  height: 154
-                  bg_color: 0x070E1B
-                  bg_opa: 100%
-                  border_width: 0
-                  radius: 20
-                  shadow_width: 18
-                  shadow_color: 0x000000
-                  shadow_opa: 18%
-                  clickable: true
+                  id: screen_dashboard_queue
+                  x: 238
+                  y: 320
+                  width: 224
+                  height: 146
+                  radius: 24
+                  bg_color: 0x10203A
+                  bg_opa: 28%
+                  border_width: 1
+                  border_color: 0x214A86
+                  clickable: false
                   scrollable: false
-                  press_lock: true
-                  on_click:
-                    then:
-                      - script.execute:
-                          id: dispatch_widget_click
-                          widget_id: "w06"
-                          widget_type: !lambda "return id(w06_type).state;"
-                          action: !lambda "return id(w06_action).state;"
-                          value: !lambda "return id(w06_value).state;"
-                          label: !lambda "return id(w06_label).state;"
-                  on_long_press:
-                    then:
-                      - lambda: |-
-                          id(suppress_click_widget) = "w06";
-                          id(suppress_click_until_ms) = millis() + 1500;
-                      - script.execute:
-                          id: dispatch_widget_action
-                          widget_id: "w06"
-                          widget_type: !lambda "return id(w06_type).state;"
-                          action: !lambda "return id(w06_action).state;"
-                          value: !lambda "return id(w06_value).state;"
-                          label: !lambda "return id(w06_label).state;"
-                          hold: true
-                  scrollbar_mode: "OFF"
-                  pad_all: 0
                   widgets:
-                    - label:
-                        id: w06_icon_label
-                        clickable: false
-                        x: 56
-                        y: 14
-                        width: 42
-                        height: 38
-                        text: "\U000F0769"
-                        text_font: mdi_icons_32
-                        text_align: CENTER
-                        text_color: 0xF59E0B
-                    - label:
-                        id: w06_label_label
-                        clickable: false
-                        x: 8
-                        y: 62
-                        width: 138
-                        height: 18
-                        text: "Main Light"
-                        text_color: 0x8E9FB8
-                        text_align: CENTER
-                        text_font: montserrat_14
-                        long_mode: DOT
-                    - label:
-                        id: w06_value_label
-                        clickable: false
-                        x: 8
+                    - line:
+                        id: screen_queue_line_top
+                        x: 16
+                        y: 42
+                        width: 192
+                        height: 4
+                        line_width: 2
+                        line_rounded: true
+                        line_color: 0x2A5A9E
+                        points:
+                          - 0, 2
+                          - 192, 2
+                    - line:
+                        id: screen_queue_line_mid
+                        x: 16
                         y: 88
-                        width: 138
-                        height: 42
-                        text: "--"
-                        text_color: 0xF1F5F9
-                        text_align: CENTER
-                        text_font: montserrat_28
-                        long_mode: DOT
+                        width: 192
+                        height: 4
+                        line_width: 2
+                        line_rounded: true
+                        line_color: 0x2A5A9E
+                        points:
+                          - 0, 2
+                          - 192, 2
               - obj:
-                  id: w07_card
-                  hidden: true
-                  x: 163
-                  y: 323
-                  width: 154
-                  height: 74
-                  bg_color: 0x070E1B
-                  bg_opa: 100%
+                  id: dashboard_canvas
+                  x: 0
+                  y: 0
+                  width: 480
+                  height: 480
+                  bg_opa: 0%
                   border_width: 0
-                  radius: 20
-                  shadow_width: 18
-                  shadow_color: 0x000000
-                  shadow_opa: 18%
-                  clickable: true
+                  pad_all: 0
+                  clickable: false
                   scrollable: false
-                  press_lock: true
-                  on_click:
-                    then:
-                      - script.execute:
-                          id: dispatch_widget_click
-                          widget_id: "w07"
-                          widget_type: !lambda "return id(w07_type).state;"
-                          action: !lambda "return id(w07_action).state;"
-                          value: !lambda "return id(w07_value).state;"
-                          label: !lambda "return id(w07_label).state;"
-                  on_long_press:
-                    then:
-                      - lambda: |-
-                          id(suppress_click_widget) = "w07";
-                          id(suppress_click_until_ms) = millis() + 1500;
-                      - script.execute:
-                          id: dispatch_widget_action
-                          widget_id: "w07"
-                          widget_type: !lambda "return id(w07_type).state;"
-                          action: !lambda "return id(w07_action).state;"
-                          value: !lambda "return id(w07_value).state;"
-                          label: !lambda "return id(w07_label).state;"
-                          hold: true
                   scrollbar_mode: "OFF"
-                  pad_all: 8
                   widgets:
-                    - label:
-                        id: w07_icon_label
-                        clickable: false
-                        x: 7
-                        y: 8
-                        width: 38
-                        height: 38
-                        text: "\U000F05A9"
-                        text_font: mdi_icons_32
-                        text_align: CENTER
-                        text_color: 0xF59E0B
-                    - label:
-                        id: w07_label_label
-                        clickable: false
-                        x: 48
-                        y: 8
-                        width: 90
-                        height: 18
-                        text: "WiFi"
-                        text_color: 0x8E9FB8
-                        text_align: LEFT
-                        text_font: montserrat_12
-                        long_mode: DOT
-                    - label:
-                        id: w07_value_label
-                        clickable: false
-                        x: 48
-                        y: 26
-                        width: 90
-                        height: 42
-                        text: "Online"
-                        text_color: 0xF1F5F9
-                        text_align: LEFT
-                        text_font: montserrat_16
-                        long_mode: DOT
-              - obj:
-                  id: w08_card
-                  hidden: true
-                  x: 163
-                  y: 403
-                  width: 154
-                  height: 74
-                  bg_color: 0x070E1B
-                  bg_opa: 100%
-                  border_width: 0
-                  radius: 20
-                  shadow_width: 18
-                  shadow_color: 0x000000
-                  shadow_opa: 18%
-                  clickable: true
-                  scrollable: false
-                  press_lock: true
-                  on_click:
-                    then:
-                      - script.execute:
-                          id: dispatch_widget_click
-                          widget_id: "w08"
-                          widget_type: !lambda "return id(w08_type).state;"
-                          action: !lambda "return id(w08_action).state;"
-                          value: !lambda "return id(w08_value).state;"
-                          label: !lambda "return id(w08_label).state;"
-                  on_long_press:
-                    then:
-                      - lambda: |-
-                          id(suppress_click_widget) = "w08";
-                          id(suppress_click_until_ms) = millis() + 1500;
-                      - script.execute:
-                          id: dispatch_widget_action
-                          widget_id: "w08"
-                          widget_type: !lambda "return id(w08_type).state;"
-                          action: !lambda "return id(w08_action).state;"
-                          value: !lambda "return id(w08_value).state;"
-                          label: !lambda "return id(w08_label).state;"
-                          hold: true
-                  scrollbar_mode: "OFF"
-                  pad_all: 8
-                  widgets:
-                    - label:
-                        id: w08_icon_label
-                        clickable: false
-                        x: 7
-                        y: 8
-                        width: 38
-                        height: 38
-                        text: "\U000F07D0"
-                        text_font: mdi_icons_32
-                        text_align: CENTER
-                        text_color: 0xF59E0B
-                    - label:
-                        id: w08_label_label
-                        clickable: false
-                        x: 48
-                        y: 8
-                        width: 90
-                        height: 18
-                        text: "Scene"
-                        text_color: 0x8E9FB8
-                        text_align: LEFT
-                        text_font: montserrat_12
-                        long_mode: DOT
-                    - label:
-                        id: w08_value_label
-                        clickable: false
-                        x: 48
-                        y: 26
-                        width: 90
-                        height: 42
-                        text: "Home"
-                        text_color: 0xF1F5F9
-                        text_align: LEFT
-                        text_font: montserrat_16
-                        long_mode: DOT
-              - obj:
-                  id: w09_card
-                  hidden: true
-                  x: 323
-                  y: 323
-                  width: 154
-                  height: 74
-                  bg_color: 0x070E1B
-                  bg_opa: 100%
-                  border_width: 0
-                  radius: 20
-                  shadow_width: 18
-                  shadow_color: 0x000000
-                  shadow_opa: 18%
-                  clickable: true
-                  scrollable: false
-                  press_lock: true
-                  on_click:
-                    then:
-                      - script.execute:
-                          id: dispatch_widget_click
-                          widget_id: "w09"
-                          widget_type: !lambda "return id(w09_type).state;"
-                          action: !lambda "return id(w09_action).state;"
-                          value: !lambda "return id(w09_value).state;"
-                          label: !lambda "return id(w09_label).state;"
-                  on_long_press:
-                    then:
-                      - lambda: |-
-                          id(suppress_click_widget) = "w09";
-                          id(suppress_click_until_ms) = millis() + 1500;
-                      - script.execute:
-                          id: dispatch_widget_action
-                          widget_id: "w09"
-                          widget_type: !lambda "return id(w09_type).state;"
-                          action: !lambda "return id(w09_action).state;"
-                          value: !lambda "return id(w09_value).state;"
-                          label: !lambda "return id(w09_label).state;"
-                          hold: true
-                  scrollbar_mode: "OFF"
-                  pad_all: 8
-                  widgets:
-                    - label:
-                        id: w09_icon_label
-                        clickable: false
-                        x: 7
-                        y: 8
-                        width: 38
-                        height: 38
-                        text: "\U000F081C"
-                        text_font: mdi_icons_32
-                        text_align: CENTER
-                        text_color: 0xF59E0B
-                    - label:
-                        id: w09_label_label
-                        clickable: false
-                        x: 48
-                        y: 8
-                        width: 90
-                        height: 18
-                        text: "Door"
-                        text_color: 0x8E9FB8
-                        text_align: LEFT
-                        text_font: montserrat_12
-                        long_mode: DOT
-                    - label:
-                        id: w09_value_label
-                        clickable: false
-                        x: 48
-                        y: 26
-                        width: 90
-                        height: 42
-                        text: "Closed"
-                        text_color: 0xF1F5F9
-                        text_align: LEFT
-                        text_font: montserrat_16
-                        long_mode: DOT
-              - obj:
-                  id: w10_card
-                  hidden: true
-                  x: 323
-                  y: 403
-                  width: 154
-                  height: 74
-                  bg_color: 0x070E1B
-                  bg_opa: 100%
-                  border_width: 0
-                  radius: 20
-                  shadow_width: 18
-                  shadow_color: 0x000000
-                  shadow_opa: 18%
-                  clickable: true
-                  scrollable: false
-                  press_lock: true
-                  on_click:
-                    then:
-                      - script.execute:
-                          id: dispatch_widget_click
-                          widget_id: "w10"
-                          widget_type: !lambda "return id(w10_type).state;"
-                          action: !lambda "return id(w10_action).state;"
-                          value: !lambda "return id(w10_value).state;"
-                          label: !lambda "return id(w10_label).state;"
-                  on_long_press:
-                    then:
-                      - lambda: |-
-                          id(suppress_click_widget) = "w10";
-                          id(suppress_click_until_ms) = millis() + 1500;
-                      - script.execute:
-                          id: dispatch_widget_action
-                          widget_id: "w10"
-                          widget_type: !lambda "return id(w10_type).state;"
-                          action: !lambda "return id(w10_action).state;"
-                          value: !lambda "return id(w10_value).state;"
-                          label: !lambda "return id(w10_label).state;"
-                          hold: true
-                  scrollbar_mode: "OFF"
-                  pad_all: 8
-                  widgets:
-                    - label:
-                        id: w10_icon_label
-                        clickable: false
-                        x: 7
-                        y: 8
-                        width: 38
-                        height: 38
-                        text: "\U000F04B9"
-                        text_font: mdi_icons_32
-                        text_align: CENTER
-                        text_color: 0xF59E0B
-                    - label:
-                        id: w10_label_label
-                        clickable: false
-                        x: 48
-                        y: 8
-                        width: 90
-                        height: 18
-                        text: "Sofa"
-                        text_color: 0x8E9FB8
-                        text_align: LEFT
-                        text_font: montserrat_12
-                        long_mode: DOT
-                    - label:
-                        id: w10_value_label
-                        clickable: false
-                        x: 48
-                        y: 26
-                        width: 90
-                        height: 42
-                        text: "Ready"
-                        text_color: 0xF1F5F9
-                        text_align: LEFT
-                        text_font: montserrat_16
-                        long_mode: DOT
-              - obj:
-                  id: w11_card
-                  hidden: true
-                  x: 3
-                  y: 163
-                  width: 154
-                  height: 74
-                  bg_color: 0x070E1B
-                  bg_opa: 100%
-                  border_width: 0
-                  radius: 20
-                  shadow_width: 18
-                  shadow_color: 0x000000
-                  shadow_opa: 18%
-                  clickable: true
-                  scrollable: false
-                  press_lock: true
-                  on_click:
-                    then:
-                      - script.execute:
-                          id: dispatch_widget_click
-                          widget_id: "w11"
-                          widget_type: !lambda "return id(w11_type).state;"
-                          action: !lambda "return id(w11_action).state;"
-                          value: !lambda "return id(w11_value).state;"
-                          label: !lambda "return id(w11_label).state;"
-                  on_long_press:
-                    then:
-                      - lambda: |-
-                          id(suppress_click_widget) = "w11";
-                          id(suppress_click_until_ms) = millis() + 1500;
-                      - script.execute:
-                          id: dispatch_widget_action
-                          widget_id: "w11"
-                          widget_type: !lambda "return id(w11_type).state;"
-                          action: !lambda "return id(w11_action).state;"
-                          value: !lambda "return id(w11_value).state;"
-                          label: !lambda "return id(w11_label).state;"
-                          hold: true
-                  scrollbar_mode: "OFF"
-                  pad_all: 8
-                  widgets:
-                    - label:
-                        id: w11_icon_label
-                        clickable: false
-                        x: 7
-                        y: 8
-                        width: 38
-                        height: 38
-                        text: "\U000F06E8"
-                        text_font: mdi_icons_32
-                        text_align: CENTER
-                        text_color: 0xF59E0B
-                    - label:
-                        id: w11_label_label
-                        clickable: false
-                        x: 48
-                        y: 8
-                        width: 90
-                        height: 18
-                        text: "Blank"
-                        text_color: 0x8E9FB8
-                        text_align: LEFT
-                        text_font: montserrat_12
-                        long_mode: DOT
-                    - label:
-                        id: w11_value_label
-                        clickable: false
-                        x: 48
-                        y: 26
-                        width: 90
-                        height: 42
-                        text: ""
-                        text_color: 0xF1F5F9
-                        text_align: LEFT
-                        text_font: montserrat_16
-                        long_mode: DOT
-              - obj:
-                  id: w12_card
-                  hidden: true
-                  x: 163
-                  y: 163
-                  width: 154
-                  height: 74
-                  bg_color: 0x070E1B
-                  bg_opa: 100%
-                  border_width: 0
-                  radius: 20
-                  shadow_width: 18
-                  shadow_color: 0x000000
-                  shadow_opa: 18%
-                  clickable: true
-                  scrollable: false
-                  press_lock: true
-                  on_click:
-                    then:
-                      - script.execute:
-                          id: dispatch_widget_click
-                          widget_id: "w12"
-                          widget_type: !lambda "return id(w12_type).state;"
-                          action: !lambda "return id(w12_action).state;"
-                          value: !lambda "return id(w12_value).state;"
-                          label: !lambda "return id(w12_label).state;"
-                  on_long_press:
-                    then:
-                      - lambda: |-
-                          id(suppress_click_widget) = "w12";
-                          id(suppress_click_until_ms) = millis() + 1500;
-                      - script.execute:
-                          id: dispatch_widget_action
-                          widget_id: "w12"
-                          widget_type: !lambda "return id(w12_type).state;"
-                          action: !lambda "return id(w12_action).state;"
-                          value: !lambda "return id(w12_value).state;"
-                          label: !lambda "return id(w12_label).state;"
-                          hold: true
-                  scrollbar_mode: "OFF"
-                  pad_all: 8
-                  widgets:
-                    - label:
-                        id: w12_icon_label
-                        clickable: false
-                        x: 7
-                        y: 8
-                        width: 38
-                        height: 38
-                        text: "\U000F06E8"
-                        text_font: mdi_icons_32
-                        text_align: CENTER
-                        text_color: 0xF59E0B
-                    - label:
-                        id: w12_label_label
-                        clickable: false
-                        x: 48
-                        y: 8
-                        width: 90
-                        height: 18
-                        text: "Blank"
-                        text_color: 0x8E9FB8
-                        text_align: LEFT
-                        text_font: montserrat_12
-                        long_mode: DOT
-                    - label:
-                        id: w12_value_label
-                        clickable: false
-                        x: 48
-                        y: 26
-                        width: 90
-                        height: 42
-                        text: ""
-                        text_color: 0xF1F5F9
-                        text_align: LEFT
-                        text_font: montserrat_16
-                        long_mode: DOT
+                    - obj:
+                        id: w01_card
+                        x: 3
+                        y: 3
+                        width: 234
+                        height: 74
+                        bg_color: 0x070E1B
+                        bg_opa: 100%
+                        border_width: 0
+                        radius: 20
+                        shadow_width: 18
+                        shadow_color: 0x000000
+                        shadow_opa: 18%
+                        clickable: true
+                        scrollable: false
+                        press_lock: true
+                        on_click:
+                          then:
+                            - script.execute:
+                                id: dispatch_widget_click
+                                widget_id: "w01"
+                                widget_type: !lambda "return id(w01_type).state;"
+                                action: !lambda "return id(w01_action).state;"
+                                value: !lambda "return id(w01_value).state;"
+                                label: !lambda "return id(w01_label).state;"
+                        on_long_press:
+                          then:
+                            - lambda: |-
+                                id(suppress_click_widget) = "w01";
+                                id(suppress_click_until_ms) = millis() + 1500;
+                            - script.execute:
+                                id: dispatch_widget_action
+                                widget_id: "w01"
+                                widget_type: !lambda "return id(w01_type).state;"
+                                action: !lambda "return id(w01_action).state;"
+                                value: !lambda "return id(w01_value).state;"
+                                label: !lambda "return id(w01_label).state;"
+                                hold: true
+                        scrollbar_mode: "OFF"
+                        pad_all: 0
+                        widgets:
+                          - label:
+                              id: w01_icon_label
+                              clickable: false
+                              x: 7
+                              y: 8
+                              width: 38
+                              height: 38
+                              text: "\U000F0150"
+                              text_font: mdi_icons_32
+                              text_align: CENTER
+                              text_color: 0xF59E0B
+                          - label:
+                              id: w01_label_label
+                              clickable: false
+                              x: 48
+                              y: 8
+                              width: 170
+                              height: 18
+                              text: "Clock"
+                              text_color: 0x8E9FB8
+                              text_align: LEFT
+                              text_font: montserrat_12
+                              long_mode: DOT
+                          - label:
+                              id: w01_value_label
+                              clickable: false
+                              x: 48
+                              y: 26
+                              width: 170
+                              height: 42
+                              text: "--:--"
+                              text_color: 0xF1F5F9
+                              text_align: LEFT
+                              text_font: montserrat_28
+                              long_mode: DOT
+                    - obj:
+                        id: w02_card
+                        x: 243
+                        y: 3
+                        width: 234
+                        height: 74
+                        bg_color: 0x070E1B
+                        bg_opa: 100%
+                        border_width: 0
+                        radius: 20
+                        shadow_width: 18
+                        shadow_color: 0x000000
+                        shadow_opa: 18%
+                        clickable: true
+                        scrollable: false
+                        press_lock: true
+                        on_click:
+                          then:
+                            - script.execute:
+                                id: dispatch_widget_click
+                                widget_id: "w02"
+                                widget_type: !lambda "return id(w02_type).state;"
+                                action: !lambda "return id(w02_action).state;"
+                                value: !lambda "return id(w02_value).state;"
+                                label: !lambda "return id(w02_label).state;"
+                        on_long_press:
+                          then:
+                            - lambda: |-
+                                id(suppress_click_widget) = "w02";
+                                id(suppress_click_until_ms) = millis() + 1500;
+                            - script.execute:
+                                id: dispatch_widget_action
+                                widget_id: "w02"
+                                widget_type: !lambda "return id(w02_type).state;"
+                                action: !lambda "return id(w02_action).state;"
+                                value: !lambda "return id(w02_value).state;"
+                                label: !lambda "return id(w02_label).state;"
+                                hold: true
+                        scrollbar_mode: "OFF"
+                        pad_all: 0
+                        widgets:
+                          - label:
+                              id: w02_icon_label
+                              clickable: false
+                              x: 7
+                              y: 8
+                              width: 38
+                              height: 38
+                              text: "\U000F00ED"
+                              text_font: mdi_icons_32
+                              text_align: CENTER
+                              text_color: 0xF59E0B
+                          - label:
+                              id: w02_label_label
+                              clickable: false
+                              x: 48
+                              y: 8
+                              width: 170
+                              height: 18
+                              text: "Date"
+                              text_color: 0x8E9FB8
+                              text_align: LEFT
+                              text_font: montserrat_12
+                              long_mode: DOT
+                          - label:
+                              id: w02_value_label
+                              clickable: false
+                              x: 48
+                              y: 26
+                              width: 170
+                              height: 42
+                              text: "--"
+                              text_color: 0xF1F5F9
+                              text_align: LEFT
+                              text_font: montserrat_22
+                              long_mode: DOT
+                    - obj:
+                        id: w03_card
+                        x: 3
+                        y: 83
+                        width: 234
+                        height: 74
+                        bg_color: 0x070E1B
+                        bg_opa: 100%
+                        border_width: 0
+                        radius: 20
+                        shadow_width: 18
+                        shadow_color: 0x000000
+                        shadow_opa: 18%
+                        clickable: true
+                        scrollable: false
+                        press_lock: true
+                        on_click:
+                          then:
+                            - script.execute:
+                                id: dispatch_widget_click
+                                widget_id: "w03"
+                                widget_type: !lambda "return id(w03_type).state;"
+                                action: !lambda "return id(w03_action).state;"
+                                value: !lambda "return id(w03_value).state;"
+                                label: !lambda "return id(w03_label).state;"
+                        on_long_press:
+                          then:
+                            - lambda: |-
+                                id(suppress_click_widget) = "w03";
+                                id(suppress_click_until_ms) = millis() + 1500;
+                            - script.execute:
+                                id: dispatch_widget_action
+                                widget_id: "w03"
+                                widget_type: !lambda "return id(w03_type).state;"
+                                action: !lambda "return id(w03_action).state;"
+                                value: !lambda "return id(w03_value).state;"
+                                label: !lambda "return id(w03_label).state;"
+                                hold: true
+                        scrollbar_mode: "OFF"
+                        pad_all: 0
+                        widgets:
+                          - label:
+                              id: w03_icon_label
+                              clickable: false
+                              x: 7
+                              y: 8
+                              width: 38
+                              height: 38
+                              text: "\U000F0595"
+                              text_font: mdi_icons_32
+                              text_align: CENTER
+                              text_color: 0xF59E0B
+                          - label:
+                              id: w03_label_label
+                              clickable: false
+                              x: 48
+                              y: 8
+                              width: 170
+                              height: 18
+                              text: "Weather"
+                              text_color: 0x8E9FB8
+                              text_align: LEFT
+                              text_font: montserrat_12
+                              long_mode: DOT
+                          - label:
+                              id: w03_value_label
+                              clickable: false
+                              x: 48
+                              y: 26
+                              width: 170
+                              height: 42
+                              text: "--"
+                              text_color: 0xF1F5F9
+                              text_align: LEFT
+                              text_font: montserrat_22
+                              long_mode: DOT
+                    - obj:
+                        id: w04_card
+                        x: 243
+                        y: 83
+                        width: 154
+                        height: 74
+                        bg_color: 0x070E1B
+                        bg_opa: 100%
+                        border_width: 0
+                        radius: 20
+                        shadow_width: 18
+                        shadow_color: 0x000000
+                        shadow_opa: 18%
+                        clickable: true
+                        scrollable: false
+                        press_lock: true
+                        on_click:
+                          then:
+                            - script.execute:
+                                id: dispatch_widget_click
+                                widget_id: "w04"
+                                widget_type: !lambda "return id(w04_type).state;"
+                                action: !lambda "return id(w04_action).state;"
+                                value: !lambda "return id(w04_value).state;"
+                                label: !lambda "return id(w04_label).state;"
+                        on_long_press:
+                          then:
+                            - lambda: |-
+                                id(suppress_click_widget) = "w04";
+                                id(suppress_click_until_ms) = millis() + 1500;
+                            - script.execute:
+                                id: dispatch_widget_action
+                                widget_id: "w04"
+                                widget_type: !lambda "return id(w04_type).state;"
+                                action: !lambda "return id(w04_action).state;"
+                                value: !lambda "return id(w04_value).state;"
+                                label: !lambda "return id(w04_label).state;"
+                                hold: true
+                        scrollbar_mode: "OFF"
+                        pad_all: 0
+                        widgets:
+                          - label:
+                              id: w04_icon_label
+                              clickable: false
+                              x: 7
+                              y: 8
+                              width: 38
+                              height: 38
+                              text: "\U000F050F"
+                              text_font: mdi_icons_32
+                              text_align: CENTER
+                              text_color: 0xF59E0B
+                          - label:
+                              id: w04_label_label
+                              clickable: false
+                              x: 48
+                              y: 8
+                              width: 90
+                              height: 18
+                              text: "Temp"
+                              text_color: 0x8E9FB8
+                              text_align: LEFT
+                              text_font: montserrat_12
+                              long_mode: DOT
+                          - label:
+                              id: w04_value_label
+                              clickable: false
+                              x: 48
+                              y: 26
+                              width: 90
+                              height: 42
+                              text: "--"
+                              text_color: 0xF1F5F9
+                              text_align: LEFT
+                              text_font: montserrat_22
+                              long_mode: DOT
+                    - obj:
+                        id: w05_card
+                        x: 403
+                        y: 83
+                        width: 74
+                        height: 74
+                        bg_color: 0x070E1B
+                        bg_opa: 100%
+                        border_width: 0
+                        radius: 20
+                        shadow_width: 18
+                        shadow_color: 0x000000
+                        shadow_opa: 18%
+                        clickable: true
+                        scrollable: false
+                        press_lock: true
+                        on_click:
+                          then:
+                            - script.execute:
+                                id: dispatch_widget_click
+                                widget_id: "w05"
+                                widget_type: !lambda "return id(w05_type).state;"
+                                action: !lambda "return id(w05_action).state;"
+                                value: !lambda "return id(w05_value).state;"
+                                label: !lambda "return id(w05_label).state;"
+                        on_long_press:
+                          then:
+                            - lambda: |-
+                                id(suppress_click_widget) = "w05";
+                                id(suppress_click_until_ms) = millis() + 1500;
+                            - script.execute:
+                                id: dispatch_widget_action
+                                widget_id: "w05"
+                                widget_type: !lambda "return id(w05_type).state;"
+                                action: !lambda "return id(w05_action).state;"
+                                value: !lambda "return id(w05_value).state;"
+                                label: !lambda "return id(w05_label).state;"
+                                hold: true
+                        scrollbar_mode: "OFF"
+                        pad_all: 0
+                        widgets:
+                          - label:
+                              id: w05_icon_label
+                              clickable: false
+                              x: 18
+                              y: 5
+                              width: 38
+                              height: 38
+                              text: "\U000F058E"
+                              text_font: mdi_icons_32
+                              text_align: CENTER
+                              text_color: 0xF59E0B
+                          - label:
+                              id: w05_label_label
+                              clickable: false
+                              x: 4
+                              y: 39
+                              width: 66
+                              height: 18
+                              text: "Humidity"
+                              text_color: 0x8E9FB8
+                              text_align: CENTER
+                              text_font: montserrat_12
+                              long_mode: DOT
+                          - label:
+                              id: w05_value_label
+                              clickable: false
+                              x: 4
+                              y: 54
+                              width: 66
+                              height: 42
+                              text: "--"
+                              text_color: 0xF1F5F9
+                              text_align: CENTER
+                              text_font: montserrat_16
+                              long_mode: DOT
+                    - obj:
+                        id: w06_card
+                        x: 3
+                        y: 323
+                        width: 154
+                        height: 154
+                        bg_color: 0x070E1B
+                        bg_opa: 100%
+                        border_width: 0
+                        radius: 20
+                        shadow_width: 18
+                        shadow_color: 0x000000
+                        shadow_opa: 18%
+                        clickable: true
+                        scrollable: false
+                        press_lock: true
+                        on_click:
+                          then:
+                            - script.execute:
+                                id: dispatch_widget_click
+                                widget_id: "w06"
+                                widget_type: !lambda "return id(w06_type).state;"
+                                action: !lambda "return id(w06_action).state;"
+                                value: !lambda "return id(w06_value).state;"
+                                label: !lambda "return id(w06_label).state;"
+                        on_long_press:
+                          then:
+                            - lambda: |-
+                                id(suppress_click_widget) = "w06";
+                                id(suppress_click_until_ms) = millis() + 1500;
+                            - script.execute:
+                                id: dispatch_widget_action
+                                widget_id: "w06"
+                                widget_type: !lambda "return id(w06_type).state;"
+                                action: !lambda "return id(w06_action).state;"
+                                value: !lambda "return id(w06_value).state;"
+                                label: !lambda "return id(w06_label).state;"
+                                hold: true
+                        scrollbar_mode: "OFF"
+                        pad_all: 0
+                        widgets:
+                          - label:
+                              id: w06_icon_label
+                              clickable: false
+                              x: 56
+                              y: 14
+                              width: 42
+                              height: 38
+                              text: "\U000F0769"
+                              text_font: mdi_icons_32
+                              text_align: CENTER
+                              text_color: 0xF59E0B
+                          - label:
+                              id: w06_label_label
+                              clickable: false
+                              x: 8
+                              y: 62
+                              width: 138
+                              height: 18
+                              text: "Main Light"
+                              text_color: 0x8E9FB8
+                              text_align: CENTER
+                              text_font: montserrat_14
+                              long_mode: DOT
+                          - label:
+                              id: w06_value_label
+                              clickable: false
+                              x: 8
+                              y: 88
+                              width: 138
+                              height: 42
+                              text: "--"
+                              text_color: 0xF1F5F9
+                              text_align: CENTER
+                              text_font: montserrat_28
+                              long_mode: DOT
+                    - obj:
+                        id: w07_card
+                        hidden: true
+                        x: 163
+                        y: 323
+                        width: 154
+                        height: 74
+                        bg_color: 0x070E1B
+                        bg_opa: 100%
+                        border_width: 0
+                        radius: 20
+                        shadow_width: 18
+                        shadow_color: 0x000000
+                        shadow_opa: 18%
+                        clickable: true
+                        scrollable: false
+                        press_lock: true
+                        on_click:
+                          then:
+                            - script.execute:
+                                id: dispatch_widget_click
+                                widget_id: "w07"
+                                widget_type: !lambda "return id(w07_type).state;"
+                                action: !lambda "return id(w07_action).state;"
+                                value: !lambda "return id(w07_value).state;"
+                                label: !lambda "return id(w07_label).state;"
+                        on_long_press:
+                          then:
+                            - lambda: |-
+                                id(suppress_click_widget) = "w07";
+                                id(suppress_click_until_ms) = millis() + 1500;
+                            - script.execute:
+                                id: dispatch_widget_action
+                                widget_id: "w07"
+                                widget_type: !lambda "return id(w07_type).state;"
+                                action: !lambda "return id(w07_action).state;"
+                                value: !lambda "return id(w07_value).state;"
+                                label: !lambda "return id(w07_label).state;"
+                                hold: true
+                        scrollbar_mode: "OFF"
+                        pad_all: 8
+                        widgets:
+                          - label:
+                              id: w07_icon_label
+                              clickable: false
+                              x: 7
+                              y: 8
+                              width: 38
+                              height: 38
+                              text: "\U000F05A9"
+                              text_font: mdi_icons_32
+                              text_align: CENTER
+                              text_color: 0xF59E0B
+                          - label:
+                              id: w07_label_label
+                              clickable: false
+                              x: 48
+                              y: 8
+                              width: 90
+                              height: 18
+                              text: "WiFi"
+                              text_color: 0x8E9FB8
+                              text_align: LEFT
+                              text_font: montserrat_12
+                              long_mode: DOT
+                          - label:
+                              id: w07_value_label
+                              clickable: false
+                              x: 48
+                              y: 26
+                              width: 90
+                              height: 42
+                              text: "Online"
+                              text_color: 0xF1F5F9
+                              text_align: LEFT
+                              text_font: montserrat_16
+                              long_mode: DOT
+                    - obj:
+                        id: w08_card
+                        hidden: true
+                        x: 163
+                        y: 403
+                        width: 154
+                        height: 74
+                        bg_color: 0x070E1B
+                        bg_opa: 100%
+                        border_width: 0
+                        radius: 20
+                        shadow_width: 18
+                        shadow_color: 0x000000
+                        shadow_opa: 18%
+                        clickable: true
+                        scrollable: false
+                        press_lock: true
+                        on_click:
+                          then:
+                            - script.execute:
+                                id: dispatch_widget_click
+                                widget_id: "w08"
+                                widget_type: !lambda "return id(w08_type).state;"
+                                action: !lambda "return id(w08_action).state;"
+                                value: !lambda "return id(w08_value).state;"
+                                label: !lambda "return id(w08_label).state;"
+                        on_long_press:
+                          then:
+                            - lambda: |-
+                                id(suppress_click_widget) = "w08";
+                                id(suppress_click_until_ms) = millis() + 1500;
+                            - script.execute:
+                                id: dispatch_widget_action
+                                widget_id: "w08"
+                                widget_type: !lambda "return id(w08_type).state;"
+                                action: !lambda "return id(w08_action).state;"
+                                value: !lambda "return id(w08_value).state;"
+                                label: !lambda "return id(w08_label).state;"
+                                hold: true
+                        scrollbar_mode: "OFF"
+                        pad_all: 8
+                        widgets:
+                          - label:
+                              id: w08_icon_label
+                              clickable: false
+                              x: 7
+                              y: 8
+                              width: 38
+                              height: 38
+                              text: "\U000F07D0"
+                              text_font: mdi_icons_32
+                              text_align: CENTER
+                              text_color: 0xF59E0B
+                          - label:
+                              id: w08_label_label
+                              clickable: false
+                              x: 48
+                              y: 8
+                              width: 90
+                              height: 18
+                              text: "Scene"
+                              text_color: 0x8E9FB8
+                              text_align: LEFT
+                              text_font: montserrat_12
+                              long_mode: DOT
+                          - label:
+                              id: w08_value_label
+                              clickable: false
+                              x: 48
+                              y: 26
+                              width: 90
+                              height: 42
+                              text: "Home"
+                              text_color: 0xF1F5F9
+                              text_align: LEFT
+                              text_font: montserrat_16
+                              long_mode: DOT
+                    - obj:
+                        id: w09_card
+                        hidden: true
+                        x: 323
+                        y: 323
+                        width: 154
+                        height: 74
+                        bg_color: 0x070E1B
+                        bg_opa: 100%
+                        border_width: 0
+                        radius: 20
+                        shadow_width: 18
+                        shadow_color: 0x000000
+                        shadow_opa: 18%
+                        clickable: true
+                        scrollable: false
+                        press_lock: true
+                        on_click:
+                          then:
+                            - script.execute:
+                                id: dispatch_widget_click
+                                widget_id: "w09"
+                                widget_type: !lambda "return id(w09_type).state;"
+                                action: !lambda "return id(w09_action).state;"
+                                value: !lambda "return id(w09_value).state;"
+                                label: !lambda "return id(w09_label).state;"
+                        on_long_press:
+                          then:
+                            - lambda: |-
+                                id(suppress_click_widget) = "w09";
+                                id(suppress_click_until_ms) = millis() + 1500;
+                            - script.execute:
+                                id: dispatch_widget_action
+                                widget_id: "w09"
+                                widget_type: !lambda "return id(w09_type).state;"
+                                action: !lambda "return id(w09_action).state;"
+                                value: !lambda "return id(w09_value).state;"
+                                label: !lambda "return id(w09_label).state;"
+                                hold: true
+                        scrollbar_mode: "OFF"
+                        pad_all: 8
+                        widgets:
+                          - label:
+                              id: w09_icon_label
+                              clickable: false
+                              x: 7
+                              y: 8
+                              width: 38
+                              height: 38
+                              text: "\U000F081C"
+                              text_font: mdi_icons_32
+                              text_align: CENTER
+                              text_color: 0xF59E0B
+                          - label:
+                              id: w09_label_label
+                              clickable: false
+                              x: 48
+                              y: 8
+                              width: 90
+                              height: 18
+                              text: "Door"
+                              text_color: 0x8E9FB8
+                              text_align: LEFT
+                              text_font: montserrat_12
+                              long_mode: DOT
+                          - label:
+                              id: w09_value_label
+                              clickable: false
+                              x: 48
+                              y: 26
+                              width: 90
+                              height: 42
+                              text: "Closed"
+                              text_color: 0xF1F5F9
+                              text_align: LEFT
+                              text_font: montserrat_16
+                              long_mode: DOT
+                    - obj:
+                        id: w10_card
+                        hidden: true
+                        x: 323
+                        y: 403
+                        width: 154
+                        height: 74
+                        bg_color: 0x070E1B
+                        bg_opa: 100%
+                        border_width: 0
+                        radius: 20
+                        shadow_width: 18
+                        shadow_color: 0x000000
+                        shadow_opa: 18%
+                        clickable: true
+                        scrollable: false
+                        press_lock: true
+                        on_click:
+                          then:
+                            - script.execute:
+                                id: dispatch_widget_click
+                                widget_id: "w10"
+                                widget_type: !lambda "return id(w10_type).state;"
+                                action: !lambda "return id(w10_action).state;"
+                                value: !lambda "return id(w10_value).state;"
+                                label: !lambda "return id(w10_label).state;"
+                        on_long_press:
+                          then:
+                            - lambda: |-
+                                id(suppress_click_widget) = "w10";
+                                id(suppress_click_until_ms) = millis() + 1500;
+                            - script.execute:
+                                id: dispatch_widget_action
+                                widget_id: "w10"
+                                widget_type: !lambda "return id(w10_type).state;"
+                                action: !lambda "return id(w10_action).state;"
+                                value: !lambda "return id(w10_value).state;"
+                                label: !lambda "return id(w10_label).state;"
+                                hold: true
+                        scrollbar_mode: "OFF"
+                        pad_all: 8
+                        widgets:
+                          - label:
+                              id: w10_icon_label
+                              clickable: false
+                              x: 7
+                              y: 8
+                              width: 38
+                              height: 38
+                              text: "\U000F04B9"
+                              text_font: mdi_icons_32
+                              text_align: CENTER
+                              text_color: 0xF59E0B
+                          - label:
+                              id: w10_label_label
+                              clickable: false
+                              x: 48
+                              y: 8
+                              width: 90
+                              height: 18
+                              text: "Sofa"
+                              text_color: 0x8E9FB8
+                              text_align: LEFT
+                              text_font: montserrat_12
+                              long_mode: DOT
+                          - label:
+                              id: w10_value_label
+                              clickable: false
+                              x: 48
+                              y: 26
+                              width: 90
+                              height: 42
+                              text: "Ready"
+                              text_color: 0xF1F5F9
+                              text_align: LEFT
+                              text_font: montserrat_16
+                              long_mode: DOT
+                    - obj:
+                        id: w11_card
+                        hidden: true
+                        x: 3
+                        y: 163
+                        width: 154
+                        height: 74
+                        bg_color: 0x070E1B
+                        bg_opa: 100%
+                        border_width: 0
+                        radius: 20
+                        shadow_width: 18
+                        shadow_color: 0x000000
+                        shadow_opa: 18%
+                        clickable: true
+                        scrollable: false
+                        press_lock: true
+                        on_click:
+                          then:
+                            - script.execute:
+                                id: dispatch_widget_click
+                                widget_id: "w11"
+                                widget_type: !lambda "return id(w11_type).state;"
+                                action: !lambda "return id(w11_action).state;"
+                                value: !lambda "return id(w11_value).state;"
+                                label: !lambda "return id(w11_label).state;"
+                        on_long_press:
+                          then:
+                            - lambda: |-
+                                id(suppress_click_widget) = "w11";
+                                id(suppress_click_until_ms) = millis() + 1500;
+                            - script.execute:
+                                id: dispatch_widget_action
+                                widget_id: "w11"
+                                widget_type: !lambda "return id(w11_type).state;"
+                                action: !lambda "return id(w11_action).state;"
+                                value: !lambda "return id(w11_value).state;"
+                                label: !lambda "return id(w11_label).state;"
+                                hold: true
+                        scrollbar_mode: "OFF"
+                        pad_all: 8
+                        widgets:
+                          - label:
+                              id: w11_icon_label
+                              clickable: false
+                              x: 7
+                              y: 8
+                              width: 38
+                              height: 38
+                              text: "\U000F06E8"
+                              text_font: mdi_icons_32
+                              text_align: CENTER
+                              text_color: 0xF59E0B
+                          - label:
+                              id: w11_label_label
+                              clickable: false
+                              x: 48
+                              y: 8
+                              width: 90
+                              height: 18
+                              text: "Blank"
+                              text_color: 0x8E9FB8
+                              text_align: LEFT
+                              text_font: montserrat_12
+                              long_mode: DOT
+                          - label:
+                              id: w11_value_label
+                              clickable: false
+                              x: 48
+                              y: 26
+                              width: 90
+                              height: 42
+                              text: ""
+                              text_color: 0xF1F5F9
+                              text_align: LEFT
+                              text_font: montserrat_16
+                              long_mode: DOT
+                    - obj:
+                        id: w12_card
+                        hidden: true
+                        x: 163
+                        y: 163
+                        width: 154
+                        height: 74
+                        bg_color: 0x070E1B
+                        bg_opa: 100%
+                        border_width: 0
+                        radius: 20
+                        shadow_width: 18
+                        shadow_color: 0x000000
+                        shadow_opa: 18%
+                        clickable: true
+                        scrollable: false
+                        press_lock: true
+                        on_click:
+                          then:
+                            - script.execute:
+                                id: dispatch_widget_click
+                                widget_id: "w12"
+                                widget_type: !lambda "return id(w12_type).state;"
+                                action: !lambda "return id(w12_action).state;"
+                                value: !lambda "return id(w12_value).state;"
+                                label: !lambda "return id(w12_label).state;"
+                        on_long_press:
+                          then:
+                            - lambda: |-
+                                id(suppress_click_widget) = "w12";
+                                id(suppress_click_until_ms) = millis() + 1500;
+                            - script.execute:
+                                id: dispatch_widget_action
+                                widget_id: "w12"
+                                widget_type: !lambda "return id(w12_type).state;"
+                                action: !lambda "return id(w12_action).state;"
+                                value: !lambda "return id(w12_value).state;"
+                                label: !lambda "return id(w12_label).state;"
+                                hold: true
+                        scrollbar_mode: "OFF"
+                        pad_all: 8
+                        widgets:
+                          - label:
+                              id: w12_icon_label
+                              clickable: false
+                              x: 7
+                              y: 8
+                              width: 38
+                              height: 38
+                              text: "\U000F06E8"
+                              text_font: mdi_icons_32
+                              text_align: CENTER
+                              text_color: 0xF59E0B
+                          - label:
+                              id: w12_label_label
+                              clickable: false
+                              x: 48
+                              y: 8
+                              width: 90
+                              height: 18
+                              text: "Blank"
+                              text_color: 0x8E9FB8
+                              text_align: LEFT
+                              text_font: montserrat_12
+                              long_mode: DOT
+                          - label:
+                              id: w12_value_label
+                              clickable: false
+                              x: 48
+                              y: 26
+                              width: 90
+                              height: 42
+                              text: ""
+                              text_color: 0xF1F5F9
+                              text_align: LEFT
+                              text_font: montserrat_16
+                              long_mode: DOT
+
 
               - obj:
                   id: notification_overlay
@@ -6247,19 +6499,6 @@ lvgl:
                         y: -20
                         width: 380
                         text_align: CENTER
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

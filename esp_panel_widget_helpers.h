@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <algorithm>
 #include <cctype>
@@ -550,8 +550,8 @@ static inline std::string esp_panel_icon_glyph(std::string icon_name, std::strin
 
 static inline EspPanelWidgetGeometry esp_panel_widget_geometry(
     int grid_w, int grid_h, const std::string &align, const std::string &layout_mode, const std::string &type_name, int icon_scale, int label_scale, int value_scale, bool show_icon, bool show_label, bool show_value) {
-  const int card_w = std::max(1, grid_w) * 80 - 6;
-  const int card_h = std::max(1, grid_h) * 80 - 6;
+  const int card_w = std::max(1, grid_w) * 74 - 6;
+  const int card_h = std::max(1, grid_h) * 66 - 6;
   const int min_side = std::min(card_w, card_h);
   const bool auto_value = type_name == "clock" || type_name == "date";
   const bool time_like = type_name == "clock" || type_name == "date";
@@ -769,3 +769,4 @@ static inline int esp_panel_widget_text_align_code(
     int grid_w, int grid_h, const std::string &align, const std::string &layout_mode, const std::string &type_name, int icon_scale, int label_scale, int value_scale) {
   return esp_panel_widget_geometry(grid_w, grid_h, align, layout_mode, type_name, icon_scale, label_scale, value_scale).text_align_code;
 }
+
