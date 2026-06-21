@@ -1,635 +1,385 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { applyWidgets, fetchEntities, fetchValueSources, fetchWidgets, reloadWidgets, type EntityOption } from "./api";
-import {
-  DEFAULT_LAYOUT,
-  PANEL_THEME_IDS,
-  PANEL_THEMES,
-  type PanelTheme,
-  type PanelThemeId,
-  type WidgetConfig,
-  type WidgetResponse
-} from "./types";
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { DEFAULT_LAYOUT, GRID_COLUMNS, GRID_ROWS, type ClockVariant, type LayoutWidget } from "./types";
 
-const WIDGET_TYPE_LABELS: Record<WidgetConfig["type"], string> = {
-  blank: "Spacer",
-  clock: "Clock",
-  date: "Date",
-  button: "Button",
-  media: "Media",
-  status: "Status"
-};
-
-const CONTENT_ALIGN_OPTIONS = [
-  { value: "start", label: "Start" },
-  { value: "center", label: "Center" },
-  { value: "end", label: "End" }
-] as const;
-
-const LAYOUT_MODE_OPTIONS = [
-  { value: "auto", label: "Auto" },
-  { value: "stacked", label: "Stacked" },
-  { value: "icon_right", label: "Icon right" }
-] as const;
-
-const TEXT_TRANSFORM_OPTIONS = [
-  { value: "none", label: "Normal" },
-  { value: "uppercase", label: "Uppercase" }
-] as const;
-
-const FONT_WEIGHT_OPTIONS = [
-  { value: "normal", label: "Regular" },
-  { value: "bold", label: "Bold" }
-] as const;
-
-const SCREEN_PRESETS = [
-  {
-    id: "command",
-    name: "Command Center",
-    summary: "Balanced home dashboard with weather, controls, telemetry and queue.",
-    apply(widgets: WidgetConfig[]) {
-      return widgets.map((widget) => {
-        switch (widget.id) {
-          case "w01": return { ...widget, visible: true, type: "clock", label: "Local Time", value: "18:42", icon: "clock", w: 3, h: 1 };
-          case "w02": return { ...widget, visible: true, type: "date", label: "Today", value: "Sun 21 Jun", icon: "calendar", w: 3, h: 1 };
-          case "w03": return { ...widget, visible: true, type: "status", label: "Weather", value: "Partly Cloudy", icon: "weather-partly-cloudy", w: 3, h: 2 };
-          case "w04": return { ...widget, visible: true, type: "status", label: "Indoor Temp", value: "21.5", icon: "thermometer", w: 1, h: 1 };
-          case "w05": return { ...widget, visible: true, type: "status", label: "Humidity", value: "54", icon: "water-percent", w: 1, h: 1 };
-          case "w06": return { ...widget, visible: true, type: "button", label: "Main Light", value: "ON", icon: "ceiling-light", w: 2, h: 2 };
-          case "w07": return { ...widget, visible: true, type: "status", label: "WiFi", value: "Online", icon: "wifi", w: 1, h: 1 };
-          case "w08": return { ...widget, visible: true, type: "status", label: "Scene", value: "Home", icon: "home", w: 1, h: 1 };
-          case "w09": return { ...widget, visible: true, type: "button", label: "Front Door", value: "Closed", icon: "door", w: 2, h: 1 };
-          case "w10": return { ...widget, visible: true, type: "status", label: "Sofa", value: "Ready", icon: "sofa", w: 2, h: 1 };
-          case "w11": return { ...widget, visible: true, type: "media", label: "Studio Audio", value: "Playing", icon: "speaker", w: 3, h: 1 };
-          case "w12": return { ...widget, visible: true, type: "button", label: "Scenes", value: "Tap", icon: "shape", w: 1, h: 1 };
-          default: return widget;
-        }
-      });
-    }
-  },
-  {
-    id: "climate",
-    name: "Climate Focus",
-    summary: "Environmental information first, with calmer controls and denser telemetry.",
-    apply(widgets: WidgetConfig[]) {
-      return widgets.map((widget) => {
-        switch (widget.id) {
-          case "w03": return { ...widget, visible: true, type: "status", label: "Outside", value: "19.0", icon: "weather-cloudy", w: 3, h: 2 };
-          case "w04": return { ...widget, visible: true, type: "status", label: "Indoor", value: "21.3", icon: "thermometer", w: 2, h: 1 };
-          case "w05": return { ...widget, visible: true, type: "status", label: "Humidity", value: "48", icon: "water-percent", w: 1, h: 1 };
-          case "w06": return { ...widget, visible: true, type: "button", label: "Climate", value: "AUTO", icon: "home", w: 2, h: 1 };
-          case "w07": return { ...widget, visible: true, type: "status", label: "Air", value: "Good", icon: "wifi", w: 2, h: 1 };
-          case "w08": return { ...widget, visible: true, type: "status", label: "Vent", value: "Normal", icon: "shape", w: 2, h: 1 };
-          case "w09": return { ...widget, visible: false };
-          case "w10": return { ...widget, visible: true, type: "status", label: "Windows", value: "Closed", icon: "door", w: 2, h: 1 };
-          case "w11": return { ...widget, visible: false };
-          case "w12": return { ...widget, visible: true, type: "button", label: "Boost", value: "Tap", icon: "ceiling-light", w: 2, h: 1 };
-          default: return { ...widget, visible: widget.id === "w01" || widget.id === "w02" || widget.visible };
-        }
-      });
-    }
-  },
-  {
-    id: "media",
-    name: "Media Deck",
-    summary: "Large hero, playback control emphasis, and compact home-state indicators.",
-    apply(widgets: WidgetConfig[]) {
-      return widgets.map((widget) => {
-        switch (widget.id) {
-          case "w03": return { ...widget, visible: true, type: "media", label: "Now Playing", value: "Lo-fi Radio", icon: "speaker", w: 3, h: 2 };
-          case "w04": return { ...widget, visible: true, type: "status", label: "Volume", value: "68", icon: "speaker", w: 2, h: 1 };
-          case "w05": return { ...widget, visible: true, type: "status", label: "WiFi", value: "Online", icon: "wifi", w: 1, h: 1 };
-          case "w06": return { ...widget, visible: true, type: "button", label: "Play / Pause", value: "Playing", icon: "speaker", w: 2, h: 2 };
-          case "w07": return { ...widget, visible: true, type: "button", label: "Next", value: "Tap", icon: "shape", w: 1, h: 1 };
-          case "w08": return { ...widget, visible: true, type: "button", label: "Scene", value: "Evening", icon: "home", w: 1, h: 1 };
-          case "w09": return { ...widget, visible: true, type: "button", label: "Lights", value: "DIM", icon: "ceiling-light", w: 2, h: 1 };
-          case "w10": return { ...widget, visible: true, type: "status", label: "Door", value: "Locked", icon: "door", w: 2, h: 1 };
-          case "w11": return { ...widget, visible: true, type: "media", label: "Queue", value: "12 tracks", icon: "calendar", w: 3, h: 1 };
-          case "w12": return { ...widget, visible: false };
-          default: return { ...widget, visible: widget.id === "w01" || widget.id === "w02" || widget.visible };
-        }
-      });
-    }
-  }
-] as const;
-
-function parseNumericValue(value: string) {
-  const match = value.match(/-?\d+(\.\d+)?/);
-  return match ? Number.parseFloat(match[0]) : null;
-}
+const SCREEN_SIZE = 480;
+const CELL_WIDTH = SCREEN_SIZE / GRID_COLUMNS;
+const CELL_HEIGHT = SCREEN_SIZE / GRID_ROWS;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function widgetTone(widget: WidgetConfig) {
-  const value = widget.value.trim().toLowerCase();
-  if (["on", "open", "online", "playing", "home", "ready", "good", "auto", "locked", "dim"].includes(value)) return "active";
-  if (["off", "offline", "closed", "away", "stopped"].includes(value)) return "idle";
-  return "neutral";
+function formatTime(date: Date, useSeconds: boolean) {
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    ...(useSeconds ? { second: "2-digit" } : {})
+  });
 }
 
-function formatWidgetValue(widget: WidgetConfig) {
-  if (widget.type === "status" && /^-?\d+(\.\d+)?$/.test(widget.value.trim())) {
-    if (widget.label.toLowerCase().includes("humid")) return `${widget.value}%`;
-    if (widget.label.toLowerCase().includes("temp") || widget.label.toLowerCase().includes("outside") || widget.label.toLowerCase().includes("indoor")) return `${widget.value} C`;
-  }
-  return widget.value || "--";
+function formatDate(date: Date) {
+  return date.toLocaleDateString([], {
+    weekday: "short",
+    day: "2-digit",
+    month: "short"
+  });
 }
 
-function iconGlyph(icon: string) {
-  const normalized = icon.trim().toLowerCase();
-  if (normalized.includes("weather-sunny")) return "Sun";
-  if (normalized.includes("weather-partly-cloudy")) return "Cloud";
-  if (normalized.includes("weather-cloudy")) return "Sky";
-  if (normalized.includes("weather-rainy")) return "Rain";
-  if (normalized.includes("weather")) return "Wx";
-  if (normalized.includes("thermometer")) return "Temp";
-  if (normalized.includes("water-percent")) return "Hum";
-  if (normalized.includes("ceiling-light")) return "Light";
-  if (normalized.includes("clock")) return "Time";
-  if (normalized.includes("calendar")) return "Date";
-  if (normalized.includes("speaker")) return "Audio";
-  if (normalized.includes("wifi")) return "WiFi";
-  if (normalized.includes("door")) return "Door";
-  if (normalized.includes("home")) return "Home";
-  if (normalized.includes("sofa")) return "Lounge";
-  return normalized.slice(0, 6) || "Icon";
-}
+function analogueHandAngles(date: Date) {
+  const hours = date.getHours() % 12;
+  const minutes = date.getMinutes();
+  const seconds = date.getSeconds();
 
-function themeVars(theme: PanelTheme): CSSProperties {
   return {
-    ["--screen-bg" as string]: theme.screenBg,
-    ["--screen-bg-elevated" as string]: `color-mix(in srgb, ${theme.screenBg} 78%, white)`,
-    ["--screen-bg-deep" as string]: `color-mix(in srgb, ${theme.screenBg} 86%, black)`,
-    ["--surface" as string]: theme.widgetBg,
-    ["--surface-border" as string]: theme.widgetBorder,
-    ["--surface-soft" as string]: `color-mix(in srgb, ${theme.widgetBg} 76%, ${theme.screenBg})`,
-    ["--accent" as string]: theme.accent,
-    ["--accent-strong" as string]: `color-mix(in srgb, ${theme.accent} 82%, white)`,
-    ["--accent-soft" as string]: `color-mix(in srgb, ${theme.accent} 24%, transparent)`,
-    ["--text-strong" as string]: theme.valueColor,
-    ["--text-soft" as string]: theme.labelColor,
-    ["--button-on" as string]: theme.buttonOnBg,
-    ["--button-off" as string]: theme.buttonOffBg,
-    ["--overlay" as string]: theme.overlayBg
+    hour: hours * 30 + minutes * 0.5,
+    minute: minutes * 6 + seconds * 0.1,
+    second: seconds * 6
   };
 }
 
-function applyThemeColors(themeId: PanelThemeId, widgets: WidgetConfig[]) {
-  const theme = PANEL_THEMES[themeId];
-  return widgets.map((widget) => ({ ...widget, iconColor: theme.iconColor, labelColor: theme.labelColor, valueColor: theme.valueColor }));
-}
-
-function copyWidgetResponse(payload: WidgetResponse) {
+function createClock(idNumber: number): LayoutWidget {
   return {
-    widgets: payload.widgets.map((widget) => ({ ...widget })),
-    defaults: payload.defaults.map((widget) => ({ ...widget })),
-    theme: { ...payload.theme },
-    missingHelpers: [...payload.missingHelpers],
-    warnings: [...payload.warnings],
-    helperYaml: payload.helperYaml
+    id: `clock-${idNumber}`,
+    type: "clock",
+    title: `Clock ${idNumber}`,
+    variant: idNumber % 2 === 0 ? "analogue" : "digital",
+    x: 0,
+    y: 0,
+    w: 4,
+    h: idNumber % 2 === 0 ? 4 : 2,
+    showSeconds: false
   };
 }
+
 function App() {
-  const [widgets, setWidgets] = useState<WidgetConfig[]>(DEFAULT_LAYOUT.map((widget) => ({ ...widget })));
-  const [defaults, setDefaults] = useState<WidgetConfig[]>(DEFAULT_LAYOUT.map((widget) => ({ ...widget })));
-  const [theme, setTheme] = useState<PanelTheme>(PANEL_THEMES.blue);
-  const [selectedId, setSelectedId] = useState(DEFAULT_LAYOUT[0]?.id || "w01");
-  const [entities, setEntities] = useState<EntityOption[]>([]);
-  const [valueSources, setValueSources] = useState<EntityOption[]>([]);
-  const [warnings, setWarnings] = useState<string[]>([]);
-  const [missingHelpers, setMissingHelpers] = useState<string[]>([]);
-  const [helperYaml, setHelperYaml] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isApplying, setIsApplying] = useState(false);
-  const [isReloading, setIsReloading] = useState(false);
-  const [error, setError] = useState("");
-  const [statusMessage, setStatusMessage] = useState("");
+  const [widgets, setWidgets] = useState<LayoutWidget[]>(DEFAULT_LAYOUT);
+  const [selectedId, setSelectedId] = useState<string>(DEFAULT_LAYOUT[0]?.id ?? "");
+  const [now, setNow] = useState(() => new Date());
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const screenRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    let active = true;
-
-    async function hydrate() {
-      setIsLoading(true);
-      setError("");
-      try {
-        const [widgetPayload, entityPayload, valuePayload] = await Promise.all([
-          fetchWidgets(),
-          fetchEntities().catch(() => ({ entities: [] })),
-          fetchValueSources().catch(() => ({ entities: [] }))
-        ]);
-        if (!active) return;
-        const snapshot = copyWidgetResponse(widgetPayload);
-        setWidgets(snapshot.widgets);
-        setDefaults(snapshot.defaults);
-        setTheme(snapshot.theme);
-        setWarnings(snapshot.warnings);
-        setMissingHelpers(snapshot.missingHelpers);
-        setHelperYaml(snapshot.helperYaml);
-        setEntities(entityPayload.entities);
-        setValueSources(valuePayload.entities);
-        setSelectedId(snapshot.widgets[0]?.id || "w01");
-      } catch (loadError) {
-        if (!active) return;
-        setError(loadError instanceof Error ? loadError.message : "Unable to load panel data.");
-      } finally {
-        if (active) setIsLoading(false);
-      }
-    }
-
-    void hydrate();
-    return () => {
-      active = false;
-    };
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
   }, []);
 
-  const selectedWidget = useMemo(() => widgets.find((widget) => widget.id === selectedId) || widgets[0] || null, [selectedId, widgets]);
-  const visibleWidgets = useMemo(() => widgets.filter((widget) => widget.visible && widget.type !== "blank"), [widgets]);
-  const statusWidgets = useMemo(() => visibleWidgets.filter((widget) => widget.type === "status"), [visibleWidgets]);
-  const actionWidgets = useMemo(() => visibleWidgets.filter((widget) => widget.type === "button" || widget.type === "media"), [visibleWidgets]);
+  useEffect(() => {
+    if (!draggingId) return;
 
-  const heroWidget = statusWidgets[0] || actionWidgets[0] || visibleWidgets[0] || null;
-  const headlineWidgets = visibleWidgets.filter((widget) => widget.type === "clock" || widget.type === "date");
-  const metricWidgets = statusWidgets.slice(0, 4);
-  const chartWidgets = statusWidgets.filter((widget) => parseNumericValue(widget.value) !== null).slice(0, 4);
-  const sliderWidgets = actionWidgets.slice(0, 2);
-  const listWidgets = visibleWidgets.filter((widget) => widget.id !== heroWidget?.id).slice(0, 5);
+    function onPointerMove(event: PointerEvent) {
+      const rect = screenRef.current?.getBoundingClientRect();
+      const widget = widgets.find((entry) => entry.id === draggingId);
+      if (!rect || !widget) return;
 
-  const chartPoints = useMemo(() => {
-    if (chartWidgets.length === 0) return "";
-    const values = chartWidgets.map((widget) => parseNumericValue(widget.value) || 0);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    return values.map((value, index) => {
-      const x = chartWidgets.length === 1 ? 12 : 12 + (index * 216) / (chartWidgets.length - 1);
-      const ratio = max === min ? 0.5 : (value - min) / (max - min);
-      const y = 104 - ratio * 68;
-      return `${x},${y}`;
-    }).join(" ");
-  }, [chartWidgets]);
+      const localX = event.clientX - rect.left;
+      const localY = event.clientY - rect.top;
+      const nextX = clamp(Math.round(localX / CELL_WIDTH - widget.w / 2), 0, GRID_COLUMNS - widget.w);
+      const nextY = clamp(Math.round(localY / CELL_HEIGHT - widget.h / 2), 0, GRID_ROWS - widget.h);
 
-  function updateWidget(id: string, patch: Partial<WidgetConfig>) {
+      setWidgets((current) =>
+        current.map((entry) => (entry.id === draggingId ? { ...entry, x: nextX, y: nextY } : entry))
+      );
+    }
+
+    function onPointerUp() {
+      setDraggingId(null);
+    }
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+  }, [draggingId, widgets]);
+
+  const selectedWidget = useMemo(
+    () => widgets.find((widget) => widget.id === selectedId) ?? null,
+    [selectedId, widgets]
+  );
+
+  function updateWidget(id: string, patch: Partial<LayoutWidget>) {
     setWidgets((current) => current.map((widget) => (widget.id === id ? { ...widget, ...patch } : widget)));
   }
 
-  function updateSelectedWidget<K extends keyof WidgetConfig>(key: K, value: WidgetConfig[K]) {
+  function updateSelected(patch: Partial<LayoutWidget>) {
     if (!selectedWidget) return;
-    updateWidget(selectedWidget.id, { [key]: value } as Partial<WidgetConfig>);
+    const next = { ...selectedWidget, ...patch };
+    next.w = clamp(next.w, 2, GRID_COLUMNS);
+    next.h = clamp(next.h, 2, GRID_ROWS);
+    next.x = clamp(next.x, 0, GRID_COLUMNS - next.w);
+    next.y = clamp(next.y, 0, GRID_ROWS - next.h);
+    updateWidget(selectedWidget.id, next);
   }
 
-  function applyScreenPreset(presetId: (typeof SCREEN_PRESETS)[number]["id"]) {
-    const preset = SCREEN_PRESETS.find((item) => item.id === presetId);
-    if (!preset) return;
-    setWidgets((current) => preset.apply(current));
-    setStatusMessage(`Applied ${preset.name}.`);
+  function addClock() {
+    const nextClock = createClock(widgets.length + 1);
+    const occupied = widgets.length;
+    nextClock.x = occupied % (GRID_COLUMNS - nextClock.w + 1);
+    nextClock.y = Math.min(Math.floor(occupied / 2), GRID_ROWS - nextClock.h);
+    setWidgets((current) => [...current, nextClock]);
+    setSelectedId(nextClock.id);
   }
 
-  function restoreDefaults() {
-    setWidgets(defaults.map((widget) => ({ ...widget })));
-    setStatusMessage("Restored defaults from the stored layout.");
+  function removeSelected() {
+    if (!selectedWidget) return;
+    const next = widgets.filter((widget) => widget.id !== selectedWidget.id);
+    setWidgets(next);
+    setSelectedId(next[0]?.id ?? "");
   }
 
-  async function handleApply() {
-    setIsApplying(true);
-    setError("");
-    setStatusMessage("");
-    try {
-      const response = await applyWidgets(widgets, theme);
-      setWidgets(response.widgets.map((widget) => ({ ...widget })));
-      setWarnings([...response.warnings]);
-      setStatusMessage("Changes applied to Home Assistant.");
-    } catch (applyError) {
-      setError(applyError instanceof Error ? applyError.message : "Unable to apply changes.");
-    } finally {
-      setIsApplying(false);
-    }
+  function resetLayout() {
+    setWidgets(DEFAULT_LAYOUT);
+    setSelectedId(DEFAULT_LAYOUT[0]?.id ?? "");
   }
-
-  async function handleReload() {
-    setIsReloading(true);
-    setError("");
-    setStatusMessage("");
-    try {
-      const payload = await reloadWidgets();
-      const snapshot = copyWidgetResponse(payload);
-      setWidgets(snapshot.widgets);
-      setDefaults(snapshot.defaults);
-      setTheme(snapshot.theme);
-      setWarnings(snapshot.warnings);
-      setMissingHelpers(snapshot.missingHelpers);
-      setHelperYaml(snapshot.helperYaml);
-      setSelectedId(snapshot.widgets[0]?.id || "w01");
-      setStatusMessage("Reloaded widget data from Home Assistant.");
-    } catch (reloadError) {
-      setError(reloadError instanceof Error ? reloadError.message : "Unable to reload widgets.");
-    } finally {
-      setIsReloading(false);
-    }
-  }
-
-  async function handleCopyYaml() {
-    try {
-      await navigator.clipboard.writeText(helperYaml);
-      setStatusMessage("Helper YAML copied.");
-    } catch {
-      setError("Clipboard copy failed in this browser session.");
-    }
-  }
-
-  const hiddenCount = widgets.filter((widget) => !widget.visible).length;
 
   return (
-    <div className="app-shell" style={themeVars(theme)}>
-      <header className="topbar">
+    <div className="app-shell">
+      <header className="app-header">
         <div>
-          <p className="eyebrow">LVGL-first redesign</p>
-          <h1>ESP Panel Display Builder</h1>
-          <p className="lede">Rebuilt around containers, widgets, transitions and low-overhead embedded surfaces instead of a raw tile grid.</p>
+          <span className="overline">LVGL Grid Builder</span>
+          <h1>Clock Layout Preview</h1>
         </div>
-        <div className="topbar-actions">
-          <button className="secondary-button" onClick={handleReload} disabled={isReloading || isLoading}>{isReloading ? "Reloading..." : "Reload"}</button>
-          <button className="primary-button" onClick={handleApply} disabled={isApplying || isLoading}>{isApplying ? "Applying..." : "Apply to Home Assistant"}</button>
+        <div className="header-actions">
+          <button className="ghost-button" onClick={resetLayout}>Reset</button>
+          <button className="primary-button" onClick={addClock}>Add Clock</button>
         </div>
       </header>
 
-      {error ? <div className="banner error">{error}</div> : null}
-      {statusMessage ? <div className="banner success">{statusMessage}</div> : null}
-      {warnings.length ? <div className="banner warn">{warnings.join(" ")}</div> : null}
-      {missingHelpers.length ? <div className="banner warn">Missing helpers: {missingHelpers.join(", ")}</div> : null}
-
       <div className="workspace">
-        <aside className="panel left-panel">
+        <aside className="sidebar">
           <section className="panel-section">
-            <div className="section-heading"><h2>Display System</h2><span>{visibleWidgets.length} active</span></div>
-            <div className="theme-grid">
-              {PANEL_THEME_IDS.map((themeId) => {
-                const option = PANEL_THEMES[themeId];
-                const active = theme.id === themeId;
-                return (
-                  <button
-                    key={themeId}
-                    className={`theme-card${active ? " active" : ""}`}
-                    onClick={() => {
-                      setTheme(option);
-                      setWidgets((current) => applyThemeColors(themeId, current));
-                    }}
-                  >
-                    <span className="theme-swatch" style={{ background: option.accent }} />
-                    <strong>{option.name}</strong>
-                    <small>{themeId}</small>
-                  </button>
-                );
-              })}
+            <div className="section-head">
+              <h2>Widgets</h2>
+              <span>{widgets.length}</span>
             </div>
-          </section>
-
-          <section className="panel-section">
-            <div className="section-heading"><h2>Screen Presets</h2><span>LVGL patterns</span></div>
-            <div className="preset-list">
-              {SCREEN_PRESETS.map((preset) => (
-                <button key={preset.id} className="preset-card" onClick={() => applyScreenPreset(preset.id)}>
-                  <strong>{preset.name}</strong>
-                  <span>{preset.summary}</span>
+            <div className="widget-list">
+              {widgets.map((widget) => (
+                <button
+                  key={widget.id}
+                  className={`widget-row${widget.id === selectedId ? " active" : ""}`}
+                  onClick={() => setSelectedId(widget.id)}
+                >
+                  <strong>{widget.title}</strong>
+                  <span>{widget.variant}</span>
                 </button>
               ))}
             </div>
-            <button className="secondary-button stretch" onClick={restoreDefaults}>Restore Stored Defaults</button>
           </section>
 
           <section className="panel-section">
-            <div className="section-heading"><h2>Widget Library</h2><span>{hiddenCount} hidden</span></div>
-            <div className="widget-library">
-              {widgets.map((widget) => {
-                const active = widget.id === selectedId;
-                return (
-                  <button key={widget.id} className={`widget-chip${active ? " active" : ""}`} onClick={() => setSelectedId(widget.id)}>
-                    <div>
-                      <strong>{widget.label || widget.id}</strong>
-                      <span>{widget.id} ? {WIDGET_TYPE_LABELS[widget.type]}</span>
-                    </div>
-                    <span className={`visibility-pill${widget.visible ? " on" : ""}`}>{widget.visible ? "Shown" : "Hidden"}</span>
-                  </button>
-                );
-              })}
+            <div className="section-head">
+              <h2>LVGL</h2>
+              <span>{GRID_COLUMNS} x {GRID_ROWS}</span>
             </div>
-          </section>
-
-          <section className="panel-section">
-            <div className="section-heading"><h2>Helper YAML</h2><span>Runtime helpers</span></div>
-            <button className="secondary-button stretch" onClick={handleCopyYaml} disabled={!helperYaml}>Copy Helper YAML</button>
-            <textarea className="yaml-preview" readOnly value={helperYaml} />
+            <div className="doc-list">
+              <a href="https://lvgl.io/docs/open/common-widget-features/layouts/grid" target="_blank" rel="noreferrer">Grid layout</a>
+              <a href="https://lvgl.io/docs/open/widgets" target="_blank" rel="noreferrer">Widgets</a>
+              <a href="https://lvgl.io/docs/open/examples" target="_blank" rel="noreferrer">Examples</a>
+              <a href="https://github.com/lvgl/lvgl" target="_blank" rel="noreferrer">LVGL repo</a>
+            </div>
           </section>
         </aside>
 
-        <main className="panel preview-panel">
-          <div className="panel-section preview-header">
-            <div>
-              <h2>Physical Display Preview</h2>
-              <p>Previewing the panel as an embedded LVGL surface with image-led hero content, motion states and dense controls.</p>
-            </div>
-            <div className="lvgl-notes"><span>Buttons</span><span>Charts</span><span>Lists</span><span>Sliders</span><span>Images</span></div>
+        <main className="canvas-panel">
+          <div className="canvas-meta">
+            <span>480 x 480</span>
+            <span>{GRID_COLUMNS} columns</span>
+            <span>{GRID_ROWS} rows</span>
           </div>
 
-          <div className="display-shell">
-            <div className="display-screen">
-              <div className="screen-topbar">
-                <span>ESP Panel</span>
-                <div className="screen-topbar-meta">
-                  {headlineWidgets.slice(0, 2).map((widget) => <span key={widget.id}>{formatWidgetValue(widget)}</span>)}
-                </div>
-              </div>
+          <div className="panel-frame">
+            <div
+              ref={screenRef}
+              className="lvgl-screen"
+              style={{
+                gridTemplateColumns: `repeat(${GRID_COLUMNS}, 1fr)`,
+                gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`
+              }}
+            >
+              {Array.from({ length: GRID_COLUMNS * GRID_ROWS }, (_, index) => (
+                <div key={index} className="grid-cell" />
+              ))}
 
-              <div className="hero-card">
-                <div className="hero-image"><div className="hero-badge">{iconGlyph(heroWidget?.icon || "shape")}</div></div>
-                <div className="hero-copy">
-                  <span className="hero-kicker">{heroWidget ? WIDGET_TYPE_LABELS[heroWidget.type] : "Widget"}</span>
-                  <strong>{heroWidget?.label || "No headline widget"}</strong>
-                  <p>{heroWidget ? formatWidgetValue(heroWidget) : "Activate a widget to populate the hero surface."}</p>
-                </div>
-              </div>
-
-              <div className="metric-row">
-                {metricWidgets.length ? metricWidgets.map((widget) => (
-                  <button key={widget.id} className={`metric-card tone-${widgetTone(widget)}${selectedId === widget.id ? " selected" : ""}`} onClick={() => setSelectedId(widget.id)}>
-                    <span>{widget.label}</span>
-                    <strong>{formatWidgetValue(widget)}</strong>
-                  </button>
-                )) : <div className="empty-card">Add visible status widgets to feed metric tiles.</div>}
-              </div>
-
-              <div className="mid-grid">
-                <section className="chart-card">
-                  <div className="card-title"><h3>Telemetry</h3><span>Smooth line chart</span></div>
-                  <svg viewBox="0 0 240 120" className="chart-svg" aria-hidden="true">
-                    <defs>
-                      <linearGradient id="chart-fill" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stopColor="var(--accent-strong)" stopOpacity="0.55" />
-                        <stop offset="100%" stopColor="var(--accent-strong)" stopOpacity="0.05" />
-                      </linearGradient>
-                    </defs>
-                    <path d="M 12 104 H 228" className="chart-axis" />
-                    {chartPoints ? <><polyline points={`${chartPoints} 228,104 12,104`} className="chart-fill" /><polyline points={chartPoints} className="chart-line" /></> : null}
-                  </svg>
-                  <div className="chart-legend">
-                    {chartWidgets.length ? chartWidgets.map((widget) => <button key={widget.id} className="legend-chip" onClick={() => setSelectedId(widget.id)}>{widget.label}</button>) : <span className="empty-inline">Use numeric status widgets to draw the chart.</span>}
-                  </div>
-                </section>
-
-                <section className="controls-card">
-                  <div className="card-title"><h3>Quick Controls</h3><span>Styled LVGL buttons</span></div>
-                  <div className="control-grid">
-                    {actionWidgets.length ? actionWidgets.slice(0, 4).map((widget) => (
-                      <button key={widget.id} className={`control-button tone-${widgetTone(widget)}${selectedId === widget.id ? " selected" : ""}`} onClick={() => setSelectedId(widget.id)}>
-                        <span className="control-icon">{iconGlyph(widget.icon)}</span>
-                        <strong>{widget.label}</strong>
-                        <small>{formatWidgetValue(widget)}</small>
-                      </button>
-                    )) : <div className="empty-card compact">Make at least one button or media widget visible.</div>}
-                  </div>
-                </section>
-              </div>
-
-              <div className="lower-grid">
-                <section className="list-card">
-                  <div className="card-title"><h3>Automation Queue</h3><span>Scrollable LVGL list</span></div>
-                  <div className="list-surface">
-                    {listWidgets.length ? listWidgets.map((widget) => (
-                      <button key={widget.id} className={`list-row${selectedId === widget.id ? " selected" : ""}`} onClick={() => setSelectedId(widget.id)}>
-                        <span>{widget.label}</span>
-                        <strong>{formatWidgetValue(widget)}</strong>
-                      </button>
-                    )) : <div className="empty-card compact">Visible widgets appear here as list items.</div>}
-                  </div>
-                </section>
-
-                <section className="slider-card">
-                  <div className="card-title"><h3>Fine Control</h3><span>Animated slider tracks</span></div>
-                  <div className="slider-stack">
-                    {sliderWidgets.length ? sliderWidgets.map((widget, index) => {
-                      const numeric = parseNumericValue(widget.value);
-                      const level = clamp(numeric ?? (widgetTone(widget) === "active" ? 78 : 36), 0, 100);
-                      return (
-                        <button key={widget.id} className={`slider-row${selectedId === widget.id ? " selected" : ""}`} onClick={() => setSelectedId(widget.id)}>
-                          <div className="slider-meta"><span>{widget.label}</span><strong>{level}%</strong></div>
-                          <div className="slider-track"><div className="slider-fill" style={{ width: `${level}%`, animationDelay: `${index * 120}ms` }} /></div>
-                        </button>
-                      );
-                    }) : <div className="empty-card compact">Visible action widgets feed the slider surface.</div>}
-                  </div>
-                </section>
-              </div>
+              {widgets.map((widget) => (
+                <ClockWidget
+                  key={widget.id}
+                  now={now}
+                  selected={widget.id === selectedId}
+                  widget={widget}
+                  onPointerDown={(event) => {
+                    event.preventDefault();
+                    setSelectedId(widget.id);
+                    setDraggingId(widget.id);
+                  }}
+                  onSelect={() => setSelectedId(widget.id)}
+                />
+              ))}
             </div>
           </div>
         </main>
 
-        <aside className="panel right-panel">
+        <aside className="sidebar">
           <section className="panel-section">
-            <div className="section-heading"><h2>Widget Inspector</h2><span>{selectedWidget?.id || "None"}</span></div>
+            <div className="section-head">
+              <h2>Inspector</h2>
+              <span>{selectedWidget?.id ?? "none"}</span>
+            </div>
 
             {selectedWidget ? (
-              <div className="inspector-form">
-                <label className="field checkbox-field">
-                  <input type="checkbox" checked={selectedWidget.visible} onChange={(event) => updateSelectedWidget("visible", event.target.checked)} />
-                  <span>Visible in the display</span>
+              <div className="inspector">
+                <label className="field">
+                  <span>Title</span>
+                  <input
+                    value={selectedWidget.title}
+                    onChange={(event) => updateSelected({ title: event.target.value })}
+                  />
                 </label>
 
-                <div className="field-grid two">
-                  <label className="field"><span>Label</span><input value={selectedWidget.label} onChange={(event) => updateSelectedWidget("label", event.target.value)} /></label>
-                  <label className="field"><span>Value</span><input value={selectedWidget.value} onChange={(event) => updateSelectedWidget("value", event.target.value)} /></label>
-                </div>
+                <label className="field">
+                  <span>View</span>
+                  <select
+                    value={selectedWidget.variant}
+                    onChange={(event) => updateSelected({ variant: event.target.value as ClockVariant })}
+                  >
+                    <option value="digital">Digital</option>
+                    <option value="analogue">Analogue</option>
+                  </select>
+                </label>
 
-                <div className="field-grid two">
-                  <label className="field"><span>Icon</span><input value={selectedWidget.icon} onChange={(event) => updateSelectedWidget("icon", event.target.value)} /></label>
-                  <label className="field">
-                    <span>Type</span>
-                    <select value={selectedWidget.type} onChange={(event) => updateSelectedWidget("type", event.target.value as WidgetConfig["type"])}>
-                      {Object.entries(WIDGET_TYPE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                    </select>
-                  </label>
-                </div>
+                <label className="checkbox-field">
+                  <input
+                    type="checkbox"
+                    checked={selectedWidget.showSeconds}
+                    onChange={(event) => updateSelected({ showSeconds: event.target.checked })}
+                  />
+                  <span>Show seconds</span>
+                </label>
 
-                <div className="field-grid two">
+                <div className="field-grid">
                   <label className="field">
-                    <span>Action entity</span>
-                    <select value={selectedWidget.action} onChange={(event) => updateSelectedWidget("action", event.target.value)}>
-                      <option value="">Manual / none</option>
-                      {entities.map((entity) => <option key={entity.entity_id} value={entity.entity_id}>{entity.name || entity.entity_id}</option>)}
-                    </select>
+                    <span>X</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={GRID_COLUMNS - selectedWidget.w}
+                      value={selectedWidget.x}
+                      onChange={(event) => updateSelected({ x: Number.parseInt(event.target.value || "0", 10) })}
+                    />
                   </label>
                   <label className="field">
-                    <span>Value source</span>
-                    <select value={selectedWidget.valueSource} onChange={(event) => updateSelectedWidget("valueSource", event.target.value)}>
-                      <option value="">Manual / none</option>
-                      {valueSources.map((entity) => <option key={entity.entity_id} value={entity.entity_id}>{entity.name || entity.entity_id}</option>)}
-                    </select>
-                  </label>
-                </div>
-
-                <div className="field-grid three">
-                  <label className="field">
-                    <span>Align</span>
-                    <select value={selectedWidget.contentAlign} onChange={(event) => updateSelectedWidget("contentAlign", event.target.value as WidgetConfig["contentAlign"])}>
-                      {CONTENT_ALIGN_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                    </select>
-                  </label>
-                  <label className="field">
-                    <span>Layout mode</span>
-                    <select value={selectedWidget.layoutMode} onChange={(event) => updateSelectedWidget("layoutMode", event.target.value as WidgetConfig["layoutMode"])}>
-                      {LAYOUT_MODE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                    </select>
-                  </label>
-                  <label className="field">
-                    <span>Case</span>
-                    <select value={selectedWidget.labelTransform} onChange={(event) => updateSelectedWidget("labelTransform", event.target.value as WidgetConfig["labelTransform"])}>
-                      {TEXT_TRANSFORM_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                    </select>
+                    <span>Y</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={GRID_ROWS - selectedWidget.h}
+                      value={selectedWidget.y}
+                      onChange={(event) => updateSelected({ y: Number.parseInt(event.target.value || "0", 10) })}
+                    />
                   </label>
                 </div>
 
-                <div className="field-grid three">
+                <div className="field-grid">
                   <label className="field">
-                    <span>Label weight</span>
-                    <select value={selectedWidget.labelWeight} onChange={(event) => updateSelectedWidget("labelWeight", event.target.value as WidgetConfig["labelWeight"])}>
-                      {FONT_WEIGHT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                    </select>
+                    <span>Width</span>
+                    <input
+                      type="number"
+                      min={2}
+                      max={GRID_COLUMNS}
+                      value={selectedWidget.w}
+                      onChange={(event) => updateSelected({ w: Number.parseInt(event.target.value || "2", 10) })}
+                    />
                   </label>
                   <label className="field">
-                    <span>Value weight</span>
-                    <select value={selectedWidget.valueWeight} onChange={(event) => updateSelectedWidget("valueWeight", event.target.value as WidgetConfig["valueWeight"])}>
-                      {FONT_WEIGHT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                    </select>
-                  </label>
-                  <label className="field checkbox-field compact">
-                    <input type="checkbox" checked={selectedWidget.showBorder} onChange={(event) => updateSelectedWidget("showBorder", event.target.checked)} />
-                    <span>Border</span>
+                    <span>Height</span>
+                    <input
+                      type="number"
+                      min={2}
+                      max={GRID_ROWS}
+                      value={selectedWidget.h}
+                      onChange={(event) => updateSelected({ h: Number.parseInt(event.target.value || "2", 10) })}
+                    />
                   </label>
                 </div>
 
-                <div className="field-grid three">
-                  <label className="field"><span>Icon scale</span><input type="number" min={50} max={200} value={selectedWidget.iconScale} onChange={(event) => updateSelectedWidget("iconScale", Number.parseInt(event.target.value || "100", 10))} /></label>
-                  <label className="field"><span>Label scale</span><input type="number" min={50} max={200} value={selectedWidget.labelScale} onChange={(event) => updateSelectedWidget("labelScale", Number.parseInt(event.target.value || "100", 10))} /></label>
-                  <label className="field"><span>Value scale</span><input type="number" min={50} max={200} value={selectedWidget.valueScale} onChange={(event) => updateSelectedWidget("valueScale", Number.parseInt(event.target.value || "100", 10))} /></label>
-                </div>
-
-                <div className="field-grid three">
-                  <label className="field"><span>X</span><input type="number" value={selectedWidget.x} onChange={(event) => updateSelectedWidget("x", Number.parseInt(event.target.value || "0", 10))} /></label>
-                  <label className="field"><span>Y</span><input type="number" value={selectedWidget.y} onChange={(event) => updateSelectedWidget("y", Number.parseInt(event.target.value || "0", 10))} /></label>
-                  <label className="field">
-                    <span>W x H</span>
-                    <div className="inline-pair">
-                      <input type="number" value={selectedWidget.w} onChange={(event) => updateSelectedWidget("w", Number.parseInt(event.target.value || "1", 10))} />
-                      <input type="number" value={selectedWidget.h} onChange={(event) => updateSelectedWidget("h", Number.parseInt(event.target.value || "1", 10))} />
-                    </div>
-                  </label>
-                </div>
+                <button className="danger-button" onClick={removeSelected}>Delete Clock</button>
               </div>
-            ) : <div className="empty-card">Select a widget to edit its behavior.</div>}
+            ) : (
+              <div className="empty-state">No clock selected.</div>
+            )}
           </section>
         </aside>
       </div>
-
-      {isLoading ? <div className="loading-overlay">Loading panel data...</div> : null}
     </div>
+  );
+}
+
+function ClockWidget({
+  widget,
+  now,
+  selected,
+  onPointerDown,
+  onSelect
+}: {
+  widget: LayoutWidget;
+  now: Date;
+  selected: boolean;
+  onPointerDown: (event: ReactPointerEvent<HTMLButtonElement>) => void;
+  onSelect: () => void;
+}) {
+  const timeLabel = formatTime(now, widget.showSeconds);
+  const dateLabel = formatDate(now);
+  const hands = analogueHandAngles(now);
+
+  return (
+    <button
+      className={`clock-widget ${widget.variant}${selected ? " selected" : ""}`}
+      style={{
+        left: `${widget.x * CELL_WIDTH}px`,
+        top: `${widget.y * CELL_HEIGHT}px`,
+        width: `${widget.w * CELL_WIDTH}px`,
+        height: `${widget.h * CELL_HEIGHT}px`
+      }}
+      onPointerDown={onPointerDown}
+      onClick={onSelect}
+    >
+      <span className="widget-title">{widget.title}</span>
+
+      {widget.variant === "digital" ? (
+        <div className="digital-clock">
+          <strong>{timeLabel}</strong>
+          <span>{dateLabel}</span>
+        </div>
+      ) : (
+        <div className="analogue-clock">
+          <svg viewBox="0 0 160 160" className="clock-face" aria-hidden="true">
+            <circle cx="80" cy="80" r="70" className="face-ring" />
+            {Array.from({ length: 12 }, (_, index) => {
+              const angle = (index * 30 * Math.PI) / 180;
+              const x1 = 80 + Math.sin(angle) * 54;
+              const y1 = 80 - Math.cos(angle) * 54;
+              const x2 = 80 + Math.sin(angle) * 64;
+              const y2 = 80 - Math.cos(angle) * 64;
+              return <line key={index} x1={x1} y1={y1} x2={x2} y2={y2} className="tick" />;
+            })}
+            <g transform={`rotate(${hands.hour} 80 80)`}>
+              <line x1="80" y1="84" x2="80" y2="44" className="hand hour-hand" />
+            </g>
+            <g transform={`rotate(${hands.minute} 80 80)`}>
+              <line x1="80" y1="88" x2="80" y2="28" className="hand minute-hand" />
+            </g>
+            {widget.showSeconds ? (
+              <g transform={`rotate(${hands.second} 80 80)`}>
+                <line x1="80" y1="92" x2="80" y2="24" className="hand second-hand" />
+              </g>
+            ) : null}
+            <circle cx="80" cy="80" r="6" className="hub" />
+          </svg>
+          <span>{timeLabel}</span>
+        </div>
+      )}
+    </button>
   );
 }
 

@@ -566,7 +566,7 @@ static inline EspPanelWidgetGeometry esp_panel_widget_geometry(
   const bool force_icon_right = layout_mode == "icon_right";
   const bool auto_layout = layout_mode.empty() || layout_mode == "auto";
   const bool squareish = card_h >= card_w - 12;
-  const bool tiny = card_w <= 96;
+  const bool tiny = card_w <= 120;
   const bool stacked = force_stacked || (auto_layout && (tall || tiny || squareish));
   const bool icon_right = force_icon_right;
   const int padding = esp_panel_clamp_int(min_side / 10, 6, 16);
@@ -582,7 +582,7 @@ static inline EspPanelWidgetGeometry esp_panel_widget_geometry(
   }
 
   if (show_value && !show_icon && !show_label) {
-    const int value_px = esp_panel_scale_px(card_h / 2, value_scale, 16, 42);
+    const int value_px = esp_panel_scale_px(card_h / 2, value_scale, 18, 52);
     geometry.value_px = value_px;
     geometry.value_x = padding;
     geometry.value_y = std::max(padding, (card_h - value_px - 8) / 2);
@@ -593,7 +593,7 @@ static inline EspPanelWidgetGeometry esp_panel_widget_geometry(
   }
 
   if (show_label && !show_icon && !show_value) {
-    const int label_px = esp_panel_scale_px(tall ? 18 : 16, label_scale, 12, 30);
+    const int label_px = esp_panel_scale_px(tall ? 20 : 16, label_scale, 12, 34);
     geometry.label_px = label_px;
     geometry.label_x = padding;
     geometry.label_y = std::max(padding, (card_h - label_px - 8) / 2);
@@ -604,7 +604,7 @@ static inline EspPanelWidgetGeometry esp_panel_widget_geometry(
   }
 
   if (show_icon && !show_label && !show_value) {
-    const int icon_px = esp_panel_scale_px(min_side / 2, icon_scale, 24, 72);
+    const int icon_px = esp_panel_scale_px(min_side / 2, icon_scale, 28, 80);
     geometry.icon_px = icon_px;
     geometry.icon_w = std::min(card_w - padding * 2, icon_px + 16);
     geometry.icon_h = icon_px + 8;
@@ -619,22 +619,22 @@ static inline EspPanelWidgetGeometry esp_panel_widget_geometry(
         show_icon && show_label && show_value ? min_side / 3 : (tall ? min_side / 2 : min_side / 3),
         icon_scale,
         16,
-        56);
+        64);
     int label_px = esp_panel_scale_px(tall ? 14 : 12, label_scale, 9, 24);
     int value_px = esp_panel_scale_px(auto_value ? card_h / 4 : (show_icon && show_label ? card_h / 6 : card_h / 5), value_scale, 12, 34);
 
     if (time_like) {
-      icon_px = esp_panel_clamp_int(icon_px - 2, 16, 48);
-      label_px = esp_panel_clamp_int(label_px - 1, 9, 20);
-      value_px = esp_panel_clamp_int(value_px + 4, 16, 38);
+      icon_px = esp_panel_clamp_int(icon_px - 4, 14, 40);
+      label_px = esp_panel_clamp_int(label_px, 10, 22);
+      value_px = esp_panel_clamp_int(value_px + (wide ? 10 : 6), 18, wide ? 52 : 42);
     } else if (media_like || button_like) {
       icon_px = esp_panel_clamp_int(icon_px + 2, 18, 58);
       label_px = esp_panel_clamp_int(label_px - 1, 9, 22);
-      value_px = esp_panel_clamp_int(value_px + 2, 14, 38);
+      value_px = esp_panel_clamp_int(value_px + (wide ? 6 : 3), 16, wide ? 44 : 38);
     } else if (status_like) {
       icon_px = esp_panel_clamp_int(icon_px - 1, 16, 52);
       label_px = esp_panel_clamp_int(label_px - 1, 9, 21);
-      value_px = esp_panel_clamp_int(value_px + 1, 13, 36);
+      value_px = esp_panel_clamp_int(value_px + (wide ? 4 : 2), 14, wide ? 40 : 36);
     }
 
     int stack_gap = gap;
@@ -692,16 +692,16 @@ static inline EspPanelWidgetGeometry esp_panel_widget_geometry(
   }
 
   int base_icon_px = esp_panel_clamp_int(card_h - padding * 2 - (grid_h > 1 ? 18 : 12), 22, 52);
-  int icon_px = esp_panel_scale_px(base_icon_px, icon_scale, 18, 64);
+  int icon_px = esp_panel_scale_px(base_icon_px, icon_scale, 18, 80);
   int label_px = esp_panel_scale_px(card_h / 6, label_scale, 10, wide ? 22 : 18);
-  int value_px = esp_panel_scale_px(auto_value ? card_h / 2 : card_h / 3, value_scale, 14, wide ? 40 : 32);
+  int value_px = esp_panel_scale_px(auto_value ? card_h / 2 : card_h / 3, value_scale, 16, wide ? 52 : 36);
 
   if (time_like) {
     icon_px = esp_panel_clamp_int(icon_px - 4, 16, 54);
     label_px = esp_panel_clamp_int(label_px - 1, 10, 18);
-    value_px = esp_panel_clamp_int(value_px + 6, 18, wide ? 44 : 36);
+    value_px = esp_panel_clamp_int(value_px + (wide ? 12 : 8), 20, wide ? 52 : 40);
   } else if (media_like || button_like) {
-    icon_px = esp_panel_clamp_int(icon_px + 2, 18, 64);
+    icon_px = esp_panel_clamp_int(icon_px + (wide ? 6 : 2), 18, 80);
     label_px = esp_panel_clamp_int(label_px - 1, 10, wide ? 20 : 17);
     value_px = esp_panel_clamp_int(value_px + 3, 16, wide ? 42 : 34);
   } else if (status_like) {
@@ -769,4 +769,6 @@ static inline int esp_panel_widget_text_align_code(
     int grid_w, int grid_h, const std::string &align, const std::string &layout_mode, const std::string &type_name, int icon_scale, int label_scale, int value_scale) {
   return esp_panel_widget_geometry(grid_w, grid_h, align, layout_mode, type_name, icon_scale, label_scale, value_scale).text_align_code;
 }
+
+
 

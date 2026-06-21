@@ -1,0 +1,2451 @@
+substitutions:
+  screen_width: "480"
+  screen_height: "480"
+
+esphome:
+  name: household-panel
+  friendly_name: Household Panel
+  min_version: 2026.4.0
+  includes:
+    - esp_panel_widget_helpers.h
+  on_boot:
+    priority: -200
+    then:
+      - delay: 2s
+      - light.turn_on:
+          id: display_backlight
+          brightness: 85%
+      - script.execute: refresh_panel
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    advanced:
+      execute_from_psram: true
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+preferences:
+  flash_write_interval: 5min
+
+logger:
+  level: WARN
+
+api:
+  actions:
+    - action: panel_notify
+      variables:
+        message: string
+      then:
+        - script.execute:
+            id: show_notification
+            message: !lambda "return message;"
+  on_client_connected:
+    then:
+      - delay: 1s
+      - script.execute: refresh_panel
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  on_connect:
+    then:
+      - delay: 1s
+      - script.execute: refresh_panel
+
+time:
+  - platform: homeassistant
+    id: ha_time
+    on_time_sync:
+      then:
+        - script.execute: refresh_panel
+    on_time:
+      - seconds: 0
+        minutes: /1
+        then:
+          - script.execute: render_header
+          - script.execute: render_all_widgets
+
+output:
+  - platform: ledc
+    pin: GPIO38
+    id: gpio_backlight_pwm
+    frequency: 100Hz
+
+light:
+  - platform: monochromatic
+    output: gpio_backlight_pwm
+    name: Display Backlight
+    id: display_backlight
+    restore_mode: ALWAYS_ON
+
+i2c:
+  - id: bus_a
+    sda: GPIO19
+    scl:
+      number: GPIO45
+      ignore_strapping_warning: true
+
+touchscreen:
+  platform: gt911
+  id: panel_touch
+  display: my_display
+  i2c_id: bus_a
+  transform:
+    mirror_x: true
+    mirror_y: true
+    swap_xy: false
+
+spi:
+  - id: lcd_spi
+    clk_pin: GPIO48
+    mosi_pin: GPIO47
+
+display:
+  - platform: mipi_rgb
+    id: my_display
+    model: GUITION-4848S040
+    auto_clear_enabled: false
+    update_interval: never
+    dimensions:
+      width: 480
+      height: 480
+
+i2s_audio:
+  - id: i2s_audio_bus
+    i2s_lrclk_pin: GPIO2
+    i2s_bclk_pin: GPIO1
+
+speaker:
+  - platform: i2s_audio
+    id: panel_speaker
+    i2s_audio_id: i2s_audio_bus
+    dac_type: external
+    i2s_dout_pin: GPIO40
+    channel: left
+    sample_rate: 44100
+    bits_per_sample: 16bit
+
+media_player:
+  - platform: speaker
+    id: household_panel_speaker
+    name: "Household Panel Speaker"
+    announcement_pipeline:
+      speaker: panel_speaker
+      format: WAV
+
+font:
+  - file: "gfonts://Montserrat"
+    id: montserrat_10
+    size: 10
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_12
+    size: 12
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_14
+    size: 14
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_16
+    size: 16
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_18
+    size: 18
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_22
+    size: 22
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_28
+    size: 28
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_36
+    size: 36
+    bpp: 4
+  - file: "gfonts://Montserrat"
+    id: montserrat_52
+    size: 52
+    bpp: 4
+  - file:
+      type: gfonts
+      family: Montserrat
+      weight: 700
+    id: montserrat_bold_12
+    size: 12
+    bpp: 4
+  - file:
+      type: gfonts
+      family: Montserrat
+      weight: 700
+    id: montserrat_bold_14
+    size: 14
+    bpp: 4
+  - file:
+      type: gfonts
+      family: Montserrat
+      weight: 700
+    id: montserrat_bold_16
+    size: 16
+    bpp: 4
+  - file:
+      type: gfonts
+      family: Montserrat
+      weight: 700
+    id: montserrat_bold_18
+    size: 18
+    bpp: 4
+  - file:
+      type: gfonts
+      family: Montserrat
+      weight: 700
+    id: montserrat_bold_22
+    size: 22
+    bpp: 4
+  - file:
+      type: gfonts
+      family: Montserrat
+      weight: 700
+    id: montserrat_bold_28
+    size: 28
+    bpp: 4
+  - file:
+      type: gfonts
+      family: Montserrat
+      weight: 700
+    id: montserrat_bold_36
+    size: 36
+    bpp: 4
+  - file:
+      type: gfonts
+      family: Montserrat
+      weight: 700
+    id: montserrat_bold_52
+    size: 52
+    bpp: 4
+  - file:
+      url: "https://cdn.jsdelivr.net/npm/@mdi/font@latest/fonts/materialdesignicons-webfont.ttf"
+      type: web
+    id: mdi_icons_24
+    size: 24
+    glyphs:
+      - "\U000F0599"
+      - "\U000F0595"
+      - "\U000F0590"
+      - "\U000F0597"
+      - "\U000F0596"
+      - "\U000F0593"
+      - "\U000F0598"
+      - "\U000F0594"
+      - "\U000F050F"
+      - "\U000F058E"
+      - "\U000F0769"
+      - "\U000F0150"
+      - "\U000F00ED"
+      - "\U000F06E8"
+      - "\U000F05A9"
+      - "\U000F04B9"
+      - "\U000F081C"
+      - "\U000F07D0"
+      - "\U000F0493"
+  - file:
+      url: "https://cdn.jsdelivr.net/npm/@mdi/font@latest/fonts/materialdesignicons-webfont.ttf"
+      type: web
+    id: mdi_icons_32
+    size: 32
+    glyphs:
+      - "\U000F0599"
+      - "\U000F0595"
+      - "\U000F0590"
+      - "\U000F0597"
+      - "\U000F0596"
+      - "\U000F0593"
+      - "\U000F0598"
+      - "\U000F0594"
+      - "\U000F050F"
+      - "\U000F058E"
+      - "\U000F0769"
+      - "\U000F0150"
+      - "\U000F00ED"
+      - "\U000F06E8"
+      - "\U000F05A9"
+      - "\U000F04B9"
+      - "\U000F081C"
+      - "\U000F07D0"
+      - "\U000F0493"
+  - file:
+      url: "https://cdn.jsdelivr.net/npm/@mdi/font@latest/fonts/materialdesignicons-webfont.ttf"
+      type: web
+    id: mdi_icons_48
+    size: 48
+    glyphs:
+      - "\U000F0599"
+      - "\U000F0595"
+      - "\U000F0590"
+      - "\U000F0597"
+      - "\U000F0596"
+      - "\U000F0593"
+      - "\U000F0598"
+      - "\U000F0594"
+      - "\U000F050F"
+      - "\U000F058E"
+      - "\U000F0769"
+      - "\U000F0150"
+      - "\U000F00ED"
+      - "\U000F06E8"
+      - "\U000F05A9"
+      - "\U000F04B9"
+      - "\U000F081C"
+      - "\U000F07D0"
+      - "\U000F0493"
+  - file:
+      url: "https://cdn.jsdelivr.net/npm/@mdi/font@latest/fonts/materialdesignicons-webfont.ttf"
+      type: web
+    id: mdi_icons_64
+    size: 64
+    glyphs:
+      - "\U000F0599"
+      - "\U000F0595"
+      - "\U000F0590"
+      - "\U000F0597"
+      - "\U000F0596"
+      - "\U000F0593"
+      - "\U000F0598"
+      - "\U000F0594"
+      - "\U000F050F"
+      - "\U000F058E"
+      - "\U000F0769"
+      - "\U000F0150"
+      - "\U000F00ED"
+      - "\U000F06E8"
+      - "\U000F05A9"
+      - "\U000F04B9"
+      - "\U000F081C"
+      - "\U000F07D0"
+      - "\U000F0493"
+
+globals:
+  - id: theme_id
+    type: std::string
+    restore_value: no
+    initial_value: '"graphite"'
+  - id: theme_screen_bg
+    type: std::string
+    restore_value: no
+    initial_value: '"#05070B"'
+  - id: theme_widget_bg
+    type: std::string
+    restore_value: no
+    initial_value: '"#11161C"'
+  - id: theme_border
+    type: std::string
+    restore_value: no
+    initial_value: '"#24303A"'
+  - id: theme_button_on
+    type: std::string
+    restore_value: no
+    initial_value: '"#21C58B"'
+  - id: theme_button_off
+    type: std::string
+    restore_value: no
+    initial_value: '"#28313A"'
+  - id: theme_overlay_bg
+    type: std::string
+    restore_value: no
+    initial_value: '"#0B1015"'
+  - id: theme_overlay_title
+    type: std::string
+    restore_value: no
+    initial_value: '"#8FE3C0"'
+  - id: theme_overlay_text
+    type: std::string
+    restore_value: no
+    initial_value: '"#F5F7FA"'
+
+script:
+  - id: show_notification
+    mode: restart
+    parameters:
+      message: string
+    then:
+      - lvgl.label.update:
+          id: notification_message_label
+          text: !lambda "return message;"
+      - lvgl.widget.show: notification_overlay
+      - delay: 10s
+      - lvgl.widget.hide: notification_overlay
+
+  - id: dispatch_entity_action
+    mode: queued
+    parameters:
+      entity: string
+    then:
+      - if:
+          condition:
+            lambda: 'return entity.empty();'
+          then:
+            - logger.log:
+                level: WARN
+                tag: panel_action
+                format: "Ignoring tap because widget action is empty."
+          else:
+            - if:
+                condition:
+                  lambda: 'return esp_panel_string_starts_with(entity, "light.");'
+                then:
+                  - homeassistant.service:
+                      service: light.toggle
+                      data:
+                        entity_id: !lambda "return entity;"
+            - if:
+                condition:
+                  lambda: 'return esp_panel_string_starts_with(entity, "switch.");'
+                then:
+                  - homeassistant.service:
+                      service: switch.toggle
+                      data:
+                        entity_id: !lambda "return entity;"
+            - if:
+                condition:
+                  lambda: 'return esp_panel_string_starts_with(entity, "input_boolean.");'
+                then:
+                  - homeassistant.service:
+                      service: input_boolean.toggle
+                      data:
+                        entity_id: !lambda "return entity;"
+            - if:
+                condition:
+                  lambda: 'return esp_panel_string_starts_with(entity, "fan.");'
+                then:
+                  - homeassistant.service:
+                      service: fan.toggle
+                      data:
+                        entity_id: !lambda "return entity;"
+            - if:
+                condition:
+                  lambda: 'return esp_panel_string_starts_with(entity, "cover.");'
+                then:
+                  - homeassistant.service:
+                      service: cover.toggle
+                      data:
+                        entity_id: !lambda "return entity;"
+            - if:
+                condition:
+                  lambda: 'return esp_panel_string_starts_with(entity, "scene.");'
+                then:
+                  - homeassistant.service:
+                      service: scene.turn_on
+                      data:
+                        entity_id: !lambda "return entity;"
+            - if:
+                condition:
+                  lambda: 'return esp_panel_string_starts_with(entity, "script.");'
+                then:
+                  - homeassistant.service:
+                      service: script.turn_on
+                      data:
+                        entity_id: !lambda "return entity;"
+            - if:
+                condition:
+                  lambda: 'return esp_panel_string_starts_with(entity, "button.");'
+                then:
+                  - homeassistant.service:
+                      service: button.press
+                      data:
+                        entity_id: !lambda "return entity;"
+            - if:
+                condition:
+                  lambda: 'return esp_panel_string_starts_with(entity, "automation.");'
+                then:
+                  - homeassistant.service:
+                      service: automation.trigger
+                      data:
+                        entity_id: !lambda "return entity;"
+            - if:
+                condition:
+                  lambda: 'return esp_panel_string_starts_with(entity, "input_select.");'
+                then:
+                  - homeassistant.service:
+                      service: input_select.select_next
+                      data:
+                        entity_id: !lambda "return entity;"
+            - if:
+                condition:
+                  lambda: 'return esp_panel_string_starts_with(entity, "media_player.");'
+                then:
+                  - homeassistant.service:
+                      service: media_player.media_play_pause
+                      data:
+                        entity_id: !lambda "return entity;"
+
+  - id: apply_theme
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: main_page
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_screen_bg), 0x08142D));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(theme_screen_bg), 0x08142D), 18));'
+          bg_grad_dir: VER
+      - lvgl.widget.update:
+          id: panel_backdrop
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_screen_bg), 0x08142D));'
+          bg_grad_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(theme_screen_bg), 0x08142D), 24));'
+          bg_grad_dir: VER
+      - lvgl.widget.update:
+          id: glow_primary
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(theme_border), 0x285EA8), 24));'
+      - lvgl.widget.update:
+          id: glow_secondary
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(theme_overlay_title), 0xFFD166), 18));'
+      - lvgl.widget.update:
+          id: outer_frame
+          border_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(theme_border), 0x285EA8), 22));'
+          outline_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(theme_overlay_title), 0xFFD166), 34));'
+      - lvgl.widget.update:
+          id: header_shell
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(theme_screen_bg), 0x08142D), 8));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_border), 0x285EA8));'
+      - lvgl.bar.update:
+          id: header_meter
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_darken(esp_panel_parse_color(id(theme_screen_bg), 0x08142D), 6));'
+      - lvgl.widget.update:
+          id: status_chip
+          bg_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(theme_screen_bg), 0x08142D), 10));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_border), 0x285EA8));'
+      - lvgl.line.update:
+          id: footer_divider
+          line_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(theme_border), 0x285EA8), 14));'
+          points:
+            - 0, 2
+            - 180, 2
+      - lvgl.widget.update:
+          id: notification_overlay
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_overlay_bg), 0x06101F));'
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_border), 0x285EA8));'
+      - lvgl.label.update:
+          id: notification_title_label
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_overlay_title), 0xFFD166));'
+      - lvgl.label.update:
+          id: notification_message_label
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_overlay_text), 0xF1F5F9));'
+
+  - id: render_header
+    mode: restart
+    then:
+      - lvgl.label.update:
+          id: header_title
+          text: "Home Core"
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_overlay_text), 0xF1F5F9));'
+      - lvgl.label.update:
+          id: header_subtitle
+          text: "Environment + Controls"
+          text_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(theme_border), 0x285EA8), 22));'
+      - lvgl.label.update:
+          id: status_chip_title
+          text: "Theme"
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_overlay_title), 0xFFD166));'
+      - lvgl.label.update:
+          id: status_chip_value
+          text: !lambda 'return id(theme_id);'
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_overlay_text), 0xF1F5F9));'
+
+  - id: render_w01
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w01_card
+          hidden: !lambda |-
+            std::string raw = id(w01_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "clock|1|1|1|1|1||Clock|clock|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.visible || config.type == "blank";
+          bg_color: !lambda |-
+            std::string raw = id(w01_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "clock|1|1|1|1|1||Clock|clock|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w01_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(bg);
+          bg_grad_color: !lambda |-
+            std::string raw = id(w01_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "clock|1|1|1|1|1||Clock|clock|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w01_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(esp_panel_color_darken(bg, 16));
+          bg_grad_dir: VER
+          border_width: !lambda |-
+            std::string raw = id(w01_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "clock|1|1|1|1|1||Clock|clock|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return config.show_border ? 2 : 0;
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_border), 0x285EA8));'
+          border_opa: 72%
+      - lvgl.widget.update:
+          id: w01_icon_label
+          hidden: !lambda |-
+            std::string raw = id(w01_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "clock|1|1|1|1|1||Clock|clock|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_icon;
+      - lvgl.label.update:
+          id: w01_icon_label
+          text: !lambda |-
+            std::string raw = id(w01_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "clock|1|1|1|1|1||Clock|clock|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_icon_glyph(config.icon, config.type);
+          text_color: !lambda |-
+            std::string raw = id(w01_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "clock|1|1|1|1|1||Clock|clock|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.icon_color, 0xFFD166));
+      - lvgl.widget.update:
+          id: w01_label_label
+          hidden: !lambda |-
+            std::string raw = id(w01_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "clock|1|1|1|1|1||Clock|clock|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_label;
+      - lvgl.label.update:
+          id: w01_label_label
+          text: !lambda |-
+            std::string raw = id(w01_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "clock|1|1|1|1|1||Clock|clock|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_transform_label(config.label, config.label_transform);
+          text_color: !lambda |-
+            std::string raw = id(w01_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "clock|1|1|1|1|1||Clock|clock|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.label_color, 0xA8C3EA));
+      - lvgl.widget.update:
+          id: w01_value_label
+          hidden: !lambda |-
+            std::string raw = id(w01_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "clock|1|1|1|1|1||Clock|clock|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_value;
+      - lvgl.label.update:
+          id: w01_value_label
+          text: !lambda |-
+            std::string raw = id(w01_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "clock|1|1|1|1|1||Clock|clock|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            if (config.type == "clock") {
+              auto now = id(ha_time).now();
+              if (now.is_valid()) {
+                char buffer[6];
+                snprintf(buffer, sizeof(buffer), "%02d:%02d", now.hour, now.minute);
+                return std::string(buffer);
+              }
+              return std::string("--:--");
+            }
+            std::string value = id(w01_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value) || value.empty()) value = "--";
+            return value;
+          text_color: !lambda |-
+            std::string raw = id(w01_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "clock|1|1|1|1|1||Clock|clock|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.value_color, 0xF1F5F9));
+
+  - id: render_w02
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w02_card
+          hidden: !lambda |-
+            std::string raw = id(w02_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "date|1|1|1|1|1||Date|calendar|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.visible || config.type == "blank";
+          bg_color: !lambda |-
+            std::string raw = id(w02_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "date|1|1|1|1|1||Date|calendar|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w02_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(bg);
+          bg_grad_color: !lambda |-
+            std::string raw = id(w02_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "date|1|1|1|1|1||Date|calendar|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w02_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(esp_panel_color_darken(bg, 16));
+          bg_grad_dir: VER
+          border_width: !lambda |-
+            std::string raw = id(w02_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "date|1|1|1|1|1||Date|calendar|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return config.show_border ? 2 : 0;
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_border), 0x285EA8));'
+          border_opa: 72%
+      - lvgl.widget.update:
+          id: w02_icon_label
+          hidden: !lambda |-
+            std::string raw = id(w02_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "date|1|1|1|1|1||Date|calendar|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_icon;
+      - lvgl.label.update:
+          id: w02_icon_label
+          text: !lambda |-
+            std::string raw = id(w02_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "date|1|1|1|1|1||Date|calendar|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_icon_glyph(config.icon, config.type);
+          text_color: !lambda |-
+            std::string raw = id(w02_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "date|1|1|1|1|1||Date|calendar|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.icon_color, 0xFFD166));
+      - lvgl.widget.update:
+          id: w02_label_label
+          hidden: !lambda |-
+            std::string raw = id(w02_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "date|1|1|1|1|1||Date|calendar|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_label;
+      - lvgl.label.update:
+          id: w02_label_label
+          text: !lambda |-
+            std::string raw = id(w02_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "date|1|1|1|1|1||Date|calendar|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_transform_label(config.label, config.label_transform);
+          text_color: !lambda |-
+            std::string raw = id(w02_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "date|1|1|1|1|1||Date|calendar|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.label_color, 0xA8C3EA));
+      - lvgl.widget.update:
+          id: w02_value_label
+          hidden: !lambda |-
+            std::string raw = id(w02_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "date|1|1|1|1|1||Date|calendar|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_value;
+      - lvgl.label.update:
+          id: w02_value_label
+          text: !lambda |-
+            std::string raw = id(w02_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "date|1|1|1|1|1||Date|calendar|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            if (config.type == "date") {
+              auto now = id(ha_time).now();
+              if (now.is_valid()) {
+                char buffer[11];
+                snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
+                return std::string(buffer);
+              }
+              return std::string("--/--/----");
+            }
+            std::string value = id(w02_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value) || value.empty()) value = "--";
+            return value;
+          text_color: !lambda |-
+            std::string raw = id(w02_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "date|1|1|1|1|1||Date|calendar|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|0|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.value_color, 0xF1F5F9));
+
+  - id: render_w03
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w03_card
+          hidden: !lambda |-
+            std::string raw = id(w03_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Weather|weather-partly-cloudy|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|1|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.visible || config.type == "blank";
+          bg_color: !lambda |-
+            std::string raw = id(w03_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Weather|weather-partly-cloudy|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|1|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w03_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(esp_panel_color_lighten(bg, 4));
+          bg_grad_color: !lambda |-
+            std::string raw = id(w03_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Weather|weather-partly-cloudy|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|1|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w03_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(esp_panel_color_darken(bg, 10));
+          bg_grad_dir: VER
+          border_width: !lambda |-
+            std::string raw = id(w03_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Weather|weather-partly-cloudy|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|1|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return config.show_border ? 2 : 0;
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_border), 0x285EA8));'
+          border_opa: 72%
+      - lvgl.widget.update:
+          id: w03_icon_label
+          hidden: !lambda |-
+            std::string raw = id(w03_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Weather|weather-partly-cloudy|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|1|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_icon;
+      - lvgl.label.update:
+          id: w03_icon_label
+          text: !lambda |-
+            std::string raw = id(w03_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Weather|weather-partly-cloudy|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|1|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_icon_glyph(config.icon, config.type);
+          text_color: !lambda |-
+            std::string raw = id(w03_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Weather|weather-partly-cloudy|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|1|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.icon_color, 0xFFD166));
+      - lvgl.widget.update:
+          id: w03_label_label
+          hidden: !lambda |-
+            std::string raw = id(w03_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Weather|weather-partly-cloudy|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|1|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_label;
+      - lvgl.label.update:
+          id: w03_label_label
+          text: !lambda |-
+            std::string raw = id(w03_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Weather|weather-partly-cloudy|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|1|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_transform_label(config.label, config.label_transform);
+          text_color: !lambda |-
+            std::string raw = id(w03_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Weather|weather-partly-cloudy|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|1|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.label_color, 0xA8C3EA));
+      - lvgl.widget.update:
+          id: w03_value_label
+          hidden: !lambda |-
+            std::string raw = id(w03_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Weather|weather-partly-cloudy|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|1|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_value;
+      - lvgl.label.update:
+          id: w03_value_label
+          text: !lambda |-
+            std::string value = id(w03_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value) || value.empty()) value = "Partly Cloudy";
+            return value;
+          text_color: !lambda |-
+            std::string raw = id(w03_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Weather|weather-partly-cloudy|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|1|3|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.value_color, 0xF1F5F9));
+
+  - id: render_w04
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w04_card
+          hidden: !lambda |-
+            std::string raw = id(w04_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Temp|thermometer|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|1|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.visible || config.type == "blank";
+          bg_color: !lambda |-
+            std::string raw = id(w04_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Temp|thermometer|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|1|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w04_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(bg);
+          bg_grad_color: !lambda |-
+            std::string raw = id(w04_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Temp|thermometer|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|1|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w04_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(esp_panel_color_darken(bg, 12));
+          bg_grad_dir: VER
+          border_width: !lambda |-
+            std::string raw = id(w04_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Temp|thermometer|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|1|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return config.show_border ? 2 : 0;
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_border), 0x285EA8));'
+      - lvgl.widget.update:
+          id: w04_icon_label
+          hidden: !lambda |-
+            std::string raw = id(w04_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Temp|thermometer|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|1|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_icon;
+      - lvgl.label.update:
+          id: w04_icon_label
+          text: !lambda |-
+            std::string raw = id(w04_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Temp|thermometer|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|1|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_icon_glyph(config.icon, config.type);
+          text_color: !lambda |-
+            std::string raw = id(w04_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Temp|thermometer|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|1|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.icon_color, 0xFFD166));
+      - lvgl.widget.update:
+          id: w04_label_label
+          hidden: !lambda |-
+            std::string raw = id(w04_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Temp|thermometer|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|1|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_label;
+      - lvgl.label.update:
+          id: w04_label_label
+          text: !lambda |-
+            std::string raw = id(w04_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Temp|thermometer|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|1|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_transform_label(config.label, config.label_transform);
+          text_color: !lambda |-
+            std::string raw = id(w04_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Temp|thermometer|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|1|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.label_color, 0xA8C3EA));
+      - lvgl.widget.update:
+          id: w04_value_label
+          hidden: !lambda |-
+            std::string raw = id(w04_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Temp|thermometer|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|1|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_value;
+      - lvgl.label.update:
+          id: w04_value_label
+          text: !lambda |-
+            std::string value = id(w04_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value) || value.empty()) value = "--";
+            return value;
+          text_color: !lambda |-
+            std::string raw = id(w04_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Temp|thermometer|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|1|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.value_color, 0xF1F5F9));
+
+  - id: render_w05
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w05_card
+          hidden: !lambda |-
+            std::string raw = id(w05_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Humidity|water-percent|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|5|1|1|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.visible || config.type == "blank";
+          bg_color: !lambda |-
+            std::string raw = id(w05_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Humidity|water-percent|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|5|1|1|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w05_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(bg);
+          bg_grad_color: !lambda |-
+            std::string raw = id(w05_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Humidity|water-percent|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|5|1|1|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w05_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(esp_panel_color_darken(bg, 12));
+          bg_grad_dir: VER
+          border_width: !lambda |-
+            std::string raw = id(w05_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Humidity|water-percent|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|5|1|1|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return config.show_border ? 2 : 0;
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_border), 0x285EA8));'
+      - lvgl.widget.update:
+          id: w05_icon_label
+          hidden: !lambda |-
+            std::string raw = id(w05_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Humidity|water-percent|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|5|1|1|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_icon;
+      - lvgl.label.update:
+          id: w05_icon_label
+          text: !lambda |-
+            std::string raw = id(w05_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Humidity|water-percent|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|5|1|1|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_icon_glyph(config.icon, config.type);
+          text_color: !lambda |-
+            std::string raw = id(w05_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Humidity|water-percent|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|5|1|1|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.icon_color, 0xFFD166));
+      - lvgl.widget.update:
+          id: w05_label_label
+          hidden: !lambda |-
+            std::string raw = id(w05_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Humidity|water-percent|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|5|1|1|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_label;
+      - lvgl.label.update:
+          id: w05_label_label
+          text: !lambda |-
+            std::string raw = id(w05_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Humidity|water-percent|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|5|1|1|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_transform_label(config.label, config.label_transform);
+          text_color: !lambda |-
+            std::string raw = id(w05_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Humidity|water-percent|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|5|1|1|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.label_color, 0xA8C3EA));
+      - lvgl.widget.update:
+          id: w05_value_label
+          hidden: !lambda |-
+            std::string raw = id(w05_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Humidity|water-percent|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|5|1|1|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_value;
+      - lvgl.label.update:
+          id: w05_value_label
+          text: !lambda |-
+            std::string value = id(w05_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value) || value.empty()) value = "--";
+            return value;
+          text_color: !lambda |-
+            std::string raw = id(w05_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Humidity|water-percent|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|5|1|1|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.value_color, 0xF1F5F9));
+
+  - id: render_w06
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w06_card
+          hidden: !lambda |-
+            std::string raw = id(w06_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|1|1|1|1|1||Main%20Light|ceiling-light|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|4|2|2";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.visible || config.type == "blank";
+          bg_color: !lambda |-
+            std::string raw = id(w06_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|1|1|1|1|1||Main%20Light|ceiling-light|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|4|2|2";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w06_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(bg);
+          bg_grad_color: !lambda |-
+            std::string raw = id(w06_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|1|1|1|1|1||Main%20Light|ceiling-light|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|4|2|2";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w06_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(esp_panel_color_darken(bg, 12));
+          bg_grad_dir: HOR
+          border_width: !lambda |-
+            std::string raw = id(w06_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|1|1|1|1|1||Main%20Light|ceiling-light|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|4|2|2";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return config.show_border ? 2 : 0;
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_border), 0x285EA8));'
+      - lvgl.widget.update:
+          id: w06_icon_label
+          hidden: !lambda |-
+            std::string raw = id(w06_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|1|1|1|1|1||Main%20Light|ceiling-light|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|4|2|2";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_icon;
+      - lvgl.label.update:
+          id: w06_icon_label
+          text: !lambda |-
+            std::string raw = id(w06_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|1|1|1|1|1||Main%20Light|ceiling-light|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|4|2|2";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_icon_glyph(config.icon, config.type);
+          text_color: !lambda |-
+            std::string raw = id(w06_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|1|1|1|1|1||Main%20Light|ceiling-light|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|4|2|2";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.icon_color, 0xFFD166));
+      - lvgl.widget.update:
+          id: w06_label_label
+          hidden: !lambda |-
+            std::string raw = id(w06_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|1|1|1|1|1||Main%20Light|ceiling-light|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|4|2|2";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_label;
+      - lvgl.label.update:
+          id: w06_label_label
+          text: !lambda |-
+            std::string raw = id(w06_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|1|1|1|1|1||Main%20Light|ceiling-light|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|4|2|2";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_transform_label(config.label, config.label_transform);
+          text_color: !lambda |-
+            std::string raw = id(w06_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|1|1|1|1|1||Main%20Light|ceiling-light|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|4|2|2";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.label_color, 0xA8C3EA));
+      - lvgl.widget.update:
+          id: w06_value_label
+          hidden: !lambda |-
+            std::string raw = id(w06_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|1|1|1|1|1||Main%20Light|ceiling-light|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|4|2|2";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.show_value;
+      - lvgl.label.update:
+          id: w06_value_label
+          text: !lambda |-
+            std::string value = id(w06_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value) || value.empty()) value = "--";
+            return value;
+          text_color: !lambda |-
+            std::string raw = id(w06_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|1|1|1|1|1||Main%20Light|ceiling-light|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|4|2|2";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.value_color, 0xF1F5F9));
+
+  - id: render_w07
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w07_card
+          hidden: !lambda |-
+            std::string raw = id(w07_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||WiFi|wifi|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.visible || config.type == "blank";
+          bg_color: !lambda |-
+            std::string raw = id(w07_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||WiFi|wifi|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w07_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(bg);
+          border_width: !lambda |-
+            std::string raw = id(w07_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||WiFi|wifi|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return config.show_border ? 1 : 0;
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_border), 0x285EA8));'
+      - lvgl.label.update:
+          id: w07_icon_label
+          text: !lambda |-
+            std::string raw = id(w07_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||WiFi|wifi|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_icon_glyph(config.icon, config.type);
+          text_color: !lambda |-
+            std::string raw = id(w07_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||WiFi|wifi|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.icon_color, 0xFFD166));
+      - lvgl.label.update:
+          id: w07_label_label
+          text: !lambda |-
+            std::string raw = id(w07_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||WiFi|wifi|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_transform_label(config.label, config.label_transform);
+          text_color: !lambda |-
+            std::string raw = id(w07_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||WiFi|wifi|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.label_color, 0xA8C3EA));
+      - lvgl.label.update:
+          id: w07_value_label
+          text: !lambda |-
+            std::string value = id(w07_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value) || value.empty()) value = "--";
+            return value;
+          text_color: !lambda |-
+            std::string raw = id(w07_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||WiFi|wifi|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.value_color, 0xF1F5F9));
+
+  - id: render_w08
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w08_card
+          hidden: !lambda |-
+            std::string raw = id(w08_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Scene|home|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.visible || config.type == "blank";
+          bg_color: !lambda |-
+            std::string raw = id(w08_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Scene|home|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w08_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(bg);
+          border_width: !lambda |-
+            std::string raw = id(w08_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Scene|home|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return config.show_border ? 1 : 0;
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_border), 0x285EA8));'
+      - lvgl.label.update:
+          id: w08_icon_label
+          text: !lambda |-
+            std::string raw = id(w08_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Scene|home|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_icon_glyph(config.icon, config.type);
+          text_color: !lambda |-
+            std::string raw = id(w08_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Scene|home|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.icon_color, 0xFFD166));
+      - lvgl.label.update:
+          id: w08_label_label
+          text: !lambda |-
+            std::string raw = id(w08_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Scene|home|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_transform_label(config.label, config.label_transform);
+          text_color: !lambda |-
+            std::string raw = id(w08_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Scene|home|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.label_color, 0xA8C3EA));
+      - lvgl.label.update:
+          id: w08_value_label
+          text: !lambda |-
+            std::string value = id(w08_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value) || value.empty()) value = "--";
+            return value;
+          text_color: !lambda |-
+            std::string raw = id(w08_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Scene|home|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.value_color, 0xF1F5F9));
+
+  - id: render_w09
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w09_card
+          hidden: !lambda |-
+            std::string raw = id(w09_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|0|1|1|1|1||Door|door|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.visible || config.type == "blank";
+          bg_color: !lambda |-
+            std::string raw = id(w09_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|0|1|1|1|1||Door|door|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w09_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(bg);
+          border_width: !lambda |-
+            std::string raw = id(w09_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|0|1|1|1|1||Door|door|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return config.show_border ? 1 : 0;
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_border), 0x285EA8));'
+      - lvgl.label.update:
+          id: w09_icon_label
+          text: !lambda |-
+            std::string raw = id(w09_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|0|1|1|1|1||Door|door|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_icon_glyph(config.icon, config.type);
+          text_color: !lambda |-
+            std::string raw = id(w09_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|0|1|1|1|1||Door|door|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.icon_color, 0xFFD166));
+      - lvgl.label.update:
+          id: w09_label_label
+          text: !lambda |-
+            std::string raw = id(w09_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|0|1|1|1|1||Door|door|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_transform_label(config.label, config.label_transform);
+          text_color: !lambda |-
+            std::string raw = id(w09_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|0|1|1|1|1||Door|door|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.label_color, 0xA8C3EA));
+      - lvgl.label.update:
+          id: w09_value_label
+          text: !lambda |-
+            std::string value = id(w09_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value) || value.empty()) value = "--";
+            return value;
+          text_color: !lambda |-
+            std::string raw = id(w09_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|0|1|1|1|1||Door|door|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|4|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.value_color, 0xF1F5F9));
+
+  - id: render_w10
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w10_card
+          hidden: !lambda |-
+            std::string raw = id(w10_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Sofa|sofa|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.visible || config.type == "blank";
+          bg_color: !lambda |-
+            std::string raw = id(w10_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Sofa|sofa|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            std::string value = id(w10_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value)) value = "";
+            const uint32_t bg = esp_panel_widget_effective_bg(config.type, value, config.bg_color, esp_panel_parse_color(id(theme_screen_bg), 0x08142D), esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33), esp_panel_parse_color(id(theme_button_on), 0x14B8A6), esp_panel_parse_color(id(theme_button_off), 0x1F2937));
+            return lv_color_hex(bg);
+          border_width: !lambda |-
+            std::string raw = id(w10_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Sofa|sofa|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return config.show_border ? 1 : 0;
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_border), 0x285EA8));'
+      - lvgl.label.update:
+          id: w10_icon_label
+          text: !lambda |-
+            std::string raw = id(w10_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Sofa|sofa|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_icon_glyph(config.icon, config.type);
+          text_color: !lambda |-
+            std::string raw = id(w10_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Sofa|sofa|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.icon_color, 0xFFD166));
+      - lvgl.label.update:
+          id: w10_label_label
+          text: !lambda |-
+            std::string raw = id(w10_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Sofa|sofa|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return esp_panel_transform_label(config.label, config.label_transform);
+          text_color: !lambda |-
+            std::string raw = id(w10_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Sofa|sofa|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.label_color, 0xA8C3EA));
+      - lvgl.label.update:
+          id: w10_value_label
+          text: !lambda |-
+            std::string value = id(w10_value_source).state;
+            if (esp_panel_runtime_text_unavailable(value) || value.empty()) value = "--";
+            return value;
+          text_color: !lambda |-
+            std::string raw = id(w10_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Sofa|sofa|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|5|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return lv_color_hex(esp_panel_parse_color(config.value_color, 0xF1F5F9));
+
+  - id: render_w11
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w11_card
+          hidden: !lambda |-
+            std::string raw = id(w11_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "blank|0|1|1|1|1||Blank|shape|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|2|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.visible || config.type == "blank";
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33));'
+          border_width: 1
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_border), 0x285EA8));'
+      - lvgl.label.update:
+          id: w11_icon_label
+          text: "\U000F06E8"
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_overlay_title), 0xFFD166));'
+      - lvgl.label.update:
+          id: w11_label_label
+          text: "Blank"
+          text_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(theme_border), 0x285EA8), 20));'
+      - lvgl.label.update:
+          id: w11_value_label
+          text: ""
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_overlay_text), 0xF1F5F9));'
+
+  - id: render_w12
+    mode: restart
+    then:
+      - lvgl.widget.update:
+          id: w12_card
+          hidden: !lambda |-
+            std::string raw = id(w12_config_source).state;
+            if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "blank|0|1|1|1|1||Blank|shape|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|2|2|1";
+            auto config = esp_panel_parse_widget_runtime(raw);
+            return !config.visible || config.type == "blank";
+          bg_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_widget_bg), 0x0D1B33));'
+          border_width: 1
+          border_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_border), 0x285EA8));'
+      - lvgl.label.update:
+          id: w12_icon_label
+          text: "\U000F06E8"
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_overlay_title), 0xFFD166));'
+      - lvgl.label.update:
+          id: w12_label_label
+          text: "Blank"
+          text_color: !lambda 'return lv_color_hex(esp_panel_color_lighten(esp_panel_parse_color(id(theme_border), 0x285EA8), 20));'
+      - lvgl.label.update:
+          id: w12_value_label
+          text: ""
+          text_color: !lambda 'return lv_color_hex(esp_panel_parse_color(id(theme_overlay_text), 0xF1F5F9));'
+
+  - id: render_all_widgets
+    mode: restart
+    then:
+      - script.execute: render_w01
+      - script.execute: render_w02
+      - script.execute: render_w03
+      - script.execute: render_w04
+      - script.execute: render_w05
+      - script.execute: render_w06
+      - script.execute: render_w07
+      - script.execute: render_w08
+      - script.execute: render_w09
+      - script.execute: render_w10
+      - script.execute: render_w11
+      - script.execute: render_w12
+      - lvgl.widget.redraw:
+
+  - id: refresh_panel
+    mode: restart
+    then:
+      - lvgl.page.show: main_page
+      - script.execute: apply_theme
+      - script.execute: render_header
+      - script.execute: render_all_widgets
+
+text_sensor:
+  - platform: homeassistant
+    id: panel_theme_source
+    entity_id: input_text.esp_panel_runtime_theme
+    on_value:
+      then:
+        - lambda: |-
+            id(theme_id) = "graphite";
+            id(theme_screen_bg) = "#05070B";
+            id(theme_widget_bg) = "#11161C";
+            id(theme_border) = "#24303A";
+            id(theme_button_on) = "#21C58B";
+            id(theme_button_off) = "#28313A";
+            id(theme_overlay_bg) = "#0B1015";
+            id(theme_overlay_title) = "#8FE3C0";
+            id(theme_overlay_text) = "#F5F7FA";
+        - script.execute: refresh_panel
+
+  - platform: homeassistant
+    id: w01_config_source
+    entity_id: input_text.esp_panel_runtime_w01_config
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
+    id: w01_value_source
+    entity_id: input_text.esp_panel_runtime_w01_value
+    on_value:
+      - script.execute: render_w01
+  - platform: homeassistant
+    id: w01_action_source
+    entity_id: input_text.esp_panel_runtime_w01_action
+
+  - platform: homeassistant
+    id: w02_config_source
+    entity_id: input_text.esp_panel_runtime_w02_config
+    on_value:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w02_value_source
+    entity_id: input_text.esp_panel_runtime_w02_value
+    on_value:
+      - script.execute: render_w02
+  - platform: homeassistant
+    id: w02_action_source
+    entity_id: input_text.esp_panel_runtime_w02_action
+
+  - platform: homeassistant
+    id: w03_config_source
+    entity_id: input_text.esp_panel_runtime_w03_config
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
+    id: w03_value_source
+    entity_id: input_text.esp_panel_runtime_w03_value
+    on_value:
+      - script.execute: render_w03
+  - platform: homeassistant
+    id: w03_action_source
+    entity_id: input_text.esp_panel_runtime_w03_action
+
+  - platform: homeassistant
+    id: w04_config_source
+    entity_id: input_text.esp_panel_runtime_w04_config
+    on_value:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w04_value_source
+    entity_id: input_text.esp_panel_runtime_w04_value
+    on_value:
+      - script.execute: render_w04
+  - platform: homeassistant
+    id: w04_action_source
+    entity_id: input_text.esp_panel_runtime_w04_action
+
+  - platform: homeassistant
+    id: w05_config_source
+    entity_id: input_text.esp_panel_runtime_w05_config
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
+    id: w05_value_source
+    entity_id: input_text.esp_panel_runtime_w05_value
+    on_value:
+      - script.execute: render_w05
+  - platform: homeassistant
+    id: w05_action_source
+    entity_id: input_text.esp_panel_runtime_w05_action
+
+  - platform: homeassistant
+    id: w06_config_source
+    entity_id: input_text.esp_panel_runtime_w06_config
+    on_value:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w06_value_source
+    entity_id: input_text.esp_panel_runtime_w06_value
+    on_value:
+      - script.execute: render_w06
+  - platform: homeassistant
+    id: w06_action_source
+    entity_id: input_text.esp_panel_runtime_w06_action
+
+  - platform: homeassistant
+    id: w07_config_source
+    entity_id: input_text.esp_panel_runtime_w07_config
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
+    id: w07_value_source
+    entity_id: input_text.esp_panel_runtime_w07_value
+    on_value:
+      - script.execute: render_w07
+  - platform: homeassistant
+    id: w07_action_source
+    entity_id: input_text.esp_panel_runtime_w07_action
+
+  - platform: homeassistant
+    id: w08_config_source
+    entity_id: input_text.esp_panel_runtime_w08_config
+    on_value:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w08_value_source
+    entity_id: input_text.esp_panel_runtime_w08_value
+    on_value:
+      - script.execute: render_w08
+  - platform: homeassistant
+    id: w08_action_source
+    entity_id: input_text.esp_panel_runtime_w08_action
+
+  - platform: homeassistant
+    id: w09_config_source
+    entity_id: input_text.esp_panel_runtime_w09_config
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
+    id: w09_value_source
+    entity_id: input_text.esp_panel_runtime_w09_value
+    on_value:
+      - script.execute: render_w09
+  - platform: homeassistant
+    id: w09_action_source
+    entity_id: input_text.esp_panel_runtime_w09_action
+
+  - platform: homeassistant
+    id: w10_config_source
+    entity_id: input_text.esp_panel_runtime_w10_config
+    on_value:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w10_value_source
+    entity_id: input_text.esp_panel_runtime_w10_value
+    on_value:
+      - script.execute: render_w10
+  - platform: homeassistant
+    id: w10_action_source
+    entity_id: input_text.esp_panel_runtime_w10_action
+
+  - platform: homeassistant
+    id: w11_config_source
+    entity_id: input_text.esp_panel_runtime_w11_config
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
+    id: w11_value_source
+    entity_id: input_text.esp_panel_runtime_w11_value
+    on_value:
+      - script.execute: render_w11
+  - platform: homeassistant
+    id: w11_action_source
+    entity_id: input_text.esp_panel_runtime_w11_action
+
+  - platform: homeassistant
+    id: w12_config_source
+    entity_id: input_text.esp_panel_runtime_w12_config
+    on_value:
+      - script.execute: render_w12
+  - platform: homeassistant
+    id: w12_value_source
+    entity_id: input_text.esp_panel_runtime_w12_value
+    on_value:
+      - script.execute: render_w12
+  - platform: homeassistant
+    id: w12_action_source
+    entity_id: input_text.esp_panel_runtime_w12_action
+
+lvgl:
+  rotation: 180
+  pages:
+    - id: main_page
+      bg_color: 0x08142D
+      pad_all: 0
+      scrollable: false
+      scrollbar_mode: "OFF"
+      widgets:
+        - obj:
+            id: panel_backdrop
+            x: 0
+            y: 0
+            width: 480
+            height: 480
+            bg_color: 0x05070B
+            bg_grad_color: 0x10161B
+            bg_grad_dir: VER
+            border_width: 0
+            radius: 0
+            clickable: false
+            scrollable: false
+        - obj:
+            id: glow_primary
+            x: 282
+            y: -34
+            width: 188
+            height: 188
+            radius: 180
+            bg_color: 0x21C58B
+            bg_opa: 8%
+            border_width: 0
+            clickable: false
+            scrollable: false
+        - obj:
+            id: glow_secondary
+            x: -42
+            y: 338
+            width: 164
+            height: 164
+            radius: 150
+            bg_color: 0xF6B73C
+            bg_opa: 6%
+            border_width: 0
+            clickable: false
+            scrollable: false
+        - obj:
+            id: outer_frame
+            x: 10
+            y: 10
+            width: 460
+            height: 460
+            bg_opa: 0%
+            border_width: 0
+            outline_width: 1
+            outline_color: 0xFFFFFF
+            outline_opa: 4%
+            radius: 22
+            clickable: false
+            scrollable: false
+        - obj:
+            id: header_shell
+            x: 18
+            y: 18
+            width: 444
+            height: 44
+            radius: 16
+            bg_color: 0x0E1318
+            bg_opa: 78%
+            border_width: 0
+            clickable: false
+            scrollable: false
+            widgets:
+              - label:
+                  id: header_title
+                  x: 16
+                  y: 6
+                  width: 156
+                  height: 18
+                  text: "Home Core"
+                  text_font: montserrat_bold_16
+                  text_color: 0xF1F5F9
+              - label:
+                  id: header_subtitle
+                  x: 16
+                  y: 23
+                  width: 180
+                  height: 14
+                  text: "Environment + Controls"
+                  text_font: montserrat_10
+                  text_color: 0x8E9FB8
+              - bar:
+                  id: header_meter
+                  x: 176
+                  y: 18
+                  width: 128
+                  height: 8
+                  min_value: 0
+                  max_value: 100
+                  value: 78
+                  bg_color: 0x1C242C
+                  border_width: 0
+                  radius: 10
+                  pad_all: 2
+                  indicator:
+                    bg_color: 0x8FE3C0
+                    bg_grad_color: 0x21C58B
+                    bg_grad_dir: HOR
+                    radius: 10
+              - obj:
+                  id: status_chip
+                  x: 318
+                  y: 5
+                  width: 112
+                  height: 36
+                  radius: 14
+                  bg_color: 0x171E25
+                  bg_opa: 100%
+                  border_width: 0
+                  clickable: false
+                  scrollable: false
+                  widgets:
+                    - label:
+                        id: status_chip_title
+                        x: 0
+                        y: 6
+                        width: 112
+                        height: 12
+                        text: "Theme"
+                        text_font: montserrat_bold_12
+                        text_align: CENTER
+                        text_color: 0xFFD166
+                    - label:
+                        id: status_chip_value
+                        x: 0
+                        y: 20
+                        width: 112
+                        height: 12
+                        text: "blue"
+                        text_font: montserrat_10
+                        text_align: CENTER
+                        text_color: 0xF1F5F9
+        - obj:
+            id: w01_card
+            x: 18
+            y: 76
+            width: 140
+            height: 48
+            radius: 16
+            bg_color: 0x11161C
+            bg_opa: 100%
+            border_width: 0
+            shadow_width: 12
+            shadow_color: 0x000000
+            shadow_opa: 14%
+            clickable: true
+            scrollable: false
+            on_click:
+              then:
+                - script.execute:
+                    id: dispatch_entity_action
+                    entity: !lambda |-
+                      std::string action = id(w01_action_source).state;
+                      if (!esp_panel_runtime_text_unavailable(action) && !action.empty()) return action;
+                      std::string raw = id(w01_config_source).state;
+                      if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "clock|1|1|1|1|1||Clock|clock|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|0|3|1";
+                      return esp_panel_parse_widget_runtime(raw).action;
+            widgets:
+              - label:
+                  id: w01_icon_label
+                  x: 10
+                  y: 8
+                  width: 28
+                  height: 28
+                  text: "\U000F0150"
+                  text_font: mdi_icons_24
+                  text_align: CENTER
+                  text_color: 0xFFD166
+              - label:
+                  id: w01_label_label
+                  x: 44
+                  y: 7
+                  width: 84
+                  height: 12
+                  text: "Clock"
+                  text_font: montserrat_10
+                  text_color: 0xA8C3EA
+              - label:
+                  id: w01_value_label
+                  x: 44
+                  y: 17
+                  width: 84
+                  height: 24
+                  text: "--:--"
+                  text_font: montserrat_bold_22
+                  text_color: 0xF1F5F9
+        - obj:
+            id: w02_card
+            x: 322
+            y: 76
+            width: 140
+            height: 48
+            radius: 16
+            bg_color: 0x11161C
+            bg_opa: 100%
+            border_width: 0
+            shadow_width: 12
+            shadow_color: 0x000000
+            shadow_opa: 14%
+            clickable: true
+            scrollable: false
+            on_click:
+              then:
+                - script.execute:
+                    id: dispatch_entity_action
+                    entity: !lambda |-
+                      std::string action = id(w02_action_source).state;
+                      if (!esp_panel_runtime_text_unavailable(action) && !action.empty()) return action;
+                      std::string raw = id(w02_config_source).state;
+                      if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "date|1|1|1|1|1||Date|calendar|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|0|3|1";
+                      return esp_panel_parse_widget_runtime(raw).action;
+            widgets:
+              - label:
+                  id: w02_icon_label
+                  x: 10
+                  y: 8
+                  width: 28
+                  height: 28
+                  text: "\U000F00ED"
+                  text_font: mdi_icons_24
+                  text_align: CENTER
+                  text_color: 0xFFD166
+              - label:
+                  id: w02_label_label
+                  x: 44
+                  y: 7
+                  width: 84
+                  height: 12
+                  text: "Date"
+                  text_font: montserrat_10
+                  text_color: 0xA8C3EA
+              - label:
+                  id: w02_value_label
+                  x: 44
+                  y: 17
+                  width: 84
+                  height: 24
+                  text: "--/--/----"
+                  text_font: montserrat_bold_16
+                  text_color: 0xF1F5F9
+        - obj:
+            id: w03_card
+            x: 18
+            y: 142
+            width: 444
+            height: 162
+            radius: 20
+            bg_color: 0x141A20
+            bg_opa: 100%
+            border_width: 0
+            shadow_width: 16
+            shadow_color: 0x000000
+            shadow_opa: 18%
+            clickable: true
+            scrollable: false
+            on_click:
+              then:
+                - script.execute:
+                    id: dispatch_entity_action
+                    entity: !lambda |-
+                      std::string action = id(w03_action_source).state;
+                      if (!esp_panel_runtime_text_unavailable(action) && !action.empty()) return action;
+                      std::string raw = id(w03_config_source).state;
+                      if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Weather|weather-partly-cloudy|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|1|3|1";
+                      return esp_panel_parse_widget_runtime(raw).action;
+            widgets:
+              - label:
+                  id: w03_icon_label
+                  x: 24
+                  y: 54
+                  width: 56
+                  height: 56
+                  text: "\U000F0595"
+                  text_font: mdi_icons_48
+                  text_align: CENTER
+                  text_color: 0xFFD166
+              - label:
+                  id: w03_label_label
+                  x: 96
+                  y: 24
+                  width: 320
+                  height: 16
+                  text: "Weather"
+                  text_font: montserrat_bold_14
+                  text_color: 0xA8C3EA
+              - label:
+                  id: w03_value_label
+                  x: 96
+                  y: 52
+                  width: 324
+                  height: 52
+                  text: "Partly Cloudy"
+                  text_font: montserrat_bold_52
+                  text_color: 0xF1F5F9
+                  long_mode: DOT
+        - obj:
+            id: w04_card
+            x: 18
+            y: 304
+            width: 216
+            height: 76
+            radius: 18
+            bg_color: 0x11161C
+            bg_opa: 100%
+            border_width: 0
+            shadow_width: 12
+            shadow_color: 0x000000
+            shadow_opa: 18%
+            clickable: true
+            scrollable: false
+            on_click:
+              then:
+                - script.execute:
+                    id: dispatch_entity_action
+                    entity: !lambda |-
+                      std::string action = id(w04_action_source).state;
+                      if (!esp_panel_runtime_text_unavailable(action) && !action.empty()) return action;
+                      std::string raw = id(w04_config_source).state;
+                      if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Temp|thermometer|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|3|1|2|1";
+                      return esp_panel_parse_widget_runtime(raw).action;
+            widgets:
+              - label:
+                  id: w04_icon_label
+                  x: 12
+                  y: 20
+                  width: 34
+                  height: 34
+                  text: "\U000F050F"
+                  text_font: mdi_icons_32
+                  text_color: 0xFFD166
+              - label:
+                  id: w04_label_label
+                  x: 54
+                  y: 16
+                  width: 148
+                  height: 14
+                  text: "Temp"
+                  text_font: montserrat_bold_12
+                  text_color: 0xA8C3EA
+              - label:
+                  id: w04_value_label
+                  x: 54
+                  y: 34
+                  width: 148
+                  height: 28
+                  text: "--"
+                  text_font: montserrat_bold_22
+                  text_color: 0xF1F5F9
+        - obj:
+            id: w05_card
+            x: 246
+            y: 304
+            width: 216
+            height: 76
+            radius: 18
+            bg_color: 0x11161C
+            bg_opa: 100%
+            border_width: 0
+            shadow_width: 12
+            shadow_color: 0x000000
+            shadow_opa: 18%
+            clickable: true
+            scrollable: false
+            on_click:
+              then:
+                - script.execute:
+                    id: dispatch_entity_action
+                    entity: !lambda |-
+                      std::string action = id(w05_action_source).state;
+                      if (!esp_panel_runtime_text_unavailable(action) && !action.empty()) return action;
+                      std::string raw = id(w05_config_source).state;
+                      if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|1|1|1|1|1||Humidity|water-percent|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|5|1|1|1";
+                      return esp_panel_parse_widget_runtime(raw).action;
+            widgets:
+              - label:
+                  id: w05_icon_label
+                  x: 12
+                  y: 20
+                  width: 34
+                  height: 34
+                  text: "\U000F058E"
+                  text_font: mdi_icons_32
+                  text_color: 0xFFD166
+              - label:
+                  id: w05_label_label
+                  x: 54
+                  y: 16
+                  width: 148
+                  height: 14
+                  text: "Humidity"
+                  text_font: montserrat_bold_12
+                  text_color: 0xA8C3EA
+              - label:
+                  id: w05_value_label
+                  x: 54
+                  y: 34
+                  width: 148
+                  height: 28
+                  text: "--"
+                  text_font: montserrat_bold_22
+                  text_color: 0xF1F5F9
+        - obj:
+            id: w06_card
+            x: 18
+            y: 392
+            width: 444
+            height: 64
+            radius: 18
+            bg_color: 0x1E8E67
+            bg_opa: 100%
+            border_width: 0
+            shadow_width: 14
+            shadow_color: 0x000000
+            shadow_opa: 18%
+            clickable: true
+            scrollable: false
+            on_click:
+              then:
+                - script.execute:
+                    id: dispatch_entity_action
+                    entity: !lambda |-
+                      std::string action = id(w06_action_source).state;
+                      if (!esp_panel_runtime_text_unavailable(action) && !action.empty()) return action;
+                      std::string raw = id(w06_config_source).state;
+                      if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|1|1|1|1|1||Main%20Light|ceiling-light|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|0|4|2|2";
+                      return esp_panel_parse_widget_runtime(raw).action;
+            widgets:
+              - label:
+                  id: w06_icon_label
+                  x: 14
+                  y: 14
+                  width: 32
+                  height: 32
+                  text: "\U000F0769"
+                  text_font: mdi_icons_32
+                  text_color: 0xFFD166
+              - label:
+                  id: w06_label_label
+                  x: 56
+                  y: 12
+                  width: 160
+                  height: 14
+                  text: "Main Light"
+                  text_font: montserrat_bold_12
+                  text_color: 0xA8C3EA
+              - label:
+                  id: w06_value_label
+                  x: 228
+                  y: 16
+                  width: 196
+                  height: 28
+                  text: "--"
+                  text_font: montserrat_bold_28
+                  text_align: RIGHT
+                  text_color: 0xF1F5F9
+        - obj:
+            id: w07_card
+            hidden: true
+            x: 18
+            y: 472
+            width: 68
+            height: 8
+            radius: 4
+            bg_color: 0x11161C
+            bg_opa: 100%
+            border_width: 0
+            clickable: true
+            scrollable: false
+            on_click:
+              then:
+                - script.execute:
+                    id: dispatch_entity_action
+                    entity: !lambda |-
+                      std::string action = id(w07_action_source).state;
+                      if (!esp_panel_runtime_text_unavailable(action) && !action.empty()) return action;
+                      std::string raw = id(w07_config_source).state;
+                      if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||WiFi|wifi|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|4|2|1";
+                      return esp_panel_parse_widget_runtime(raw).action;
+            widgets:
+              - label:
+                  id: w07_icon_label
+                  x: 0
+                  y: 4
+                  width: 68
+                  height: 18
+                  text: "\U000F05A9"
+                  text_font: mdi_icons_24
+                  text_align: CENTER
+                  text_color: 0xFFD166
+              - label:
+                  id: w07_label_label
+                  x: 4
+                  y: 24
+                  width: 60
+                  height: 10
+                  text: "WiFi"
+                  text_font: montserrat_10
+                  text_align: CENTER
+                  text_color: 0xA8C3EA
+              - label:
+                  id: w07_value_label
+                  x: 4
+                  y: 35
+                  width: 60
+                  height: 10
+                  text: "On"
+                  text_font: montserrat_10
+                  text_align: CENTER
+                  text_color: 0xF1F5F9
+        - obj:
+            id: w08_card
+            hidden: true
+            x: 92
+            y: 472
+            width: 68
+            height: 8
+            radius: 4
+            bg_color: 0x11161C
+            bg_opa: 100%
+            border_width: 0
+            clickable: true
+            scrollable: false
+            on_click:
+              then:
+                - script.execute:
+                    id: dispatch_entity_action
+                    entity: !lambda |-
+                      std::string action = id(w08_action_source).state;
+                      if (!esp_panel_runtime_text_unavailable(action) && !action.empty()) return action;
+                      std::string raw = id(w08_config_source).state;
+                      if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Scene|home|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|2|5|2|1";
+                      return esp_panel_parse_widget_runtime(raw).action;
+            widgets:
+              - label:
+                  id: w08_icon_label
+                  x: 0
+                  y: 4
+                  width: 68
+                  height: 18
+                  text: "\U000F07D0"
+                  text_font: mdi_icons_24
+                  text_align: CENTER
+                  text_color: 0xFFD166
+              - label:
+                  id: w08_label_label
+                  x: 4
+                  y: 24
+                  width: 60
+                  height: 10
+                  text: "Scene"
+                  text_font: montserrat_10
+                  text_align: CENTER
+                  text_color: 0xA8C3EA
+              - label:
+                  id: w08_value_label
+                  x: 4
+                  y: 35
+                  width: 60
+                  height: 10
+                  text: "Home"
+                  text_font: montserrat_10
+                  text_align: CENTER
+                  text_color: 0xF1F5F9
+        - obj:
+            id: w09_card
+            hidden: true
+            x: 166
+            y: 472
+            width: 68
+            height: 8
+            radius: 4
+            bg_color: 0x11161C
+            bg_opa: 100%
+            border_width: 0
+            clickable: true
+            scrollable: false
+            on_click:
+              then:
+                - script.execute:
+                    id: dispatch_entity_action
+                    entity: !lambda |-
+                      std::string action = id(w09_action_source).state;
+                      if (!esp_panel_runtime_text_unavailable(action) && !action.empty()) return action;
+                      std::string raw = id(w09_config_source).state;
+                      if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "button|0|1|1|1|1||Door|door|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|4|2|1";
+                      return esp_panel_parse_widget_runtime(raw).action;
+            widgets:
+              - label:
+                  id: w09_icon_label
+                  x: 0
+                  y: 4
+                  width: 68
+                  height: 18
+                  text: "\U000F081C"
+                  text_font: mdi_icons_24
+                  text_align: CENTER
+                  text_color: 0xFFD166
+              - label:
+                  id: w09_label_label
+                  x: 4
+                  y: 24
+                  width: 60
+                  height: 10
+                  text: "Door"
+                  text_font: montserrat_10
+                  text_align: CENTER
+                  text_color: 0xA8C3EA
+              - label:
+                  id: w09_value_label
+                  x: 4
+                  y: 35
+                  width: 60
+                  height: 10
+                  text: "Closed"
+                  text_font: montserrat_10
+                  text_align: CENTER
+                  text_color: 0xF1F5F9
+        - obj:
+            id: w10_card
+            hidden: true
+            x: 240
+            y: 472
+            width: 68
+            height: 8
+            radius: 4
+            bg_color: 0x11161C
+            bg_opa: 100%
+            border_width: 0
+            clickable: true
+            scrollable: false
+            on_click:
+              then:
+                - script.execute:
+                    id: dispatch_entity_action
+                    entity: !lambda |-
+                      std::string action = id(w10_action_source).state;
+                      if (!esp_panel_runtime_text_unavailable(action) && !action.empty()) return action;
+                      std::string raw = id(w10_config_source).state;
+                      if (esp_panel_runtime_text_unavailable(raw) || raw.empty()) raw = "status|0|1|1|1|1||Sofa|sofa|start|none|bold|normal|%23ffd166|%23a8c3ea|%23f1f5f9|100|100|100|4|5|2|1";
+                      return esp_panel_parse_widget_runtime(raw).action;
+            widgets:
+              - label:
+                  id: w10_icon_label
+                  x: 0
+                  y: 4
+                  width: 68
+                  height: 18
+                  text: "\U000F04B9"
+                  text_font: mdi_icons_24
+                  text_align: CENTER
+                  text_color: 0xFFD166
+              - label:
+                  id: w10_label_label
+                  x: 4
+                  y: 24
+                  width: 60
+                  height: 10
+                  text: "Sofa"
+                  text_font: montserrat_10
+                  text_align: CENTER
+                  text_color: 0xA8C3EA
+              - label:
+                  id: w10_value_label
+                  x: 4
+                  y: 35
+                  width: 60
+                  height: 10
+                  text: "Ready"
+                  text_font: montserrat_10
+                  text_align: CENTER
+                  text_color: 0xF1F5F9
+        - obj:
+            id: w11_card
+            hidden: true
+            x: 314
+            y: 472
+            width: 68
+            height: 8
+            radius: 4
+            bg_color: 0x11161C
+            bg_opa: 100%
+            border_width: 0
+            clickable: true
+            scrollable: false
+            widgets:
+              - label:
+                  id: w11_icon_label
+                  x: 0
+                  y: 4
+                  width: 68
+                  height: 18
+                  text: "\U000F06E8"
+                  text_font: mdi_icons_24
+                  text_align: CENTER
+                  text_color: 0xFFD166
+              - label:
+                  id: w11_label_label
+                  x: 4
+                  y: 24
+                  width: 60
+                  height: 10
+                  text: "Blank"
+                  text_font: montserrat_10
+                  text_align: CENTER
+                  text_color: 0xA8C3EA
+              - label:
+                  id: w11_value_label
+                  x: 4
+                  y: 35
+                  width: 60
+                  height: 10
+                  text: ""
+                  text_font: montserrat_10
+                  text_align: CENTER
+                  text_color: 0xF1F5F9
+        - obj:
+            id: w12_card
+            hidden: true
+            x: 388
+            y: 472
+            width: 68
+            height: 8
+            radius: 4
+            bg_color: 0x11161C
+            bg_opa: 100%
+            border_width: 0
+            clickable: true
+            scrollable: false
+            widgets:
+              - label:
+                  id: w12_icon_label
+                  x: 0
+                  y: 4
+                  width: 68
+                  height: 18
+                  text: "\U000F06E8"
+                  text_font: mdi_icons_24
+                  text_align: CENTER
+                  text_color: 0xFFD166
+              - label:
+                  id: w12_label_label
+                  x: 4
+                  y: 24
+                  width: 60
+                  height: 10
+                  text: "Blank"
+                  text_font: montserrat_10
+                  text_align: CENTER
+                  text_color: 0xA8C3EA
+              - label:
+                  id: w12_value_label
+                  x: 4
+                  y: 35
+                  width: 60
+                  height: 10
+                  text: ""
+                  text_font: montserrat_10
+                  text_align: CENTER
+                  text_color: 0xF1F5F9
+        - line:
+            id: footer_divider
+            x: 178
+            y: 474
+            width: 124
+            height: 4
+            line_width: 2
+            line_rounded: true
+            line_color: 0x24303A
+            points:
+              - 0, 2
+              - 124, 2
+        - obj:
+            id: notification_overlay
+            hidden: true
+            x: 32
+            y: 168
+            width: 416
+            height: 112
+            radius: 26
+            bg_color: 0x06101F
+            bg_opa: 96%
+            border_width: 1
+            border_color: 0x285EA8
+            shadow_width: 20
+            shadow_color: 0x000000
+            shadow_opa: 26%
+            clickable: false
+            scrollable: false
+            widgets:
+              - label:
+                  id: notification_title_label
+                  x: 20
+                  y: 18
+                  width: 376
+                  height: 18
+                  text: "Notification"
+                  text_font: montserrat_bold_18
+                  text_color: 0xFFD166
+              - label:
+                  id: notification_message_label
+                  x: 20
+                  y: 46
+                  width: 376
+                  height: 42
+                  text: ""
+                  text_font: montserrat_16
+                  text_color: 0xF1F5F9
+                  long_mode: WRAP
