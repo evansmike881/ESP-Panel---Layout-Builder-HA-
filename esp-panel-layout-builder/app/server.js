@@ -10,6 +10,7 @@ const PORT = Number.parseInt(process.env.PORT || "8099", 10);
 const DATA_DIR = path.join(__dirname, "data");
 const STORE_PATH = path.join(DATA_DIR, "clock-layout.json");
 const GENERATED_YAML_PATH = path.resolve(__dirname, "..", "household-panel.generated.yaml");
+const LIVE_YAML_PATH = path.resolve(__dirname, "..", "..", "household-panel-live.yaml");
 const GENERATED_HELPER_PATH = path.resolve(__dirname, "..", "esp_panel_live_helpers.yaml");
 const HASS_URL = process.env.HASS_URL || "http://supervisor/core/api";
 const TOKEN = process.env.SUPERVISOR_TOKEN || process.env.HASSIO_TOKEN || "";
@@ -290,16 +291,14 @@ function buildWidgetCard(slot) {
           width: !lambda return id(slot_${slot}_w) * ${CELL_SIZE};
           height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE};
           hidden: !lambda return !id(slot_${slot}_visible);
-          bg_color: !lambda return id(slot_${slot}_bg_color);
+          bg_color: !lambda return lv_color_hex(id(slot_${slot}_bg_color));
           bg_grad_color: 0x081428
           bg_grad_dir: VER
-          border_color: !lambda return id(slot_${slot}_border_color);
-          border_width: !lambda return id(slot_${slot}_border_visible) ? 2 : 0;
+          border_color: !lambda return lv_color_hex(id(slot_${slot}_border_color));
+          border_width: !lambda |-
+            return id(slot_${slot}_border_visible) ? 1 : 0;
           radius: 22
-          pad_top: 14
-          pad_bottom: 14
-          pad_left: 16
-          pad_right: 16
+          pad_all: 14
           scrollable: false
           widgets:
             - label:
@@ -310,7 +309,7 @@ function buildWidgetCard(slot) {
                 hidden: !lambda return !id(slot_${slot}_visible) || !id(slot_${slot}_title_visible) || id(slot_${slot}_title_text).empty() || id(slot_${slot}_align_mode) != 0;
                 text: !lambda return id(slot_${slot}_title_text);
                 text_font: montserrat_bold_14
-                text_color: !lambda return id(slot_${slot}_accent_color);
+                text_color: !lambda return lv_color_hex(id(slot_${slot}_accent_color));
                 text_align: LEFT
             - label:
                 id: slot_${slot}_title_center
@@ -320,7 +319,7 @@ function buildWidgetCard(slot) {
                 hidden: !lambda return !id(slot_${slot}_visible) || !id(slot_${slot}_title_visible) || id(slot_${slot}_title_text).empty() || id(slot_${slot}_align_mode) != 1;
                 text: !lambda return id(slot_${slot}_title_text);
                 text_font: montserrat_bold_14
-                text_color: !lambda return id(slot_${slot}_accent_color);
+                text_color: !lambda return lv_color_hex(id(slot_${slot}_accent_color));
                 text_align: CENTER
             - label:
                 id: slot_${slot}_title_end
@@ -330,14 +329,16 @@ function buildWidgetCard(slot) {
                 hidden: !lambda return !id(slot_${slot}_visible) || !id(slot_${slot}_title_visible) || id(slot_${slot}_title_text).empty() || id(slot_${slot}_align_mode) != 2;
                 text: !lambda return id(slot_${slot}_title_text);
                 text_font: montserrat_bold_14
-                text_color: !lambda return id(slot_${slot}_accent_color);
+                text_color: !lambda return lv_color_hex(id(slot_${slot}_accent_color));
                 text_align: RIGHT
             - obj:
                 id: slot_${slot}_digital_start
                 x: 0
-                y: !lambda return (id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 34 : 0;
+                y: !lambda |-
+                  return (id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 34 : 0;
                 width: 100%
-                height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - ((id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 48 : 12);
+                height: !lambda |-
+                  return id(slot_${slot}_h) * ${CELL_SIZE} - ((id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 48 : 12);
                 hidden: !lambda return !id(slot_${slot}_visible) || id(slot_${slot}_analogue) || id(slot_${slot}_align_mode) != 0;
                 bg_opa: TRANSP
                 border_width: 0
@@ -358,13 +359,15 @@ function buildWidgetCard(slot) {
                       id: slot_${slot}_date_start
                       text: "-- ---"
                       text_font: montserrat_18
-                      text_color: !lambda return id(slot_${slot}_accent_color);
+                      text_color: !lambda return lv_color_hex(id(slot_${slot}_accent_color));
             - obj:
                 id: slot_${slot}_digital_center
                 x: 0
-                y: !lambda return (id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 34 : 0;
+                y: !lambda |-
+                  return (id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 34 : 0;
                 width: 100%
-                height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - ((id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 48 : 12);
+                height: !lambda |-
+                  return id(slot_${slot}_h) * ${CELL_SIZE} - ((id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 48 : 12);
                 hidden: !lambda return !id(slot_${slot}_visible) || id(slot_${slot}_analogue) || id(slot_${slot}_align_mode) != 1;
                 bg_opa: TRANSP
                 border_width: 0
@@ -387,15 +390,17 @@ function buildWidgetCard(slot) {
                       id: slot_${slot}_date_center
                       text: "-- ---"
                       text_font: montserrat_18
-                      text_color: !lambda return id(slot_${slot}_accent_color);
+                      text_color: !lambda return lv_color_hex(id(slot_${slot}_accent_color));
                       text_align: CENTER
                       width: 100%
             - obj:
                 id: slot_${slot}_digital_end
                 x: 0
-                y: !lambda return (id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 34 : 0;
+                y: !lambda |-
+                  return (id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 34 : 0;
                 width: 100%
-                height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - ((id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 48 : 12);
+                height: !lambda |-
+                  return id(slot_${slot}_h) * ${CELL_SIZE} - ((id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 48 : 12);
                 hidden: !lambda return !id(slot_${slot}_visible) || id(slot_${slot}_analogue) || id(slot_${slot}_align_mode) != 2;
                 bg_opa: TRANSP
                 border_width: 0
@@ -418,70 +423,73 @@ function buildWidgetCard(slot) {
                       id: slot_${slot}_date_end
                       text: "-- ---"
                       text_font: montserrat_18
-                      text_color: !lambda return id(slot_${slot}_accent_color);
+                      text_color: !lambda return lv_color_hex(id(slot_${slot}_accent_color));
                       text_align: RIGHT
                       width: 100%
             - obj:
                 id: slot_${slot}_analog_shell_seconds
                 x: 0
-                y: !lambda return (id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 28 : 0;
+                y: !lambda |-
+                  return (id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 28 : 0;
                 width: 100%
-                height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - ((id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 42 : 10);
+                height: !lambda |-
+                  return id(slot_${slot}_h) * ${CELL_SIZE} - ((id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 42 : 10);
                 hidden: !lambda return !id(slot_${slot}_visible) || !id(slot_${slot}_analogue) || !id(slot_${slot}_show_seconds);
                 bg_opa: TRANSP
                 border_width: 0
                 pad_all: 0
                 scrollable: false
                 widgets:
+                  - obj:
+                      width: 150
+                      height: 150
+                      align: CENTER
+                      radius: 75
+                      bg_color: 0x040E1D
+                      border_color: !lambda return lv_color_hex(id(slot_${slot}_border_color));
+                      border_width: 3
+                      pad_all: 0
+                      scrollable: false
                   - meter:
                       id: slot_${slot}_analog_seconds
-                      width: 100%
-                      height: 100%
+                      width: 150
+                      height: 150
                       align: CENTER
                       bg_opa: TRANSP
                       border_width: 0
                       pad_all: 0
-                      text_color: !lambda return id(slot_${slot}_accent_color);
+                      text_color: !lambda return lv_color_hex(id(slot_${slot}_accent_color));
                       scales:
                         - range_from: 0
                           range_to: 60
                           angle_range: 360
                           rotation: 270
                           ticks:
-                            width: 1
-                            count: 61
-                            length: 10
-                            color: !lambda return id(slot_${slot}_accent_color);
+                            count: 2
                           indicators:
                             - line:
                                 id: slot_${slot}_minute_hand
                                 width: 4
-                                color: !lambda return id(slot_${slot}_accent_color);
-                                length: 78%
+                                color: !lambda return lv_color_hex(id(slot_${slot}_accent_color));
+                                length: 52
                                 rounded: true
                                 value: 0
                             - line:
                                 id: slot_${slot}_second_hand
                                 width: 2
                                 color: 0xFFD36B
-                                length: 86%
+                                length: 56
                                 rounded: true
                                 value: 0
-                        - range_from: 1
+                        - range_from: 0
                           range_to: 12
-                          angle_range: 330
-                          rotation: 300
+                          angle_range: 360
+                          rotation: 270
                           ticks:
-                            width: 1
                             count: 12
-                            length: 1
-                            color: 0x000000
-                            major:
-                              stride: 1
-                              width: 3
-                              length: 16
-                              color: !lambda return id(slot_${slot}_border_color);
-                              label_gap: 0
+                            width: 3
+                            length: 10
+                            color: !lambda return lv_color_hex(id(slot_${slot}_accent_color));
                         - range_from: 0
                           range_to: 720
                           angle_range: 360
@@ -493,63 +501,75 @@ function buildWidgetCard(slot) {
                                 id: slot_${slot}_hour_hand
                                 width: 6
                                 color: 0xF7FBFF
-                                length: 56%
+                                length: 40
                                 rounded: true
                                 value: 0
+                  - obj:
+                      width: 12
+                      height: 12
+                      align: CENTER
+                      radius: 6
+                      bg_color: 0xF7FBFF
+                      border_width: 0
+                      pad_all: 0
+                      scrollable: false
             - obj:
                 id: slot_${slot}_analog_shell_plain
                 x: 0
-                y: !lambda return (id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 28 : 0;
+                y: !lambda |-
+                  return (id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 28 : 0;
                 width: 100%
-                height: !lambda return id(slot_${slot}_h) * ${CELL_SIZE} - ((id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 42 : 10);
+                height: !lambda |-
+                  return id(slot_${slot}_h) * ${CELL_SIZE} - ((id(slot_${slot}_title_visible) && !id(slot_${slot}_title_text).empty()) ? 42 : 10);
                 hidden: !lambda return !id(slot_${slot}_visible) || !id(slot_${slot}_analogue) || id(slot_${slot}_show_seconds);
                 bg_opa: TRANSP
                 border_width: 0
                 pad_all: 0
                 scrollable: false
                 widgets:
+                  - obj:
+                      width: 150
+                      height: 150
+                      align: CENTER
+                      radius: 75
+                      bg_color: 0x040E1D
+                      border_color: !lambda return lv_color_hex(id(slot_${slot}_border_color));
+                      border_width: 3
+                      pad_all: 0
+                      scrollable: false
                   - meter:
                       id: slot_${slot}_analog_plain
-                      width: 100%
-                      height: 100%
+                      width: 150
+                      height: 150
                       align: CENTER
                       bg_opa: TRANSP
                       border_width: 0
                       pad_all: 0
-                      text_color: !lambda return id(slot_${slot}_accent_color);
+                      text_color: !lambda return lv_color_hex(id(slot_${slot}_accent_color));
                       scales:
                         - range_from: 0
                           range_to: 60
                           angle_range: 360
                           rotation: 270
                           ticks:
-                            width: 1
-                            count: 61
-                            length: 10
-                            color: !lambda return id(slot_${slot}_accent_color);
+                            count: 2
                           indicators:
                             - line:
                                 id: slot_${slot}_minute_hand_plain
                                 width: 4
-                                color: !lambda return id(slot_${slot}_accent_color);
-                                length: 78%
+                                color: !lambda return lv_color_hex(id(slot_${slot}_accent_color));
+                                length: 52
                                 rounded: true
                                 value: 0
-                        - range_from: 1
+                        - range_from: 0
                           range_to: 12
-                          angle_range: 330
-                          rotation: 300
+                          angle_range: 360
+                          rotation: 270
                           ticks:
-                            width: 1
                             count: 12
-                            length: 1
-                            color: 0x000000
-                            major:
-                              stride: 1
-                              width: 3
-                              length: 16
-                              color: !lambda return id(slot_${slot}_border_color);
-                              label_gap: 0
+                            width: 3
+                            length: 10
+                            color: !lambda return lv_color_hex(id(slot_${slot}_accent_color));
                         - range_from: 0
                           range_to: 720
                           angle_range: 360
@@ -561,9 +581,18 @@ function buildWidgetCard(slot) {
                                 id: slot_${slot}_hour_hand_plain
                                 width: 6
                                 color: 0xF7FBFF
-                                length: 56%
+                                length: 40
                                 rounded: true
-                                value: 0`;
+                                value: 0
+                  - obj:
+                      width: 12
+                      height: 12
+                      align: CENTER
+                      radius: 6
+                      bg_color: 0xF7FBFF
+                      border_width: 0
+                      pad_all: 0
+                      scrollable: false`;
 }
 
 function buildEsphomeYaml() {
@@ -1079,7 +1108,9 @@ async function syncHelpers(layout) {
 }
 
 async function writeGeneratedArtifacts() {
-  await fs.writeFile(GENERATED_YAML_PATH, buildEsphomeYaml());
+  const esphomeYaml = buildEsphomeYaml();
+  await fs.writeFile(GENERATED_YAML_PATH, esphomeYaml);
+  await fs.writeFile(LIVE_YAML_PATH, esphomeYaml);
   await fs.writeFile(GENERATED_HELPER_PATH, buildHelperYaml());
 }
 
